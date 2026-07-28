@@ -1,0 +1,346 @@
+'use client';
+
+import Link from 'next/link';
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { ArrowRight, BookOpen, Clock, GraduationCap, Users, Presentation } from 'lucide-react';
+import { courses } from '@/lib/mock-data';
+import AuthModal from '@/components/AuthModal';
+
+export default function HomePage() {
+  const [authOpen, setAuthOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signup');
+
+  function openAuth(mode: 'signin' | 'signup') {
+    setAuthMode(mode);
+    setAuthOpen(true);
+  }
+
+  return (
+    <main>
+      {/* ─── Hero ─── */}
+      <section className="bg-white pt-16 pb-14 sm:pt-24 sm:pb-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-3xl mx-auto text-center">
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="text-4xl sm:text-5xl lg:text-[3.5rem] font-extrabold text-ink-900 leading-[1.1] tracking-tight"
+            >
+              Dream. Learn.{' '}
+              <span className="text-indigo-600">Achieve.</span>
+            </motion.h1>
+
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="mt-5 text-lg text-ink-500 max-w-2xl mx-auto leading-relaxed"
+            >
+              Build real-world skills, earn verified certificates, and unlock new opportunities.
+            </motion.p>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Role picker ─── */}
+      <section className="bg-white pb-16 sm:pb-24">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <p className="text-center text-sm font-bold text-ink-400 uppercase tracking-wide mb-6">Get started as a...</p>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <Link
+                href="/courses"
+                className="block rounded-2xl border-2 border-indigo-200 hover:border-indigo-400 hover:bg-indigo-50 p-5 text-center transition-all group"
+              >
+                <GraduationCap className="w-7 h-7 text-ink-400 mx-auto mb-2 group-hover:text-ink-700 transition-colors" />
+                <h3 className="font-bold text-ink-900 mb-0.5">Learner</h3>
+                <p className="text-xs text-ink-500">Discover courses and earn certificates</p>
+              </Link>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.28 }}
+            >
+              <button
+                onClick={() => openAuth('signup')}
+                className="block w-full rounded-2xl border-2 border-brand-200 hover:border-brand-400 hover:bg-brand-50 p-5 text-center transition-all group"
+              >
+                <Presentation className="w-7 h-7 text-ink-400 mx-auto mb-2 group-hover:text-ink-700 transition-colors" />
+                <h3 className="font-bold text-ink-900 mb-0.5">Instructor</h3>
+                <p className="text-xs text-ink-500">Create, teach, and inspire learners</p>
+              </button>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.36 }}
+            >
+              <Link
+                href="/about"
+                className="block rounded-2xl border-2 border-ink-200 hover:border-ink-400 hover:bg-ink-50 p-5 text-center transition-all group"
+              >
+                <Users className="w-7 h-7 text-ink-400 mx-auto mb-2 group-hover:text-ink-700 transition-colors" />
+                <h3 className="font-bold text-ink-900 mb-0.5">Organization</h3>
+                <p className="text-xs text-ink-500">Upskill your team with scalable learning</p>
+              </Link>
+            </motion.div>
+          </div>
+
+          <p className="text-center mt-6 text-sm text-ink-400">
+            Already have an account?{' '}
+            <button onClick={() => openAuth('signin')} className="font-bold text-indigo-600 hover:text-indigo-700 underline underline-offset-2">
+              Log in
+            </button>
+          </p>
+        </div>
+      </section>
+
+      {/* ─── Courses — as a list, not cards ─── */}
+      <section className="border-t border-ink-100 bg-white py-16 sm:py-24">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-end justify-between mb-8">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-ink-900">Explore courses</h2>
+            <Link href="/courses" className="text-sm text-indigo-600 hover:text-indigo-700 font-bold hidden sm:block">
+              See all &rarr;
+            </Link>
+          </div>
+
+          <div className="divide-y divide-ink-100">
+            {courses.map((course, i) => (
+              <motion.div
+                key={course.id}
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.08 }}
+              >
+                <Link
+                  href={`/courses/${course.id}`}
+                  className="flex items-center gap-5 py-5 group"
+                >
+                  {/* Color dot */}
+                  <div className={`w-3 h-3 rounded-full flex-shrink-0 ${i === 0 ? 'bg-indigo-500' : 'bg-brand-500'}`} />
+                  
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-ink-900 group-hover:text-indigo-600 transition-colors truncate">
+                      {course.title}
+                    </h3>
+                    <p className="text-sm text-ink-500 mt-0.5 hidden sm:block">{course.shortDescription}</p>
+                    <div className="flex items-center gap-3 mt-1.5 text-xs text-ink-400">
+                      <span className="flex items-center gap-1"><BookOpen className="w-3 h-3" /> {course.modules.length} modules</span>
+                      <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {course.duration}</span>
+                      <span className="font-medium text-brand-600">Free preview</span>
+                    </div>
+                  </div>
+
+                  {/* Arrow */}
+                  <ArrowRight className="w-4 h-4 text-ink-300 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all flex-shrink-0" />
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── What you can learn ─── */}
+      <section className="border-t border-ink-100 bg-white py-16 sm:py-24">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-ink-900">What you can learn</h2>
+            <p className="text-ink-500 mt-2">Courses across disciplines. More added every month.</p>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            {[
+              { label: 'Project Management', color: 'bg-indigo-50 text-indigo-700 border-indigo-100' },
+              { label: 'Digital Marketing', color: 'bg-indigo-50 text-indigo-700 border-indigo-100' },
+              { label: 'Data Analytics', color: 'bg-ink-100 text-ink-700 border-ink-200' },
+              { label: 'UX Design', color: 'bg-ink-100 text-ink-700 border-ink-200' },
+              { label: 'Leadership', color: 'bg-indigo-50 text-indigo-700 border-indigo-100' },
+              { label: 'Finance', color: 'bg-ink-100 text-ink-700 border-ink-200' },
+              { label: 'Software Development', color: 'bg-indigo-50 text-indigo-700 border-indigo-100' },
+              { label: 'Communication', color: 'bg-ink-100 text-ink-700 border-ink-200' },
+            ].map((item, i) => (
+              <motion.div
+                key={item.label}
+                initial={{ opacity: 0, scale: 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.04 }}
+                className={`rounded-xl border px-4 py-3 text-center text-sm font-semibold ${item.color}`}
+              >
+                {item.label}
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Why Ndotoni ─── */}
+      <section className="border-t border-ink-100 bg-ink-50 py-16 sm:py-24">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-ink-900">Why Ndotoni Academy</h2>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-8">
+            {[
+              { title: 'Learn at your pace', desc: 'No deadlines. No pressure. Learn when it suits you.' },
+              { title: 'Free to start', desc: 'Every course has a free first module. No card needed.' },
+              { title: 'Verified certificates', desc: 'Credentials employers and peers recognize.' },
+              { title: 'Expert instructors', desc: 'Professionals with real-world experience.' },
+              { title: 'Bite-sized modules', desc: 'Short lessons you can finish in one sitting.' },
+              { title: 'Built for professionals', desc: 'Designed for working adults who value their time.' },
+            ].map((item, i) => (
+              <motion.div
+                key={item.title}
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.06 }}
+              >
+                <h3 className="font-bold text-ink-900 mb-1">{item.title}</h3>
+                <p className="text-sm text-ink-500">{item.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Mission & Vision ─── */}
+      <section className="border-t border-ink-100 bg-white py-16 sm:py-24">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+            >
+              <p className="text-sm font-bold text-indigo-600 uppercase tracking-wide mb-2">Our mission</p>
+              <p className="text-ink-700 leading-relaxed">
+                Make quality education accessible to everyone. Knowledge shouldn&apos;t be locked behind expensive classrooms. It should be available wherever you are, whenever you&apos;re ready.
+              </p>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+            >
+              <p className="text-sm font-bold text-brand-600 uppercase tracking-wide mb-2">Our vision</p>
+              <p className="text-ink-700 leading-relaxed">
+                A world where anyone can build skills, prove their expertise, and advance their career. No matter where they started.
+              </p>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── How it works ─── */}
+      <section className="border-t border-ink-100 bg-ink-50 py-16 sm:py-24">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-ink-900">How it works</h2>
+            <p className="text-ink-500 mt-2">Short modules, immediate feedback, real progress.</p>
+          </div>
+
+          <div className="space-y-6">
+            {[
+              { num: '1', title: 'Watch short lessons', desc: 'Video and text. Finish one in a single sitting.' },
+              { num: '2', title: 'Practice with quizzes', desc: 'Instant feedback after every module.' },
+              { num: '3', title: 'Earn your certificate', desc: 'Pass the assessment. Get certified.' },
+            ].map((item, i) => (
+              <motion.div
+                key={item.num}
+                initial={{ opacity: 0, x: -12 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="flex gap-4 items-start"
+              >
+                <div className="w-9 h-9 rounded-full bg-indigo-600 text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
+                  {item.num}
+                </div>
+                <div>
+                  <h3 className="font-bold text-ink-900">{item.title}</h3>
+                  <p className="text-sm text-ink-500">{item.desc}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── For instructors ─── */}
+      <section className="border-t border-ink-100 bg-white py-16 sm:py-24">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <p className="text-sm font-bold text-brand-600 uppercase tracking-wide mb-2">For instructors</p>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-ink-900 mb-4">
+            Teach what you know
+          </h2>
+          <p className="text-ink-500 leading-relaxed mb-6 max-w-xl">
+            Create courses and reach learners. The platform handles quizzes, progress tracking, and certificates for you.
+          </p>
+          <ul className="space-y-2 mb-8">
+            {[
+              'Upload video lessons and written content',
+              'Automatic quizzes and certificates',
+              'Enrolment and completion analytics',
+              'Free to publish',
+            ].map((item, i) => (
+              <li key={i} className="flex items-center gap-2.5 text-sm text-ink-700">
+                <span className="w-1.5 h-1.5 rounded-full bg-brand-500 flex-shrink-0" />
+                {item}
+              </li>
+            ))}
+          </ul>
+          <button
+            onClick={() => openAuth('signup')}
+            className="inline-flex items-center gap-1.5 text-sm font-bold text-indigo-600 hover:text-indigo-700 transition-colors"
+          >
+            Start teaching <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
+      </section>
+
+      {/* ─── Final CTA ─── */}
+      <section className="border-t border-ink-100 bg-white py-14 sm:py-16">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-2xl font-extrabold text-ink-900 mb-5">
+            Start learning for free
+          </h2>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <button
+              onClick={() => openAuth('signup')}
+              className="inline-flex items-center justify-center rounded-full bg-indigo-600 px-8 py-3.5 text-sm font-bold text-white hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-600/20"
+            >
+              Sign up free
+            </button>
+            <button
+              onClick={() => openAuth('signup')}
+              className="inline-flex items-center justify-center rounded-full border-2 border-ink-200 px-7 py-3.5 text-sm font-bold text-ink-700 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700 transition-colors"
+            >
+              I&apos;m an instructor
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={authOpen}
+        onClose={() => setAuthOpen(false)}
+        initialMode={authMode}
+      />
+    </main>
+  );
+}
