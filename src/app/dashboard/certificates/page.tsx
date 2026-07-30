@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Award, Download } from 'lucide-react';
 import { mockUser, courses, Course, Certificate } from '@/lib/mock-data';
 import { getCategoryTheme } from '@/lib/category-theme';
@@ -92,7 +94,15 @@ function openCertificate(cert: Certificate, userName: string, course?: Course) {
 }
 
 export default function CertificatesPage() {
+  const router = useRouter();
   const user = mockUser;
+
+  // Organizations don't take courses themselves; this page only applies to individual accounts.
+  useEffect(() => {
+    if (user.organization) router.replace('/dashboard');
+  }, [user.organization, router]);
+
+  if (user.organization) return null;
 
   return (
     <div className="p-6 lg:p-8 max-w-5xl">

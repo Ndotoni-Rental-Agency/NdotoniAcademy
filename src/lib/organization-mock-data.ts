@@ -28,6 +28,8 @@ export interface TeamMember {
   status: MembershipStatus;
   joinedAt?: string;
   assignedCourseIds: string[];
+  /** Aggregate completion across assigned courses, 0-100. */
+  trainingProgress: number;
 }
 
 export interface PendingInvitation {
@@ -54,6 +56,7 @@ export const mockTeamMembers: TeamMember[] = [
     status: 'ACTIVE',
     joinedAt: '2026-04-02',
     assignedCourseIds: ['project-management'],
+    trainingProgress: 33,
   },
   {
     id: 'tm-2',
@@ -63,6 +66,7 @@ export const mockTeamMembers: TeamMember[] = [
     status: 'ACTIVE',
     joinedAt: '2026-04-10',
     assignedCourseIds: ['project-management', 'digital-marketing'],
+    trainingProgress: 60,
   },
   {
     id: 'tm-3',
@@ -72,6 +76,7 @@ export const mockTeamMembers: TeamMember[] = [
     status: 'ACTIVE',
     joinedAt: '2026-05-01',
     assignedCourseIds: ['data-analytics'],
+    trainingProgress: 45,
   },
   {
     id: 'tm-4',
@@ -81,6 +86,7 @@ export const mockTeamMembers: TeamMember[] = [
     status: 'ACTIVE',
     joinedAt: '2026-05-14',
     assignedCourseIds: [],
+    trainingProgress: 0,
   },
   {
     id: 'tm-5',
@@ -90,6 +96,7 @@ export const mockTeamMembers: TeamMember[] = [
     status: 'ACTIVE',
     joinedAt: '2026-06-02',
     assignedCourseIds: ['ux-design'],
+    trainingProgress: 80,
   },
 ];
 
@@ -112,6 +119,29 @@ export const mockPendingInvitations: PendingInvitation[] = [
 
 export function getAssignableCourses() {
   return courses.map((c) => ({ id: c.id, title: c.title }));
+}
+
+export interface TeamCourse {
+  id: string;
+  title: string;
+  category: string;
+  visibility: 'PRIVATE' | 'PUBLIC';
+  assignedCount: number;
+  isCustom: boolean;
+}
+
+/** Courses from the public catalog currently assigned to at least one team member. */
+export function getTeamCourseUsage(): TeamCourse[] {
+  return courses
+    .map((c) => ({
+      id: c.id,
+      title: c.title,
+      category: c.category,
+      visibility: 'PUBLIC' as const,
+      assignedCount: mockTeamMembers.filter((m) => m.assignedCourseIds.includes(c.id)).length,
+      isCustom: false,
+    }))
+    .filter((c) => c.assignedCount > 0);
 }
 
 export const roleBadgeClass: Record<MembershipRole, string> = {
