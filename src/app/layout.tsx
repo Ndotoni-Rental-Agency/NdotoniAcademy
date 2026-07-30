@@ -4,6 +4,7 @@ import './globals.css';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ScrollToTop from '@/components/ScrollToTop';
+import { SITE_URL, SITE_NAME } from '@/lib/site';
 
 const dmSans = DM_Sans({
   subsets: ['latin'],
@@ -20,7 +21,11 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: 'Ndotoni Academy: Learn anything. Get certified.',
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: `${SITE_NAME}: Learn anything. Get certified.`,
+    template: `%s | ${SITE_NAME}`,
+  },
   description: 'Expert-led video courses, interactive quizzes, and real certificates. Learn at your pace or teach what you know.',
 };
 

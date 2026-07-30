@@ -1,28 +1,18 @@
-'use client';
-
 import Link from 'next/link';
-import { useState } from 'react';
-import { motion } from 'framer-motion';
 import {
   ArrowRight, BookOpen, Clock, GraduationCap, Users, Presentation,
   Award, Zap, UserCheck, Layers, Briefcase,
 } from 'lucide-react';
 import { courses } from '@/lib/mock-data';
 import { getCategoryTheme } from '@/lib/category-theme';
-import AuthModal from '@/components/AuthModal';
+import AuthButton from '@/components/AuthButton';
+import Reveal from '@/components/Reveal';
 import CourseExperiencePreview from '@/components/CourseExperiencePreview';
 import CertificatePreview from '@/components/CertificatePreview';
 import InstructorPreview from '@/components/InstructorPreview';
 
 export default function HomePage() {
-  const [authOpen, setAuthOpen] = useState(false);
-  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signup');
   const featuredCourse = courses.find((c) => c.id === 'project-management');
-
-  function openAuth(mode: 'signin' | 'signup') {
-    setAuthMode(mode);
-    setAuthOpen(true);
-  }
 
   return (
     <main>
@@ -30,24 +20,18 @@ export default function HomePage() {
       <section className="bg-white pt-16 pb-14 sm:pt-24 sm:pb-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mx-auto text-center">
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="text-4xl sm:text-5xl lg:text-[3.5rem] font-extrabold text-ink-900 leading-[1.1] tracking-tight"
-            >
-              Dream. Learn.{' '}
-              <span className="text-indigo-600">Achieve.</span>
-            </motion.h1>
+            <Reveal y={20} mode="mount">
+              <h1 className="text-4xl sm:text-5xl lg:text-[3.5rem] font-extrabold text-ink-900 leading-[1.1] tracking-tight">
+                Dream. Learn.{' '}
+                <span className="text-indigo-600">Achieve.</span>
+              </h1>
+            </Reveal>
 
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="mt-5 text-lg text-ink-500 max-w-2xl mx-auto leading-relaxed"
-            >
-              Build real-world skills, earn verified certificates, and unlock new opportunities.
-            </motion.p>
+            <Reveal y={20} delay={0.1} mode="mount">
+              <p className="mt-5 text-lg text-ink-500 max-w-2xl mx-auto leading-relaxed">
+                Build real-world skills, earn verified certificates, and unlock new opportunities.
+              </p>
+            </Reveal>
           </div>
         </div>
       </section>
@@ -56,13 +40,9 @@ export default function HomePage() {
       <section className="bg-white pb-16 sm:pb-24">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <p className="text-center text-sm font-bold text-ink-400 uppercase tracking-wide mb-6">Get started as a...</p>
-          
+
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
+            <Reveal y={12} delay={0.2} mode="mount">
               <Link
                 href="/courses"
                 className="block rounded-2xl border-2 border-indigo-200 hover:border-indigo-400 hover:bg-indigo-50 p-5 text-center transition-all group"
@@ -71,26 +51,18 @@ export default function HomePage() {
                 <h3 className="font-bold text-ink-900 mb-0.5">Learner</h3>
                 <p className="text-xs text-ink-500">Discover courses and earn certificates</p>
               </Link>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.28 }}
-            >
-              <button
-                onClick={() => openAuth('signup')}
+            </Reveal>
+            <Reveal y={12} delay={0.28} mode="mount">
+              <AuthButton
+                mode="signup"
                 className="block w-full rounded-2xl border-2 border-brand-200 hover:border-brand-400 hover:bg-brand-50 p-5 text-center transition-all group"
               >
                 <Presentation className="w-7 h-7 text-ink-400 mx-auto mb-2 group-hover:text-ink-700 transition-colors" />
                 <h3 className="font-bold text-ink-900 mb-0.5">Instructor</h3>
                 <p className="text-xs text-ink-500">Create, teach, and inspire learners</p>
-              </button>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.36 }}
-            >
+              </AuthButton>
+            </Reveal>
+            <Reveal y={12} delay={0.36} mode="mount">
               <Link
                 href="/organizations"
                 className="block rounded-2xl border-2 border-sky-200 hover:border-sky-400 hover:bg-sky-50 p-5 text-center transition-all group"
@@ -99,14 +71,14 @@ export default function HomePage() {
                 <h3 className="font-bold text-ink-900 mb-0.5">Organization</h3>
                 <p className="text-xs text-ink-500">Upskill your team with scalable learning</p>
               </Link>
-            </motion.div>
+            </Reveal>
           </div>
 
           <p className="text-center mt-6 text-sm text-ink-400">
             Already have an account?{' '}
-            <button onClick={() => openAuth('signin')} className="font-bold text-indigo-600 hover:text-indigo-700 underline underline-offset-2">
+            <AuthButton mode="signin" className="font-bold text-indigo-600 hover:text-indigo-700 underline underline-offset-2">
               Log in
-            </button>
+            </AuthButton>
           </p>
         </div>
       </section>
@@ -125,37 +97,31 @@ export default function HomePage() {
             {courses.map((course, i) => {
               const theme = getCategoryTheme(course.category);
               return (
-              <motion.div
-                key={course.id}
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.08 }}
-              >
-                <Link
-                  href={`/courses/${course.id}`}
-                  className="flex items-center gap-5 py-5 group"
-                >
-                  {/* Category color dot */}
-                  <div className={`w-3 h-3 rounded-full flex-shrink-0 ${theme.solidBg}`} />
-                  
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-ink-900 group-hover:text-indigo-600 transition-colors truncate">
-                      {course.title}
-                    </h3>
-                    <p className="text-sm text-ink-500 mt-0.5 hidden sm:block">{course.shortDescription}</p>
-                    <div className="flex items-center gap-3 mt-1.5 text-xs text-ink-400">
-                      <span className="flex items-center gap-1"><BookOpen className="w-3 h-3" /> {course.modules.length} modules</span>
-                      <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {course.duration}</span>
-                      <span className="font-medium text-brand-600">Free preview</span>
-                    </div>
-                  </div>
+                <Reveal key={course.id} delay={i * 0.08}>
+                  <Link
+                    href={`/courses/${course.id}`}
+                    className="flex items-center gap-5 py-5 group"
+                  >
+                    {/* Category color dot */}
+                    <div className={`w-3 h-3 rounded-full flex-shrink-0 ${theme.solidBg}`} />
 
-                  {/* Arrow */}
-                  <ArrowRight className="w-4 h-4 text-ink-300 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all flex-shrink-0" />
-                </Link>
-              </motion.div>
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-ink-900 group-hover:text-indigo-600 transition-colors truncate">
+                        {course.title}
+                      </h3>
+                      <p className="text-sm text-ink-500 mt-0.5 hidden sm:block">{course.shortDescription}</p>
+                      <div className="flex items-center gap-3 mt-1.5 text-xs text-ink-400">
+                        <span className="flex items-center gap-1"><BookOpen className="w-3 h-3" /> {course.modules.length} modules</span>
+                        <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {course.duration}</span>
+                        <span className="font-medium text-brand-600">Free preview</span>
+                      </div>
+                    </div>
+
+                    {/* Arrow */}
+                    <ArrowRight className="w-4 h-4 text-ink-300 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all flex-shrink-0" />
+                  </Link>
+                </Reveal>
               );
             })}
           </div>
@@ -183,18 +149,16 @@ export default function HomePage() {
             ].map((item, i) => {
               const theme = item.category ? getCategoryTheme(item.category) : null;
               return (
-                <motion.div
+                <Reveal
                   key={item.label}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.04 }}
+                  scale={0.95}
+                  delay={i * 0.04}
                   className={`rounded-xl border px-4 py-3 text-center text-sm font-semibold ${
                     theme ? `${theme.softBg} ${theme.softText} ${theme.border}` : 'bg-ink-50 text-ink-600 border-ink-100'
                   }`}
                 >
                   {item.label}
-                </motion.div>
+                </Reveal>
               );
             })}
           </div>
@@ -217,14 +181,7 @@ export default function HomePage() {
               { icon: Layers, title: 'Bite-sized modules', desc: 'Short lessons you can finish in one sitting.' },
               { icon: Briefcase, title: 'Built for professionals', desc: 'Designed for working adults who value their time.' },
             ].map((item, i) => (
-              <motion.div
-                key={item.title}
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.06 }}
-                className="flex items-start gap-3.5"
-              >
+              <Reveal key={item.title} y={10} delay={i * 0.06} className="flex items-start gap-3.5">
                 <div className="w-9 h-9 rounded-xl bg-indigo-100 flex items-center justify-center flex-shrink-0">
                   <item.icon className="w-4 h-4 text-indigo-600" />
                 </div>
@@ -232,7 +189,7 @@ export default function HomePage() {
                   <h3 className="font-bold text-ink-900 mb-1">{item.title}</h3>
                   <p className="text-sm text-ink-500">{item.desc}</p>
                 </div>
-              </motion.div>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -242,27 +199,18 @@ export default function HomePage() {
       <section className="border-t border-ink-100 bg-white py-16 sm:py-24">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-            >
+            <Reveal y={12}>
               <p className="text-sm font-bold text-indigo-600 uppercase tracking-wide mb-2">Our mission</p>
               <p className="text-ink-700 leading-relaxed">
                 Make quality education accessible to everyone. Knowledge shouldn&apos;t be locked behind expensive classrooms. It should be available wherever you are, whenever you&apos;re ready.
               </p>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.1 }}
-            >
+            </Reveal>
+            <Reveal y={12} delay={0.1}>
               <p className="text-sm font-bold text-brand-600 uppercase tracking-wide mb-2">Our vision</p>
               <p className="text-ink-700 leading-relaxed">
                 A world where anyone can build skills, prove their expertise, and advance their career. No matter where they started.
               </p>
-            </motion.div>
+            </Reveal>
           </div>
         </div>
       </section>
@@ -281,14 +229,7 @@ export default function HomePage() {
               { num: '2', title: 'Practice with quizzes', desc: 'Instant feedback after every module.' },
               { num: '3', title: 'Earn your certificate', desc: 'Pass the assessment. Get certified.' },
             ].map((item, i) => (
-              <motion.div
-                key={item.num}
-                initial={{ opacity: 0, x: -12 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="flex gap-4 items-start"
-              >
+              <Reveal key={item.num} x={-12} delay={i * 0.1} className="flex gap-4 items-start">
                 <div className="w-9 h-9 rounded-full bg-indigo-600 text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
                   {item.num}
                 </div>
@@ -296,7 +237,7 @@ export default function HomePage() {
                   <h3 className="font-bold text-ink-900">{item.title}</h3>
                   <p className="text-sm text-ink-500">{item.desc}</p>
                 </div>
-              </motion.div>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -311,15 +252,15 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-6 lg:gap-4 items-center">
-            <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+            <Reveal y={12}>
               <CourseExperiencePreview />
-            </motion.div>
+            </Reveal>
 
             <div className="hidden lg:flex items-center justify-center">
               <ArrowRight className="w-6 h-6 text-ink-300" />
             </div>
 
-            <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }}>
+            <Reveal y={12} delay={0.1}>
               {featuredCourse && (
                 <CertificatePreview
                   courseTitle={featuredCourse.title}
@@ -328,7 +269,7 @@ export default function HomePage() {
                   points={featuredCourse.points}
                 />
               )}
-            </motion.div>
+            </Reveal>
           </div>
         </div>
       </section>
@@ -358,17 +299,17 @@ export default function HomePage() {
                   </li>
                 ))}
               </ul>
-              <button
-                onClick={() => openAuth('signup')}
+              <AuthButton
+                mode="signup"
                 className="inline-flex items-center gap-1.5 text-sm font-bold text-indigo-600 hover:text-indigo-700 transition-colors"
               >
                 Start teaching <ArrowRight className="w-4 h-4" />
-              </button>
+              </AuthButton>
             </div>
 
-            <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+            <Reveal y={12}>
               {featuredCourse && <InstructorPreview course={featuredCourse} />}
-            </motion.div>
+            </Reveal>
           </div>
         </div>
       </section>
@@ -380,28 +321,21 @@ export default function HomePage() {
             Start learning for free
           </h2>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <button
-              onClick={() => openAuth('signup')}
+            <AuthButton
+              mode="signup"
               className="inline-flex items-center justify-center rounded-full bg-indigo-600 px-8 py-3.5 text-sm font-bold text-white hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-600/20"
             >
               Sign up free
-            </button>
-            <button
-              onClick={() => openAuth('signup')}
+            </AuthButton>
+            <AuthButton
+              mode="signup"
               className="inline-flex items-center justify-center rounded-full border-2 border-ink-200 px-7 py-3.5 text-sm font-bold text-ink-700 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700 transition-colors"
             >
               I&apos;m an instructor
-            </button>
+            </AuthButton>
           </div>
         </div>
       </section>
-
-      {/* Auth Modal */}
-      <AuthModal
-        isOpen={authOpen}
-        onClose={() => setAuthOpen(false)}
-        initialMode={authMode}
-      />
     </main>
   );
 }

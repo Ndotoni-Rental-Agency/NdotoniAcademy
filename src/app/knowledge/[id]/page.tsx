@@ -1,10 +1,29 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft, Clock } from 'lucide-react';
 import { articles } from '@/lib/knowledge-mock-data';
+import { SITE_URL } from '@/lib/site';
 
 export function generateStaticParams() {
   return articles.map((a) => ({ id: String(a.id) }));
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const article = articles.find((a) => a.id === Number(id));
+  if (!article) return {};
+
+  return {
+    title: article.title,
+    description: article.excerpt,
+    openGraph: {
+      title: article.title,
+      description: article.excerpt,
+      type: 'article',
+      url: `${SITE_URL}/knowledge/${article.id}`,
+    },
+  };
 }
 
 export default async function ArticlePage({ params }: { params: Promise<{ id: string }> }) {
@@ -12,8 +31,23 @@ export default async function ArticlePage({ params }: { params: Promise<{ id: st
   const article = articles.find((a) => a.id === Number(id));
   if (!article) return notFound();
 
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: article.title,
+    description: article.excerpt,
+    articleSection: article.category,
+    datePublished: article.date,
+    publisher: {
+      '@type': 'Organization',
+      name: 'Ndotoni Academy',
+      sameAs: SITE_URL,
+    },
+  };
+
   return (
     <main className="min-h-screen bg-white">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
         <Link href="/knowledge" className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink-500 hover:text-indigo-600 transition-colors mb-6">
           <ArrowLeft className="w-4 h-4" /> Back to Knowledge

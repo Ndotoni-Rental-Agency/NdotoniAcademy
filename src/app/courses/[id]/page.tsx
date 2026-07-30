@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import {
@@ -7,9 +8,27 @@ import {
 import { getCourse, courses } from '@/lib/mock-data';
 import { getCategoryTheme } from '@/lib/category-theme';
 import Avatar from '@/components/Avatar';
+import { SITE_URL } from '@/lib/site';
 
 export function generateStaticParams() {
   return courses.map((c) => ({ id: c.id }));
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const course = getCourse(id);
+  if (!course) return {};
+
+  return {
+    title: course.title,
+    description: course.shortDescription,
+    openGraph: {
+      title: course.title,
+      description: course.shortDescription,
+      type: 'website',
+      url: `${SITE_URL}/courses/${course.id}`,
+    },
+  };
 }
 
 export default async function CourseDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -21,8 +40,35 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
   const totalQuizQuestions = course.modules.reduce((sum, m) => sum + m.quiz.length, 0);
   const videoModules = course.modules.filter(m => m.videoUrl);
 
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Course',
+    name: course.title,
+    description: course.shortDescription,
+    provider: {
+      '@type': 'Organization',
+      name: 'Ndotoni Academy',
+      sameAs: SITE_URL,
+    },
+    instructor: {
+      '@type': 'Person',
+      name: course.instructor,
+    },
+    aggregateRating: {
+      '@type': 'AggregateRating',
+      ratingValue: course.rating,
+      ratingCount: course.enrolledCount,
+    },
+    hasCourseInstance: {
+      '@type': 'CourseInstance',
+      courseMode: 'online',
+    },
+  };
+
   return (
     <main className="min-h-screen bg-white">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+
       {/* Hero */}
       <section className={`relative ${theme.solidBg} text-white overflow-hidden`}>
         {/* Flat geometric accent shapes */}
