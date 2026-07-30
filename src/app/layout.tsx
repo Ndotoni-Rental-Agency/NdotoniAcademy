@@ -13,7 +13,7 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: 'Ndotoni Academy — Learn anything. Get certified.',
+  title: 'Ndotoni Academy: Learn anything. Get certified.',
   description: 'Expert-led video courses, interactive quizzes, and real certificates. Learn at your pace or teach what you know.',
 };
 

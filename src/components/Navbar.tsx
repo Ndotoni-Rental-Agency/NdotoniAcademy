@@ -5,6 +5,8 @@ import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { Menu, X } from 'lucide-react';
 import AuthModal from './AuthModal';
+import Avatar from './Avatar';
+import { mockUser } from '@/lib/mock-data';
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -15,6 +17,7 @@ export default function Navbar() {
 
   const navLinks = [
     { href: '/courses', label: 'Courses' },
+    { href: '/organizations', label: 'For Organizations' },
     { href: '/knowledge', label: 'Knowledge' },
     { href: '/events', label: 'Events' },
     { href: '/about', label: 'About' },
@@ -41,7 +44,7 @@ export default function Navbar() {
               </span>
             </Link>
 
-            {/* Desktop Nav — only show on public pages */}
+            {/* Desktop Nav: only show on public pages */}
             {!isDashboard && (
               <div className="hidden md:flex items-center gap-1">
                 {navLinks.map((link) => {
@@ -66,11 +69,8 @@ export default function Navbar() {
             {/* Right side */}
             <div className="hidden md:flex items-center gap-3">
               {isDashboard ? (
-                <Link
-                  href="/dashboard"
-                  className="h-8 w-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-bold hover:bg-indigo-700 transition-colors"
-                >
-                  E
+                <Link href="/dashboard" className="rounded-full ring-2 ring-transparent hover:ring-indigo-200 transition-all">
+                  <Avatar name={mockUser.name} size="md" />
                 </Link>
               ) : (
                 <>

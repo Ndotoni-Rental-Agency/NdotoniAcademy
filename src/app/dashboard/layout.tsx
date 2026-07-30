@@ -2,9 +2,10 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, BookOpen, Award, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Award, Settings, LogOut, Building2 } from 'lucide-react';
+import { mockUser } from '@/lib/mock-data';
 
-const navItems = [
+const baseNavItems = [
   { label: 'Overview', href: '/dashboard', icon: LayoutDashboard },
   { label: 'My Courses', href: '/dashboard/courses', icon: BookOpen },
   { label: 'Certificates', href: '/dashboard/certificates', icon: Award },
@@ -13,11 +14,12 @@ const navItems = [
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const navItems = mockUser.organization
+    ? [...baseNavItems, { label: 'Team', href: '/dashboard/team', icon: Building2 }]
+    : baseNavItems;
 
   return (
     <>
-      <style>{`footer { display: none; }`}</style>
-
       <div className="flex h-[calc(100vh-56px)]">
         {/* Sidebar */}
         <aside className="hidden lg:flex lg:flex-col w-56 border-r border-ink-200 bg-white flex-shrink-0">
@@ -29,13 +31,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-bold transition-colors ${
                     isActive
-                      ? 'bg-indigo-50 text-indigo-700'
-                      : 'text-ink-600 hover:bg-ink-50 hover:text-ink-900'
+                      ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/30'
+                      : 'text-ink-600 font-medium hover:bg-ink-50 hover:text-ink-900'
                   }`}
                 >
-                  <item.icon className={`w-4 h-4 ${isActive ? 'text-indigo-600' : 'text-ink-400'}`} />
+                  <item.icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-ink-400'}`} />
                   {item.label}
                 </Link>
               );
@@ -65,8 +67,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
-                      isActive ? 'bg-indigo-50 text-indigo-700' : 'text-ink-500 hover:bg-ink-50'
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-colors ${
+                      isActive ? 'bg-indigo-600 text-white' : 'text-ink-500 hover:bg-ink-50'
                     }`}
                   >
                     <item.icon className="w-3.5 h-3.5" />

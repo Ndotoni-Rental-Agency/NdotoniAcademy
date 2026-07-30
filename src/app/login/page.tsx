@@ -1,18 +1,31 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import AuthModal from '@/components/AuthModal';
 
-export default function LoginPage() {
-  const [isOpen] = useState(true);
+function LoginModal() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const mode = searchParams.get('mode') === 'signup' ? 'signup' : 'signin';
 
+  function close() {
+    if (window.history.length > 1) {
+      router.back();
+    } else {
+      router.push('/');
+    }
+  }
+
+  return <AuthModal isOpen onClose={close} initialMode={mode} />;
+}
+
+export default function LoginPage() {
   return (
     <main className="min-h-screen bg-white">
-      <AuthModal
-        isOpen={isOpen}
-        onClose={() => window.history.back()}
-        initialMode="signin"
-      />
+      <Suspense fallback={null}>
+        <LoginModal />
+      </Suspense>
     </main>
   );
 }

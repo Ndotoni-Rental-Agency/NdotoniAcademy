@@ -1,7 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, Clock, Video, Users } from 'lucide-react';
+import { Calendar, Clock, Video, Check } from 'lucide-react';
+import FeaturedBanner from '@/components/FeaturedBanner';
 
 const events = [
   { id: 1, title: 'Building Effective Online Courses', type: 'Webinar', date: 'August 5, 2026', time: '2:00 PM EAT', month: 'Aug', day: '5', featured: true },
@@ -13,6 +15,11 @@ const events = [
 export default function EventsPage() {
   const featured = events.find(e => e.featured);
   const upcoming = events.filter(e => !e.featured);
+  const [registered, setRegistered] = useState<number[]>([]);
+
+  function register(id: number) {
+    setRegistered((prev) => (prev.includes(id) ? prev : [...prev, id]));
+  }
 
   return (
     <main className="min-h-screen bg-white">
@@ -30,31 +37,27 @@ export default function EventsPage() {
       {featured && (
         <section className="bg-white py-8 sm:py-10">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="rounded-2xl bg-indigo-600 overflow-hidden"
-            >
-              <div className="p-7 sm:p-9 text-white">
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="text-[11px] font-bold uppercase tracking-wide bg-white/20 px-3 py-1 rounded-full">
-                    Next event
-                  </span>
-                  <span className="text-[11px] font-bold uppercase tracking-wide bg-white/10 px-3 py-1 rounded-full">
-                    {featured.type}
-                  </span>
-                </div>
-                <h2 className="text-2xl sm:text-3xl font-extrabold mb-4 leading-tight">{featured.title}</h2>
-                <div className="flex flex-wrap gap-5 text-sm text-indigo-200 mb-6">
+            <FeaturedBanner
+              eyebrow="Next event"
+              eyebrowSecondary={featured.type}
+              title={featured.title}
+              meta={
+                <>
                   <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4" /> {featured.date}</span>
                   <span className="flex items-center gap-1.5"><Clock className="w-4 h-4" /> {featured.time}</span>
                   <span className="flex items-center gap-1.5"><Video className="w-4 h-4" /> Online</span>
-                </div>
-                <button className="inline-flex items-center justify-center rounded-full bg-white px-6 py-2.5 text-sm font-bold text-indigo-700 hover:bg-indigo-50 transition-colors">
-                  Register free
+                </>
+              }
+              action={
+                <button
+                  onClick={() => register(featured.id)}
+                  disabled={registered.includes(featured.id)}
+                  className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-2.5 text-sm font-bold text-indigo-700 hover:bg-white/90 transition-colors disabled:opacity-70 disabled:cursor-default"
+                >
+                  {registered.includes(featured.id) ? (<><Check className="w-4 h-4" /> Registered</>) : 'Register free'}
                 </button>
-              </div>
-            </motion.div>
+              }
+            />
           </div>
         </section>
       )}
@@ -71,12 +74,12 @@ export default function EventsPage() {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
-                className="flex items-center gap-5 bg-white rounded-2xl border border-ink-200 p-5 hover:border-indigo-200 hover:shadow-sm transition-all"
+                className="flex items-center gap-5 bg-white rounded-2xl border-2 border-ink-100 p-5 hover:border-indigo-200 hover:shadow-sm transition-all"
               >
                 {/* Date block */}
                 <div className="w-14 h-14 rounded-xl bg-indigo-50 flex flex-col items-center justify-center flex-shrink-0">
-                  <span className="text-[10px] font-bold text-indigo-600 uppercase">{event.month}</span>
-                  <span className="text-xl font-extrabold text-indigo-700 leading-none">{event.day}</span>
+                  <span className="text-[10px] font-bold uppercase text-indigo-700">{event.month}</span>
+                  <span className="text-xl font-extrabold leading-none text-indigo-700">{event.day}</span>
                 </div>
 
                 {/* Info */}
@@ -89,8 +92,12 @@ export default function EventsPage() {
                 </div>
 
                 {/* Action */}
-                <button className="text-sm font-bold text-indigo-600 hover:text-indigo-700 px-4 py-2 rounded-full hover:bg-indigo-50 transition-colors flex-shrink-0">
-                  Register
+                <button
+                  onClick={() => register(event.id)}
+                  disabled={registered.includes(event.id)}
+                  className="flex items-center gap-1.5 text-sm font-bold text-indigo-600 px-4 py-2 rounded-full hover:bg-indigo-50 transition-colors flex-shrink-0 disabled:text-green-600 disabled:hover:bg-transparent"
+                >
+                  {registered.includes(event.id) ? (<><Check className="w-4 h-4" /> Registered</>) : 'Register'}
                 </button>
               </motion.div>
             ))}

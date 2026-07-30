@@ -84,7 +84,7 @@ export default function HomePage() {
               transition={{ delay: 0.36 }}
             >
               <Link
-                href="/about"
+                href="/organizations"
                 className="block rounded-2xl border-2 border-ink-200 hover:border-ink-400 hover:bg-ink-50 p-5 text-center transition-all group"
               >
                 <Users className="w-7 h-7 text-ink-400 mx-auto mb-2 group-hover:text-ink-700 transition-colors" />
@@ -103,7 +103,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── Courses — as a list, not cards ─── */}
+      {/* ─── Courses: as a list, not cards ─── */}
       <section className="border-t border-ink-100 bg-white py-16 sm:py-24">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-end justify-between mb-8">

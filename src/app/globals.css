@@ -14,14 +14,27 @@
 
   --color-indigo-50: #eef2ff;
   --color-indigo-100: #e0e7ff;
+  --color-indigo-300: #a5b4fc;
   --color-indigo-500: #6366f1;
   --color-indigo-600: #4f46e5;
   --color-indigo-700: #4338ca;
 
   --color-sky-50: #f0f9ff;
   --color-sky-100: #e0f2fe;
+  --color-sky-200: #bae6fd;
+  --color-sky-300: #7dd3fc;
   --color-sky-500: #0ea5e9;
   --color-sky-600: #0284c7;
+  --color-sky-700: #0369a1;
+
+  --color-coral-50: #fff2ef;
+  --color-coral-100: #ffe1da;
+  --color-coral-200: #ffc4b3;
+  --color-coral-300: #ffab8f;
+  --color-coral-400: #ff9478;
+  --color-coral-500: #ff6b4a;
+  --color-coral-600: #f4502c;
+  --color-coral-700: #d63d1d;
 
   --color-ink-50: #f9fafb;
   --color-ink-100: #f3f4f6;
@@ -35,8 +48,13 @@
   --color-ink-900: #111827;
 
   --color-warm-50: #fffbeb;
+  --color-warm-100: #fef3c7;
+  --color-warm-200: #fde68a;
+  --color-warm-300: #fcd34d;
   --color-warm-400: #fbbf24;
   --color-warm-500: #f59e0b;
+  --color-warm-600: #d97706;
+  --color-warm-700: #b45309;
 
   --font-sans: var(--font-dm-sans), system-ui, sans-serif;
 }

@@ -1,6 +1,12 @@
+'use client';
+
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 export default function Footer() {
+  const pathname = usePathname();
+  if (pathname.startsWith('/dashboard')) return null;
+
   return (
     <footer className="bg-white border-t border-ink-200 mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -33,8 +39,8 @@ export default function Footer() {
             <h4 className="font-bold text-ink-900 mb-3 text-sm">Company</h4>
             <ul className="space-y-2 text-sm">
               <li><Link href="/about" className="text-ink-500 hover:text-indigo-600 transition-colors">About</Link></li>
-              <li><Link href="/advocacy" className="text-ink-500 hover:text-indigo-600 transition-colors">Advocacy</Link></li>
-              <li><Link href="/login" className="text-ink-500 hover:text-indigo-600 transition-colors">Teach on Ndotoni</Link></li>
+              <li><Link href="/organizations" className="text-ink-500 hover:text-indigo-600 transition-colors">For Organizations</Link></li>
+              <li><Link href="/login?mode=signup" className="text-ink-500 hover:text-indigo-600 transition-colors">Teach on Ndotoni</Link></li>
             </ul>
           </div>
 
@@ -48,12 +54,8 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-ink-200 mt-8 pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-ink-400">
+        <div className="border-t border-ink-200 mt-8 pt-6 text-xs text-ink-400 text-center sm:text-left">
           <p>&copy; 2026 Ndotoni Academy</p>
-          <div className="flex gap-4 mt-2 sm:mt-0">
-            <Link href="/terms" className="hover:text-ink-700 transition-colors">Terms</Link>
-            <Link href="/privacy" className="hover:text-ink-700 transition-colors">Privacy</Link>
-          </div>
         </div>
       </div>
     </footer>

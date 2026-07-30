@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle2, XCircle, Zap, Trophy, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import { CheckCircle2, XCircle, Zap, Trophy, ArrowRight, ChevronLeft, ChevronRight, Check } from 'lucide-react';
 import { QuizQuestion } from '@/lib/mock-data';
 
 interface QuizProps {
@@ -138,7 +138,7 @@ export default function Quiz({ questions, onComplete }: QuizProps) {
                   : 'bg-ink-100 text-ink-500 hover:bg-ink-200'
               }`}
             >
-              {ans ? '✓' : i + 1}
+              {ans ? <Check className="w-4 h-4" /> : i + 1}
             </button>
           );
         })}

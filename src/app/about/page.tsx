@@ -1,20 +1,31 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowRight, BookOpen, Users, Award, Zap } from 'lucide-react';
+import AuthModal from '@/components/AuthModal';
+
+const values = [
+  { icon: BookOpen, title: 'Expert-led', desc: 'Courses built by working professionals with real experience.' },
+  { icon: Zap, title: 'Bite-sized', desc: 'Short modules you can finish in one sitting. No marathon lectures.' },
+  { icon: Award, title: 'Verified', desc: 'Certificates that are shareable and employer-recognized.' },
+  { icon: Users, title: 'Open', desc: 'Module 1 is always free. No bait. No hidden costs.' },
+];
 
 export default function AboutPage() {
+  const [authOpen, setAuthOpen] = useState(false);
+
   return (
     <main className="min-h-screen bg-white">
       {/* Hero */}
-      <section className="bg-indigo-600 text-white py-14 sm:py-20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <section className="bg-white pt-16 pb-14 sm:pt-24 sm:pb-20">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold mb-4 leading-tight">
-              Education should be<br />accessible to everyone.
+            <h1 className="text-4xl sm:text-5xl font-extrabold text-ink-900 leading-[1.1] tracking-tight mb-5">
+              Education should be <span className="text-indigo-600">accessible</span> to everyone.
             </h1>
-            <p className="text-lg text-indigo-100 max-w-2xl mx-auto">
+            <p className="text-lg text-ink-500 max-w-2xl mx-auto leading-relaxed">
               Ndotoni Academy connects experts who want to teach with people who want to grow. One module at a time.
             </p>
           </motion.div>
@@ -25,12 +36,7 @@ export default function AboutPage() {
       <section className="py-14 sm:py-20">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {[
-              { icon: BookOpen, title: 'Expert-led', desc: 'Courses built by working professionals with real experience.' },
-              { icon: Zap, title: 'Bite-sized', desc: 'Short modules you can finish in one sitting. No marathon lectures.' },
-              { icon: Award, title: 'Verified', desc: 'Certificates that are shareable and employer-recognized.' },
-              { icon: Users, title: 'Open', desc: 'Module 1 is always free. No bait. No hidden costs.' },
-            ].map((item, i) => (
+            {values.map((item, i) => (
               <motion.div
                 key={item.title}
                 initial={{ opacity: 0, y: 12 }}
@@ -111,12 +117,17 @@ export default function AboutPage() {
             <Link href="/courses" className="inline-flex items-center justify-center rounded-full bg-indigo-600 px-7 py-3 text-sm font-bold text-white hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-600/20">
               Start learning
             </Link>
-            <Link href="/login" className="inline-flex items-center gap-1.5 justify-center rounded-full border-2 border-ink-200 px-7 py-3 text-sm font-bold text-ink-700 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700 transition-colors">
+            <button
+              onClick={() => setAuthOpen(true)}
+              className="inline-flex items-center gap-1.5 justify-center rounded-full border-2 border-ink-200 px-7 py-3 text-sm font-bold text-ink-700 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700 transition-colors"
+            >
               Become an instructor <ArrowRight className="w-4 h-4" />
-            </Link>
+            </button>
           </div>
         </div>
       </section>
+
+      <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} initialMode="signup" />
     </main>
   );
 }
