@@ -3,8 +3,12 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, BookOpen, Clock, GraduationCap, Users, Presentation } from 'lucide-react';
+import {
+  ArrowRight, BookOpen, Clock, GraduationCap, Users, Presentation,
+  Award, Zap, UserCheck, Layers, Briefcase,
+} from 'lucide-react';
 import { courses } from '@/lib/mock-data';
+import { getCategoryTheme } from '@/lib/category-theme';
 import AuthModal from '@/components/AuthModal';
 
 export default function HomePage() {
@@ -108,13 +112,15 @@ export default function HomePage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-end justify-between mb-8">
             <h2 className="text-2xl sm:text-3xl font-extrabold text-ink-900">Explore courses</h2>
-            <Link href="/courses" className="text-sm text-indigo-600 hover:text-indigo-700 font-bold hidden sm:block">
-              See all &rarr;
+            <Link href="/courses" className="inline-flex items-center gap-1 text-sm text-indigo-600 hover:text-indigo-700 font-bold hidden sm:flex">
+              See all <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
 
           <div className="divide-y divide-ink-100">
-            {courses.map((course, i) => (
+            {courses.map((course, i) => {
+              const theme = getCategoryTheme(course.category);
+              return (
               <motion.div
                 key={course.id}
                 initial={{ opacity: 0 }}
@@ -126,8 +132,8 @@ export default function HomePage() {
                   href={`/courses/${course.id}`}
                   className="flex items-center gap-5 py-5 group"
                 >
-                  {/* Color dot */}
-                  <div className={`w-3 h-3 rounded-full flex-shrink-0 ${i === 0 ? 'bg-indigo-500' : 'bg-brand-500'}`} />
+                  {/* Category color dot */}
+                  <div className={`w-3 h-3 rounded-full flex-shrink-0 ${theme.solidBg}`} />
                   
                   {/* Content */}
                   <div className="flex-1 min-w-0">
@@ -146,7 +152,8 @@ export default function HomePage() {
                   <ArrowRight className="w-4 h-4 text-ink-300 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all flex-shrink-0" />
                 </Link>
               </motion.div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
@@ -161,26 +168,31 @@ export default function HomePage() {
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {[
-              { label: 'Project Management', color: 'bg-indigo-50 text-indigo-700 border-indigo-100' },
-              { label: 'Digital Marketing', color: 'bg-indigo-50 text-indigo-700 border-indigo-100' },
-              { label: 'Data Analytics', color: 'bg-ink-100 text-ink-700 border-ink-200' },
-              { label: 'UX Design', color: 'bg-ink-100 text-ink-700 border-ink-200' },
-              { label: 'Leadership', color: 'bg-indigo-50 text-indigo-700 border-indigo-100' },
-              { label: 'Finance', color: 'bg-ink-100 text-ink-700 border-ink-200' },
-              { label: 'Software Development', color: 'bg-indigo-50 text-indigo-700 border-indigo-100' },
-              { label: 'Communication', color: 'bg-ink-100 text-ink-700 border-ink-200' },
-            ].map((item, i) => (
-              <motion.div
-                key={item.label}
-                initial={{ opacity: 0, scale: 0.95 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.04 }}
-                className={`rounded-xl border px-4 py-3 text-center text-sm font-semibold ${item.color}`}
-              >
-                {item.label}
-              </motion.div>
-            ))}
+              { label: 'Project Management', category: 'Project Management' },
+              { label: 'Digital Marketing', category: 'Marketing' },
+              { label: 'Data Analytics', category: 'Technology' },
+              { label: 'UX Design', category: 'Design' },
+              { label: 'Leadership', category: null },
+              { label: 'Finance', category: null },
+              { label: 'Software Development', category: null },
+              { label: 'Communication', category: null },
+            ].map((item, i) => {
+              const theme = item.category ? getCategoryTheme(item.category) : null;
+              return (
+                <motion.div
+                  key={item.label}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.04 }}
+                  className={`rounded-xl border px-4 py-3 text-center text-sm font-semibold ${
+                    theme ? `${theme.softBg} ${theme.softText} ${theme.border}` : 'bg-ink-50 text-ink-600 border-ink-100'
+                  }`}
+                >
+                  {item.label}
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -194,12 +206,12 @@ export default function HomePage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-8">
             {[
-              { title: 'Learn at your pace', desc: 'No deadlines. No pressure. Learn when it suits you.' },
-              { title: 'Free to start', desc: 'Every course has a free first module. No card needed.' },
-              { title: 'Verified certificates', desc: 'Credentials employers and peers recognize.' },
-              { title: 'Expert instructors', desc: 'Professionals with real-world experience.' },
-              { title: 'Bite-sized modules', desc: 'Short lessons you can finish in one sitting.' },
-              { title: 'Built for professionals', desc: 'Designed for working adults who value their time.' },
+              { icon: Clock, title: 'Learn at your pace', desc: 'No deadlines. No pressure. Learn when it suits you.' },
+              { icon: Zap, title: 'Free to start', desc: 'Every course has a free first module. No card needed.' },
+              { icon: Award, title: 'Verified certificates', desc: 'Credentials employers and peers recognize.' },
+              { icon: UserCheck, title: 'Expert instructors', desc: 'Professionals with real-world experience.' },
+              { icon: Layers, title: 'Bite-sized modules', desc: 'Short lessons you can finish in one sitting.' },
+              { icon: Briefcase, title: 'Built for professionals', desc: 'Designed for working adults who value their time.' },
             ].map((item, i) => (
               <motion.div
                 key={item.title}
@@ -207,9 +219,15 @@ export default function HomePage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.06 }}
+                className="flex items-start gap-3.5"
               >
-                <h3 className="font-bold text-ink-900 mb-1">{item.title}</h3>
-                <p className="text-sm text-ink-500">{item.desc}</p>
+                <div className="w-9 h-9 rounded-xl bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                  <item.icon className="w-4 h-4 text-indigo-600" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-ink-900 mb-1">{item.title}</h3>
+                  <p className="text-sm text-ink-500">{item.desc}</p>
+                </div>
               </motion.div>
             ))}
           </div>
