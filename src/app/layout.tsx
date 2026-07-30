@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { DM_Sans } from 'next/font/google';
+import { DM_Sans, Playfair_Display } from 'next/font/google';
 import './globals.css';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -10,6 +10,13 @@ const dmSans = DM_Sans({
   display: 'swap',
   variable: '--font-dm-sans',
   weight: ['300', '400', '500', '600', '700', '800'],
+});
+
+const playfair = Playfair_Display({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-playfair',
+  weight: ['600', '700'],
 });
 
 export const metadata: Metadata = {
@@ -24,7 +31,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${dmSans.variable} font-sans bg-white text-ink-900 flex flex-col min-h-screen`}>
+      <body className={`${dmSans.variable} ${playfair.variable} font-sans bg-white text-ink-900 flex flex-col min-h-screen`}>
         <ScrollToTop />
         <Navbar />
         <div className="flex-1">{children}</div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { Award, Download } from 'lucide-react';
-import { mockUser, courses, Certificate } from '@/lib/mock-data';
+import { mockUser, courses, Course, Certificate } from '@/lib/mock-data';
 import { getCategoryTheme } from '@/lib/category-theme';
 
 const accentHex: Record<string, string> = {
@@ -11,9 +11,10 @@ const accentHex: Record<string, string> = {
   Design: '#d97706',
 };
 
-function openCertificate(cert: Certificate, userName: string, category?: string) {
+function openCertificate(cert: Certificate, userName: string, course?: Course) {
   const issued = new Date(cert.issuedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-  const accent = accentHex[category ?? ''] ?? '#4f46e5';
+  const accent = accentHex[course?.category ?? ''] ?? '#4f46e5';
+  const certificateId = `NDT-${cert.id.toUpperCase()}`;
   const win = window.open('', '_blank');
   if (!win) return;
   win.document.write(`
@@ -21,24 +22,67 @@ function openCertificate(cert: Certificate, userName: string, category?: string)
     <html>
       <head>
         <title>Certificate: ${cert.courseTitle}</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
         <style>
-          body { font-family: system-ui, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #f3f4f6; }
-          .cert { width: 100%; max-width: 720px; border: 10px solid ${accent}; border-radius: 16px; padding: 64px 48px; text-align: center; background: white; }
-          .eyebrow { text-transform: uppercase; letter-spacing: 0.1em; font-size: 12px; font-weight: 700; color: ${accent}; }
-          h1 { font-size: 28px; margin: 16px 0 4px; }
-          .name { font-size: 22px; font-weight: 700; margin: 24px 0 4px; }
-          .course { font-size: 18px; color: #374151; margin-bottom: 24px; }
-          .meta { font-size: 13px; color: #6b7280; }
+          * { box-sizing: border-box; }
+          body { font-family: system-ui, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 24px; background: #f3f4f6; }
+          .serif { font-family: 'Playfair Display', Georgia, serif; }
+          .wrap { position: relative; width: 100%; max-width: 640px; background: white; border-radius: 16px; box-shadow: 0 20px 40px rgba(17,24,39,0.12); overflow: hidden; }
+          .ribbon-clip { position: absolute; top: 0; right: 0; width: 144px; height: 144px; overflow: hidden; pointer-events: none; }
+          .ribbon { position: absolute; top: 22px; right: -38px; width: 170px; transform: rotate(45deg); background: ${accent}; color: white; font-size: 10px; font-weight: 700; letter-spacing: 0.15em; text-align: center; padding: 6px 0; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+          .frame-outer { border: 3px solid rgba(17,24,39,0.85); margin: 12px; border-radius: 12px; }
+          .frame-inner { border: 1px solid #fbbf24; margin: 6px; border-radius: 10px; padding: 40px 36px; text-align: center; }
+          .brand { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 20px; }
+          .brand .mark { width: 24px; height: 24px; background: ${accent}; border-radius: 6px; color: white; font-weight: 800; font-size: 11px; display: flex; align-items: center; justify-content: center; }
+          .brand .word { font-size: 12px; font-weight: 700; letter-spacing: 0.15em; color: #6b7280; text-transform: uppercase; }
+          .seal { width: 64px; height: 64px; border-radius: 50%; margin: 0 auto 20px; background: radial-gradient(circle at 35% 30%, #fcd34d, #d97706); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(217,119,6,0.35); }
+          .seal svg { width: 28px; height: 28px; color: white; }
+          .eyebrow { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.2em; color: ${accent}; margin-bottom: 24px; }
+          .label { font-size: 14px; color: #9ca3af; margin: 8px 0; }
+          .name { font-size: 28px; font-weight: 700; color: #111827; display: inline-block; padding: 0 32px 12px; margin: 8px 0; border-bottom: 2px solid #f3f4f6; }
+          .course { font-size: 20px; font-weight: 700; color: #111827; margin: 20px 0 24px; }
+          .rule { width: 64px; height: 1px; background: linear-gradient(to right, transparent, #fbbf24, transparent); margin: 0 auto 24px; }
+          .meta { font-size: 13px; color: #9ca3af; margin-bottom: 32px; }
+          .meta strong { color: #374151; }
+          .bottom { display: flex; align-items: flex-end; justify-content: space-between; text-align: left; gap: 16px; }
+          .sig { font-style: italic; font-size: 14px; color: #1f2937; border-bottom: 1px solid #e5e7eb; padding-bottom: 6px; min-width: 110px; margin-bottom: 4px; }
+          .caption { font-size: 10px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.1em; }
+          .serial { text-align: right; }
+          .serial-id { font-family: monospace; font-size: 12px; color: #4b5563; }
         </style>
       </head>
       <body>
-        <div class="cert">
-          <p class="eyebrow">Ndotoni Academy · Certificate of Completion</p>
-          <h1>This certifies that</h1>
-          <p class="name">${userName}</p>
-          <p>has successfully completed</p>
-          <p class="course">${cert.courseTitle}</p>
-          <p class="meta">Score: ${cert.score}% &middot; ${cert.points} points &middot; Issued ${issued}</p>
+        <div class="wrap">
+          <div class="ribbon-clip"><div class="ribbon">VERIFIED</div></div>
+          <div class="frame-outer">
+            <div class="frame-inner">
+              <div class="brand">
+                <div class="mark">N</div>
+                <span class="word">Ndotoni Academy</span>
+              </div>
+              <div class="seal">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z"/><path d="M8.5 13.5 7 22l5-3 5 3-1.5-8.5"/></svg>
+              </div>
+              <p class="serif eyebrow">Certificate of Completion</p>
+              <p class="label">This certifies that</p>
+              <p class="serif name">${userName}</p>
+              <p class="label" style="margin-top:20px;">has successfully completed</p>
+              <p class="serif course">${cert.courseTitle}</p>
+              <div class="rule"></div>
+              <p class="meta">Score: <strong>${cert.score}%</strong> &middot; <strong>${cert.points}</strong> points &middot; Issued ${issued}</p>
+              <div class="bottom">
+                <div>
+                  <p class="serif sig">${course?.instructor ?? 'Ndotoni Academy'}</p>
+                  <p class="caption">Instructor</p>
+                </div>
+                <div class="serial">
+                  <p class="caption">Certificate ID</p>
+                  <p class="serial-id">${certificateId}</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
         <script>window.onload = () => window.print();</script>
       </body>
@@ -58,8 +102,8 @@ export default function CertificatesPage() {
       {user.certificates.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
           {user.certificates.map((cert) => {
-            const category = courses.find((c) => c.title === cert.courseTitle)?.category;
-            const theme = getCategoryTheme(category ?? '');
+            const course = courses.find((c) => c.title === cert.courseTitle);
+            const theme = getCategoryTheme(course?.category ?? '');
             return (
               <div key={cert.id} className="rounded-2xl border-2 border-ink-100 overflow-hidden">
                 <div className={`${theme.solidBg} relative overflow-hidden p-5`}>
@@ -76,7 +120,7 @@ export default function CertificatesPage() {
                     </p>
                   </div>
                   <button
-                    onClick={() => openCertificate(cert, user.name, category)}
+                    onClick={() => openCertificate(cert, user.name, course)}
                     className={`flex items-center gap-1.5 text-xs font-bold text-white ${theme.solidBg} ${theme.solidBgHover} px-3 py-2 rounded-lg transition-colors flex-shrink-0`}
                   >
                     <Download className="w-3.5 h-3.5" /> Download

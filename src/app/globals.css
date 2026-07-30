@@ -57,6 +57,7 @@
   --color-warm-700: #b45309;
 
   --font-sans: var(--font-dm-sans), system-ui, sans-serif;
+  --font-serif: var(--font-playfair), Georgia, serif;
 }
 
 html {

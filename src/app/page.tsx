@@ -10,10 +10,14 @@ import {
 import { courses } from '@/lib/mock-data';
 import { getCategoryTheme } from '@/lib/category-theme';
 import AuthModal from '@/components/AuthModal';
+import CourseExperiencePreview from '@/components/CourseExperiencePreview';
+import CertificatePreview from '@/components/CertificatePreview';
+import InstructorPreview from '@/components/InstructorPreview';
 
 export default function HomePage() {
   const [authOpen, setAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signup');
+  const featuredCourse = courses.find((c) => c.id === 'project-management');
 
   function openAuth(mode: 'signin' | 'signup') {
     setAuthMode(mode);
@@ -89,7 +93,7 @@ export default function HomePage() {
             >
               <Link
                 href="/organizations"
-                className="block rounded-2xl border-2 border-ink-200 hover:border-ink-400 hover:bg-ink-50 p-5 text-center transition-all group"
+                className="block rounded-2xl border-2 border-sky-200 hover:border-sky-400 hover:bg-sky-50 p-5 text-center transition-all group"
               >
                 <Users className="w-7 h-7 text-ink-400 mx-auto mb-2 group-hover:text-ink-700 transition-colors" />
                 <h3 className="font-bold text-ink-900 mb-0.5">Organization</h3>
@@ -298,35 +302,74 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ─── See it in action ─── */}
+      <section className="border-t border-ink-100 bg-white py-16 sm:py-24">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-ink-900">See it in action</h2>
+            <p className="text-ink-500 mt-2">A real quiz question from the platform, and the certificate waiting at the end.</p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-6 lg:gap-4 items-center">
+            <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+              <CourseExperiencePreview />
+            </motion.div>
+
+            <div className="hidden lg:flex items-center justify-center">
+              <ArrowRight className="w-6 h-6 text-ink-300" />
+            </div>
+
+            <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }}>
+              {featuredCourse && (
+                <CertificatePreview
+                  courseTitle={featuredCourse.title}
+                  instructor={featuredCourse.instructor}
+                  score={92}
+                  points={featuredCourse.points}
+                />
+              )}
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
       {/* ─── For instructors ─── */}
       <section className="border-t border-ink-100 bg-white py-16 sm:py-24">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <p className="text-sm font-bold text-brand-600 uppercase tracking-wide mb-2">For instructors</p>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-ink-900 mb-4">
-            Teach what you know
-          </h2>
-          <p className="text-ink-500 leading-relaxed mb-6 max-w-xl">
-            Create courses and reach learners. The platform handles quizzes, progress tracking, and certificates for you.
-          </p>
-          <ul className="space-y-2 mb-8">
-            {[
-              'Upload video lessons and written content',
-              'Automatic quizzes and certificates',
-              'Enrolment and completion analytics',
-              'Free to publish',
-            ].map((item, i) => (
-              <li key={i} className="flex items-center gap-2.5 text-sm text-ink-700">
-                <span className="w-1.5 h-1.5 rounded-full bg-brand-500 flex-shrink-0" />
-                {item}
-              </li>
-            ))}
-          </ul>
-          <button
-            onClick={() => openAuth('signup')}
-            className="inline-flex items-center gap-1.5 text-sm font-bold text-indigo-600 hover:text-indigo-700 transition-colors"
-          >
-            Start teaching <ArrowRight className="w-4 h-4" />
-          </button>
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+            <div>
+              <p className="text-sm font-bold text-brand-600 uppercase tracking-wide mb-2">For instructors</p>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-ink-900 mb-4">
+                Teach what you know
+              </h2>
+              <p className="text-ink-500 leading-relaxed mb-6 max-w-xl">
+                Create courses and reach learners. The platform handles quizzes, progress tracking, and certificates for you.
+              </p>
+              <ul className="space-y-2 mb-8">
+                {[
+                  'Upload video lessons and written content',
+                  'Automatic quizzes and certificates',
+                  'Enrolment and completion analytics',
+                  'Free to publish',
+                ].map((item, i) => (
+                  <li key={i} className="flex items-center gap-2.5 text-sm text-ink-700">
+                    <span className="w-1.5 h-1.5 rounded-full bg-brand-500 flex-shrink-0" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <button
+                onClick={() => openAuth('signup')}
+                className="inline-flex items-center gap-1.5 text-sm font-bold text-indigo-600 hover:text-indigo-700 transition-colors"
+              >
+                Start teaching <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+
+            <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+              {featuredCourse && <InstructorPreview course={featuredCourse} />}
+            </motion.div>
+          </div>
         </div>
       </section>
 
