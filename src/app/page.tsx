@@ -6,6 +6,7 @@ import {
 import { courses } from '@/lib/mock-data';
 import { getCategoryTheme } from '@/lib/category-theme';
 import AuthButton from '@/components/AuthButton';
+import SignedOutOnly from '@/components/SignedOutOnly';
 import Reveal from '@/components/Reveal';
 import CourseExperiencePreview from '@/components/CourseExperiencePreview';
 import CertificatePreview from '@/components/CertificatePreview';
@@ -73,12 +74,14 @@ export default function HomePage() {
             </Reveal>
           </div>
 
-          <p className="text-center mt-6 text-sm text-ink-400">
-            Already have an account?{' '}
-            <AuthButton mode="signin" className="font-bold text-indigo-600 hover:text-indigo-700 underline underline-offset-2">
-              Log in
-            </AuthButton>
-          </p>
+          <SignedOutOnly>
+            <p className="text-center mt-6 text-sm text-ink-400">
+              Already have an account?{' '}
+              <AuthButton mode="signin" className="font-bold text-indigo-600 hover:text-indigo-700 underline underline-offset-2">
+                Log in
+              </AuthButton>
+            </p>
+          </SignedOutOnly>
         </div>
       </section>
 
