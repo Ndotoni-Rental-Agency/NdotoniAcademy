@@ -54,7 +54,8 @@ export default function CreateOrganizationPage() {
       await refetch();
       router.push('/dashboard/team');
     } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
+      console.error('[create-organization] createOrganization failed ->', err);
+      const message = err instanceof Error ? err.message : JSON.stringify(err);
       // Slugs double as the organization's id — a collision is the one
       // failure mode worth explaining specifically rather than showing the
       // raw backend message.

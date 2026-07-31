@@ -52,7 +52,8 @@ export default function OrganizationSignupWizard() {
       savePendingOrganization({ name: orgName, type: orgType });
       setOrgStep('check-email');
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      console.error('[org-signup] signUp failed ->', err);
+      setError(err instanceof Error ? err.message : JSON.stringify(err));
     } finally {
       setSubmitting(false);
     }
