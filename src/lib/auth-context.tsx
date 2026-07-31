@@ -31,10 +31,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       // Throws if there's no signed-in session — cheaper than a failed
       // GraphQL call for the common "signed out" case.
-      await getCurrentUser();
+      const currentUser = await getCurrentUser();
+      console.log('[auth] getCurrentUser() ->', currentUser);
       const data = await GraphQLClient.execute<MeQuery>(me);
+      console.log('[auth] me query ->', data);
       setUser(data.me ?? null);
-    } catch {
+    } catch (err) {
+      console.error('[auth] fetchUser failed ->', err);
       setUser(null);
     } finally {
       setLoading(false);
