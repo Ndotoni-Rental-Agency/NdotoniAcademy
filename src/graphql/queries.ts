@@ -63,6 +63,10 @@ export const invitationsForOrganization = /* GraphQL */ `query InvitationsForOrg
   APITypes.InvitationsForOrganizationQueryVariables,
   APITypes.InvitationsForOrganizationQuery
 >;
+// Trimmed by hand — see the comment on createOrganization in mutations.ts
+// for why: organizations[].organization stays flat (no nested .members),
+// and organizations[].user is dropped entirely — nothing in the app reads
+// either, and the backend's resolver doesn't populate that deep anyway.
 export const me = /* GraphQL */ `query Me {
   me {
     avatarUrl
@@ -77,16 +81,6 @@ export const me = /* GraphQL */ `query Me {
       organization {
         createdAt
         id
-        members {
-          id
-          joinedAt
-          organizationId
-          permissions
-          role
-          status
-          userId
-          __typename
-        }
         name
         slug
         status
@@ -97,27 +91,6 @@ export const me = /* GraphQL */ `query Me {
       permissions
       role
       status
-      user {
-        avatarUrl
-        createdAt
-        email
-        firstName
-        id
-        lastName
-        organizations {
-          id
-          joinedAt
-          organizationId
-          permissions
-          role
-          status
-          userId
-          __typename
-        }
-        status
-        updatedAt
-        __typename
-      }
       userId
       __typename
     }
@@ -127,6 +100,10 @@ export const me = /* GraphQL */ `query Me {
   }
 }
 ` as GeneratedQuery<APITypes.MeQueryVariables, APITypes.MeQuery>;
+// Trimmed by hand — see the comment on createOrganization in mutations.ts
+// for why: Amplify codegen expands Organization's cyclic reference to
+// members[].organization/.user out to maxDepth, which this backend's
+// hand-constructed resolver responses can't (and don't need to) populate.
 export const organization = /* GraphQL */ `query Organization($id: ID!) {
   organization(id: $id) {
     createdAt
@@ -134,50 +111,10 @@ export const organization = /* GraphQL */ `query Organization($id: ID!) {
     members {
       id
       joinedAt
-      organization {
-        createdAt
-        id
-        members {
-          id
-          joinedAt
-          organizationId
-          permissions
-          role
-          status
-          userId
-          __typename
-        }
-        name
-        slug
-        status
-        type
-        __typename
-      }
       organizationId
       permissions
       role
       status
-      user {
-        avatarUrl
-        createdAt
-        email
-        firstName
-        id
-        lastName
-        organizations {
-          id
-          joinedAt
-          organizationId
-          permissions
-          role
-          status
-          userId
-          __typename
-        }
-        status
-        updatedAt
-        __typename
-      }
       userId
       __typename
     }
@@ -199,50 +136,10 @@ export const organizationBySlug = /* GraphQL */ `query OrganizationBySlug($slug:
     members {
       id
       joinedAt
-      organization {
-        createdAt
-        id
-        members {
-          id
-          joinedAt
-          organizationId
-          permissions
-          role
-          status
-          userId
-          __typename
-        }
-        name
-        slug
-        status
-        type
-        __typename
-      }
       organizationId
       permissions
       role
       status
-      user {
-        avatarUrl
-        createdAt
-        email
-        firstName
-        id
-        lastName
-        organizations {
-          id
-          joinedAt
-          organizationId
-          permissions
-          role
-          status
-          userId
-          __typename
-        }
-        status
-        updatedAt
-        __typename
-      }
       userId
       __typename
     }

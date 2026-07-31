@@ -7,13 +7,11 @@ import { useAuth, defaultDashboardPath } from '@/lib/auth-context';
 
 export default function AuthButton({
   mode,
-  accountType,
   next,
   className,
   children,
 }: {
   mode: 'signin' | 'signup';
-  accountType?: 'individual' | 'organization';
   /** Where to send a sign-in success — see AuthModal's `next` prop doc for what makes a safe value here. */
   next?: string;
   className?: string;
@@ -38,7 +36,7 @@ export default function AuthButton({
       <button type="button" onClick={handleClick} className={className}>
         {children}
       </button>
-      <AuthModal isOpen={open} onClose={() => setOpen(false)} initialMode={mode} accountType={accountType} next={next} />
+      <AuthModal isOpen={open} onClose={() => setOpen(false)} initialMode={mode} next={next} />
     </>
   );
 }

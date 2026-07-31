@@ -208,6 +208,14 @@ export const changeMemberRole = /* GraphQL */ `mutation ChangeMemberRole(
   APITypes.ChangeMemberRoleMutationVariables,
   APITypes.ChangeMemberRoleMutation
 >;
+// Trimmed by hand from Amplify codegen's default output, which expands
+// Organization <-> OrganizationMembership's cyclic reference out to
+// maxDepth (4) — members[].organization and members[].user included their
+// own full nested sub-graphs. The backend's Lambda resolvers hand-construct
+// their JSON response rather than doing per-field lazy resolution, so they
+// can only populate what's actually requested; nothing here ever consumed
+// that deep data anyway (the caller just needs the mutation to succeed,
+// then refetches `me` separately). Keep this flat if regenerating.
 export const createOrganization = /* GraphQL */ `mutation CreateOrganization($input: CreateOrganizationInput!) {
   createOrganization(input: $input) {
     createdAt
@@ -215,50 +223,10 @@ export const createOrganization = /* GraphQL */ `mutation CreateOrganization($in
     members {
       id
       joinedAt
-      organization {
-        createdAt
-        id
-        members {
-          id
-          joinedAt
-          organizationId
-          permissions
-          role
-          status
-          userId
-          __typename
-        }
-        name
-        slug
-        status
-        type
-        __typename
-      }
       organizationId
       permissions
       role
       status
-      user {
-        avatarUrl
-        createdAt
-        email
-        firstName
-        id
-        lastName
-        organizations {
-          id
-          joinedAt
-          organizationId
-          permissions
-          role
-          status
-          userId
-          __typename
-        }
-        status
-        updatedAt
-        __typename
-      }
       userId
       __typename
     }
@@ -346,6 +314,7 @@ export const revokeInvitation = /* GraphQL */ `mutation RevokeInvitation($email:
   APITypes.RevokeInvitationMutationVariables,
   APITypes.RevokeInvitationMutation
 >;
+// Trimmed by hand — see the comment on createOrganization above for why.
 export const updateProfile = /* GraphQL */ `mutation UpdateProfile($input: UpdateUserProfileInput!) {
   updateProfile(input: $input) {
     avatarUrl
@@ -360,16 +329,6 @@ export const updateProfile = /* GraphQL */ `mutation UpdateProfile($input: Updat
       organization {
         createdAt
         id
-        members {
-          id
-          joinedAt
-          organizationId
-          permissions
-          role
-          status
-          userId
-          __typename
-        }
         name
         slug
         status
@@ -380,27 +339,6 @@ export const updateProfile = /* GraphQL */ `mutation UpdateProfile($input: Updat
       permissions
       role
       status
-      user {
-        avatarUrl
-        createdAt
-        email
-        firstName
-        id
-        lastName
-        organizations {
-          id
-          joinedAt
-          organizationId
-          permissions
-          role
-          status
-          userId
-          __typename
-        }
-        status
-        updatedAt
-        __typename
-      }
       userId
       __typename
     }

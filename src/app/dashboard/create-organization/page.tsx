@@ -1,18 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Building2, Loader2, XCircle } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { GraphQLClient } from '@/lib/graphql-client';
 import { createOrganization } from '@/graphql/mutations';
 import { OrganizationType, type CreateOrganizationMutation, type CreateOrganizationMutationVariables } from '@/API';
-import { readPendingOrganization, clearPendingOrganization } from '@/lib/pending-organization';
 import { inputClass, orgTypes } from '@/components/auth/shared';
-
-function isOrganizationType(value: string): value is OrganizationType {
-  return (Object.values(OrganizationType) as string[]).includes(value);
-}
 
 function slugify(name: string): string {
   return name
@@ -23,18 +18,23 @@ function slugify(name: string): string {
 }
 
 export default function CreateOrganizationPage() {
-  const { refetch } = useAuth();
+  const { user, refetch } = useAuth();
   const router = useRouter();
+  const hasOrg = Boolean(user?.organizations[0]?.organization);
 
-  // Pre-fill from what they entered in OrganizationSignupWizard's step 1, if
-  // they're arriving here fresh from confirming that account's email.
-  const [name, setName] = useState(() => readPendingOrganization()?.name ?? '');
-  const [type, setType] = useState<OrganizationType>(() => {
-    const pendingType = readPendingOrganization()?.type;
-    return pendingType && isOrganizationType(pendingType) ? pendingType : OrganizationType.COMPANY;
-  });
+  // One organization per account — the backend rejects this too, but
+  // redirecting someone who already has one away from the form entirely is
+  // a better experience than letting them fill it out just to hit an error.
+  useEffect(() => {
+    if (hasOrg) router.replace('/dashboard/team');
+  }, [hasOrg, router]);
+
+  const [name, setName] = useState('');
+  const [type, setType] = useState<OrganizationType>(OrganizationType.COMPANY);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+
+  if (!user || hasOrg) return null;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -50,7 +50,6 @@ export default function CreateOrganizationPage() {
       await GraphQLClient.execute<CreateOrganizationMutation>(createOrganization, {
         input: { name: name.trim(), slug, type },
       } satisfies CreateOrganizationMutationVariables);
-      clearPendingOrganization();
       await refetch();
       router.push('/dashboard/team');
     } catch (err) {

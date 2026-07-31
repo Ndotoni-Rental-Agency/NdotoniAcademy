@@ -33,7 +33,16 @@ export default function OrganizationCTAButton({ className }: { className?: strin
       <button type="button" onClick={handleClick} className={className}>
         {user && hasOrg ? 'Manage organization' : 'Create your organization'} <ArrowRight className="w-4 h-4" />
       </button>
-      <AuthModal isOpen={open} onClose={() => setOpen(false)} initialMode="signup" accountType="organization" />
+      {/*
+        Signup here is always the regular individual flow now — accounts get
+        created first, then converted into an organization owner from
+        /dashboard/create-organization, never the other way around. `next`
+        only matters for the sign-in branch (an existing account choosing
+        "Sign in" instead of signing up fresh) — signup itself can't reach
+        `next` at all, since Cognito requires confirming the new account
+        before any session exists to redirect with.
+      */}
+      <AuthModal isOpen={open} onClose={() => setOpen(false)} initialMode="signup" next="/dashboard/create-organization" />
     </>
   );
 }
