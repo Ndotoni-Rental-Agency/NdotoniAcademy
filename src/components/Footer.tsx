@@ -39,7 +39,7 @@ export default function Footer() {
             <ul className="space-y-2 text-sm">
               <li><Link href="/about" className="text-ink-500 hover:text-indigo-600 transition-colors">About</Link></li>
               <li><Link href="/organizations" className="text-ink-500 hover:text-indigo-600 transition-colors">For Organizations</Link></li>
-              <li><Link href="/login?mode=signup" className="text-ink-500 hover:text-indigo-600 transition-colors">Teach on Ndotoni</Link></li>
+              <li><Link href="/instructors" className="text-ink-500 hover:text-indigo-600 transition-colors">For Instructors</Link></li>
             </ul>
           </div>
 
