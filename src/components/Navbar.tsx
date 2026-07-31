@@ -19,9 +19,13 @@ export default function Navbar() {
   const { user, signOut } = useAuth();
 
   async function handleSignOut() {
-    await signOut();
+    // Navigate away first, then clear auth state — otherwise, if this fires
+    // while a /dashboard/* page is still mounted, its guard effect can see
+    // user go null before this push lands and bounce to /login instead
+    // (which renders this same modal), rather than landing on home.
     setMobileOpen(false);
     router.push('/');
+    await signOut();
   }
 
   const navLinks = [

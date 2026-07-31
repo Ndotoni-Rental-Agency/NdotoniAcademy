@@ -52,8 +52,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [loading, user, router, pathname]);
 
   async function handleSignOut() {
-    await signOut();
+    // Navigate first, then clear auth state — this component's own guard
+    // effect above reacts to `user` going null, so clearing it before we've
+    // started leaving /dashboard would redirect to /login instead of home.
     router.push('/');
+    await signOut();
   }
 
   if (loading || !user) {

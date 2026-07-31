@@ -42,8 +42,11 @@ export default function SettingsPage() {
   }
 
   async function handleSignOut() {
-    await signOut();
+    // Navigate first, then clear auth state — DashboardLayout's own guard
+    // effect reacts to `user` going null, so clearing it before we've
+    // started leaving /dashboard would redirect to /login instead of home.
     router.push('/');
+    await signOut();
   }
 
   return (

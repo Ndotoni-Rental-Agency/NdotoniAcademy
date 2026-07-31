@@ -6,6 +6,7 @@ import { signIn, signUp, resetPassword } from 'aws-amplify/auth';
 import SocialLoginButtons from './SocialLoginButtons';
 import { inputClass } from './shared';
 import { configureAmplify } from '@/lib/amplify';
+import { useAuth } from '@/lib/auth-context';
 
 type Step = 'form' | 'submitting' | 'check-email' | 'reset-sent';
 
@@ -26,6 +27,7 @@ export default function IndividualAuthForm({
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [step, setStep] = useState<Step>('form');
   const [error, setError] = useState('');
+  const { refetch } = useAuth();
 
   // Switching between sign in / sign up shouldn't carry a stale error or a
   // "check your email" screen from a previous attempt into the new mode.
@@ -64,6 +66,11 @@ export default function IndividualAuthForm({
       } else {
         const { isSignedIn } = await signIn({ username: email, password });
         if (isSignedIn) {
+          // Wait for AuthContext to actually pick up the new session before
+          // navigating — otherwise DashboardLayout's guard runs with the
+          // still-stale "signed out" state and bounces straight back to
+          // /login, which looks like this same modal popping up again.
+          await refetch();
           onSuccess();
         } else {
           // MFA / additional challenges aren't wired up yet.
