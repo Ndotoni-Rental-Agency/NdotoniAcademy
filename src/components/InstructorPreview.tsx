@@ -2,9 +2,7 @@ import { Star, Users, TrendingUp, Plus, Wallet } from 'lucide-react';
 import { getCategoryTheme } from '@/lib/category-theme';
 import Avatar from './Avatar';
 import type { Course } from '@/lib/mock-data';
-
-const HYPOTHETICAL_PRICE_TZS = 15000;
-const INSTRUCTOR_SHARE = 0.8;
+import { HYPOTHETICAL_PRICE_TZS, INSTRUCTOR_SHARE } from '@/lib/instructor-pricing';
 
 export default function InstructorPreview({ course }: { course: Course }) {
   const theme = getCategoryTheme(course.category);

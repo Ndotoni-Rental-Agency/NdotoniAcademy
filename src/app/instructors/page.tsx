@@ -1,11 +1,10 @@
 import type { Metadata } from 'next';
-import {
-  ArrowRight, Video, Layers, FileText, HelpCircle, MessageSquare,
-  DollarSign, PiggyBank, CalendarClock,
-} from 'lucide-react';
+import { ArrowRight, Video, Layers, FileText, HelpCircle, DollarSign } from 'lucide-react';
 import AuthButton from '@/components/AuthButton';
 import Reveal from '@/components/Reveal';
 import InstructorPreview from '@/components/InstructorPreview';
+import PayoutPreview from '@/components/PayoutPreview';
+import LessonBuilderPreview from '@/components/LessonBuilderPreview';
 import { courses } from '@/lib/mock-data';
 
 export const metadata: Metadata = {
@@ -14,52 +13,6 @@ export const metadata: Metadata = {
 };
 
 const featuredCourse = courses.find((c) => c.id === 'project-management')!;
-
-const payoutStats = [
-  {
-    icon: DollarSign,
-    title: 'Set your own price',
-    desc: 'Module 1 is always free to try. You set the price for the full course.',
-  },
-  {
-    icon: PiggyBank,
-    title: 'Keep the majority',
-    desc: 'You keep the largest share of every enrollment. No hidden platform fees.',
-  },
-  {
-    icon: CalendarClock,
-    title: 'Paid out monthly',
-    desc: 'Earnings are tallied automatically and paid out to you every month.',
-  },
-];
-
-const lessonFormats = [
-  {
-    icon: Video,
-    title: 'Video lessons',
-    tip: 'Ten minutes beats sixty. Record one focused idea per video.',
-  },
-  {
-    icon: Layers,
-    title: 'Flashcards',
-    tip: 'Best for vocabulary, definitions, and quick recall drills between lessons.',
-  },
-  {
-    icon: FileText,
-    title: 'Written guides',
-    tip: 'Walk through a real example. Theory alone rarely sticks.',
-  },
-  {
-    icon: HelpCircle,
-    title: 'Quizzes',
-    tip: 'Test what learners just watched or read, while it is still fresh.',
-  },
-  {
-    icon: MessageSquare,
-    title: 'Feedback',
-    tip: 'Leave a note on a learner’s quiz attempt when they need a nudge.',
-  },
-];
 
 export default function InstructorsPage() {
   return (
@@ -107,20 +60,19 @@ export default function InstructorsPage() {
       {/* How you get paid */}
       <section className="border-t border-ink-100 bg-brand-50/40 py-14 sm:py-20">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-ink-900">How you get paid</h2>
-            <p className="text-ink-500 mt-2">Straightforward, and entirely automatic.</p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            {payoutStats.map((item, i) => (
-              <Reveal key={item.title} y={12} delay={i * 0.08} className="bg-white rounded-2xl border-2 border-ink-100 p-6 text-center">
-                <div className="w-11 h-11 rounded-xl bg-brand-100 text-brand-700 flex items-center justify-center mx-auto mb-3">
-                  <item.icon className="w-5 h-5" />
-                </div>
-                <h3 className="font-bold text-ink-900 mb-1">{item.title}</h3>
-                <p className="text-sm text-ink-500 leading-relaxed">{item.desc}</p>
-              </Reveal>
-            ))}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+            <Reveal y={12}>
+              <p className="text-sm font-bold text-brand-600 uppercase tracking-wide mb-3">Straightforward, automatic</p>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-ink-900 mb-4 leading-tight">
+                How you get paid
+              </h2>
+              <p className="text-ink-500 leading-relaxed max-w-md">
+                Set your own price for the full course. Module 1 stays free so learners can try before they buy. You keep the majority of every enrollment, and it lands in your account automatically every month, no invoices to chase.
+              </p>
+            </Reveal>
+            <Reveal y={12} delay={0.1}>
+              <PayoutPreview />
+            </Reveal>
           </div>
         </div>
       </section>
@@ -128,20 +80,31 @@ export default function InstructorsPage() {
       {/* Lesson formats and tools */}
       <section className="py-14 sm:py-20">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-ink-900">Every lesson format, one toolkit</h2>
-            <p className="text-ink-500 mt-2">Mix and match to fit what you are teaching.</p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {lessonFormats.map((item, i) => (
-              <Reveal key={item.title} y={12} delay={i * 0.06} className="rounded-2xl border-2 border-ink-100 p-5 hover:border-brand-200 hover:shadow-sm transition-all">
-                <div className="w-10 h-10 rounded-xl bg-brand-50 text-brand-700 flex items-center justify-center mb-3">
-                  <item.icon className="w-5 h-5" />
-                </div>
-                <h3 className="font-bold text-ink-900 mb-1">{item.title}</h3>
-                <p className="text-sm text-ink-500 leading-relaxed">{item.tip}</p>
-              </Reveal>
-            ))}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+            <Reveal y={12} delay={0.1} className="order-first lg:order-last">
+              <LessonBuilderPreview />
+            </Reveal>
+            <Reveal y={12}>
+              <p className="text-sm font-bold text-brand-600 uppercase tracking-wide mb-3">Mix and match</p>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-ink-900 mb-4 leading-tight">
+                Every lesson format, one toolkit
+              </h2>
+              <p className="text-ink-500 leading-relaxed max-w-md mb-5">
+                Build each module out of whatever teaches it best: a short video, a flashcard set for terms learners need to memorize, a written walkthrough, or a quiz. Leave feedback directly on a learner&apos;s quiz attempt when they need a nudge in the right direction.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { icon: Video, label: 'Video' },
+                  { icon: Layers, label: 'Flashcards' },
+                  { icon: FileText, label: 'Written guides' },
+                  { icon: HelpCircle, label: 'Quizzes' },
+                ].map((item) => (
+                  <span key={item.label} className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 text-brand-700 text-xs font-bold px-3 py-1.5">
+                    <item.icon className="w-3.5 h-3.5" /> {item.label}
+                  </span>
+                ))}
+              </div>
+            </Reveal>
           </div>
         </div>
       </section>

@@ -1,0 +1,2 @@
+export const HYPOTHETICAL_PRICE_TZS = 15000;
+export const INSTRUCTOR_SHARE = 0.8;
