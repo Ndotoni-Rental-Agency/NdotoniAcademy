@@ -3,13 +3,14 @@
 import Link from 'next/link';
 import { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, BookOpen, Award, Settings, LogOut, Users, Loader2 } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Award, Settings, LogOut, Users, Building2, Loader2 } from 'lucide-react';
 import { useAuth, displayName } from '@/lib/auth-context';
 
 const individualNavItems = [
   { label: 'Overview', href: '/dashboard', icon: LayoutDashboard },
   { label: 'Courses', href: '/dashboard/courses', icon: BookOpen },
   { label: 'Certificates', href: '/dashboard/certificates', icon: Award },
+  { label: 'Create organization', href: '/dashboard/create-organization', icon: Building2 },
 ];
 
 const organizationNavItems = [

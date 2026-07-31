@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import { ArrowRight, Mail, BookOpen, BarChart3 } from 'lucide-react';
-import AuthButton from '@/components/AuthButton';
+import { Mail, BookOpen, BarChart3 } from 'lucide-react';
+import OrganizationCTAButton from '@/components/OrganizationCTAButton';
 import Reveal from '@/components/Reveal';
 import OrgPreviewPanel from '@/components/OrgPreviewPanel';
 import TeamProgressPreview from '@/components/TeamProgressPreview';
@@ -34,13 +34,7 @@ export default function OrganizationsPage() {
               <p className="text-base sm:text-lg text-ink-500 leading-relaxed mb-6 max-w-md">
                 Invite employees, assign courses, and see exactly who&apos;s finished what, all from one dashboard.
               </p>
-              <AuthButton
-                mode="signup"
-                accountType="organization"
-                className="inline-flex items-center gap-2 rounded-full bg-indigo-600 px-7 py-3.5 text-sm font-bold text-white hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-600/20 mb-8"
-              >
-                Create your organization <ArrowRight className="w-4 h-4" />
-              </AuthButton>
+              <OrganizationCTAButton className="inline-flex items-center gap-2 rounded-full bg-indigo-600 px-7 py-3.5 text-sm font-bold text-white hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-600/20 mb-8" />
 
               <div className="flex flex-wrap gap-2">
                 {[
@@ -209,13 +203,7 @@ export default function OrganizationsPage() {
       <section className="border-t border-ink-100 py-14 sm:py-16">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-2xl font-extrabold text-ink-900 mb-5">Bring your team to Ndotoni Academy</h2>
-          <AuthButton
-            mode="signup"
-            accountType="organization"
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-indigo-600 px-8 py-3.5 text-sm font-bold text-white hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-600/20"
-          >
-            Create your organization <ArrowRight className="w-4 h-4" />
-          </AuthButton>
+          <OrganizationCTAButton className="inline-flex items-center justify-center gap-2 rounded-full bg-indigo-600 px-8 py-3.5 text-sm font-bold text-white hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-600/20" />
         </div>
       </section>
     </main>
