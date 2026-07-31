@@ -6,7 +6,7 @@ import { signIn, signUp, resetPassword } from 'aws-amplify/auth';
 import SocialLoginButtons from './SocialLoginButtons';
 import { inputClass } from './shared';
 import { configureAmplify } from '@/lib/amplify';
-import { useAuth } from '@/lib/auth-context';
+import { useAuth, type AuthUser } from '@/lib/auth-context';
 
 type Step = 'form' | 'submitting' | 'check-email' | 'reset-sent';
 
@@ -17,7 +17,7 @@ export default function IndividualAuthForm({
 }: {
   mode: 'signin' | 'signup';
   onSwitchMode: () => void;
-  onSuccess: () => void;
+  onSuccess: (user: AuthUser | null) => void;
 }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -70,8 +70,12 @@ export default function IndividualAuthForm({
           // navigating — otherwise DashboardLayout's guard runs with the
           // still-stale "signed out" state and bounces straight back to
           // /login, which looks like this same modal popping up again.
-          await refetch();
-          onSuccess();
+          // Pass the fresh user straight through rather than relying on
+          // useAuth() elsewhere — other consumers won't see this update
+          // until their next render, which is too late for AuthModal's
+          // redirect decision right below.
+          const freshUser = await refetch();
+          onSuccess(freshUser);
         } else {
           // MFA / additional challenges aren't wired up yet.
           setStep('form');

@@ -5,15 +5,27 @@ import { useRouter } from 'next/navigation';
 import { X, User, Building2 } from 'lucide-react';
 import IndividualAuthForm from './auth/IndividualAuthForm';
 import OrganizationSignupWizard from './auth/OrganizationSignupWizard';
+import { defaultDashboardPath, type AuthUser } from '@/lib/auth-context';
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialMode?: 'signin' | 'signup';
   accountType?: 'individual' | 'organization';
+  /**
+   * Where to land after a *sign-in* success (not a fresh org signup — that
+   * always goes to /dashboard/team, since completing the wizard inherently
+   * means "you just made/joined an org" regardless of which page's CTA
+   * started the flow). Only pass this for a destination that renders
+   * something sensible for any user, signed-in-with-no-org included —
+   * /dashboard/team blanks out for an org-less user, /dashboard/courses
+   * doesn't, which is why the instructors page uses this and the
+   * organizations page doesn't.
+   */
+  next?: string;
 }
 
-export default function AuthModal({ isOpen, onClose, initialMode = 'signin', accountType = 'individual' }: AuthModalProps) {
+export default function AuthModal({ isOpen, onClose, initialMode = 'signin', accountType = 'individual', next }: AuthModalProps) {
   const router = useRouter();
   const [mode, setMode] = useState<'signin' | 'signup'>(initialMode);
   const [signupType, setSignupType] = useState<'individual' | 'organization'>(accountType);
@@ -35,9 +47,9 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin', acc
 
   if (!isOpen) return null;
 
-  function handleIndividualSuccess() {
+  function handleIndividualSuccess(user: AuthUser | null) {
     onClose();
-    router.push('/dashboard');
+    router.push(next ?? defaultDashboardPath(user));
   }
 
   function handleOrgComplete() {

@@ -31,6 +31,7 @@ export default function InstructorsPage() {
               </p>
               <AuthButton
                 mode="signup"
+                next="/dashboard/courses"
                 className="inline-flex items-center gap-2 rounded-full bg-indigo-600 px-7 py-3.5 text-sm font-bold text-white hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-600/20 mb-8"
               >
                 Start teaching <ArrowRight className="w-4 h-4" />
@@ -115,6 +116,7 @@ export default function InstructorsPage() {
           <h2 className="text-2xl font-extrabold text-ink-900 mb-5">Ready to teach on Ndotoni Academy?</h2>
           <AuthButton
             mode="signup"
+            next="/dashboard/courses"
             className="inline-flex items-center justify-center gap-2 rounded-full bg-indigo-600 px-8 py-3.5 text-sm font-bold text-white hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-600/20"
           >
             Start teaching <ArrowRight className="w-4 h-4" />

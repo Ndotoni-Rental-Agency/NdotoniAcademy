@@ -15,8 +15,14 @@ interface AuthContextValue {
   user: AuthUser | null;
   /** True until the first session check + `me` fetch settles. */
   loading: boolean;
-  /** Re-run the session check and re-fetch `me` — call after a profile edit. */
-  refetch: () => Promise<void>;
+  /**
+   * Re-run the session check and re-fetch `me`, returning the fresh value
+   * directly — call after a profile edit, or right after sign-in when a
+   * caller needs the just-fetched user synchronously (context consumers
+   * elsewhere won't see the update until their next render, which is too
+   * late if you're about to redirect based on it).
+   */
+  refetch: () => Promise<AuthUser | null>;
   signOut: () => Promise<void>;
 }
 
@@ -26,7 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchUser = useCallback(async () => {
+  const fetchUser = useCallback(async (): Promise<AuthUser | null> => {
     configureAmplify();
     try {
       // Throws if there's no signed-in session — cheaper than a failed
@@ -35,10 +41,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('[auth] getCurrentUser() ->', currentUser);
       const data = await GraphQLClient.execute<MeQuery>(me);
       console.log('[auth] me query ->', data);
-      setUser(data.me ?? null);
+      const nextUser = data.me ?? null;
+      setUser(nextUser);
+      return nextUser;
     } catch (err) {
       console.error('[auth] fetchUser failed ->', err);
       setUser(null);
+      return null;
     } finally {
       setLoading(false);
     }
@@ -95,4 +104,18 @@ export function displayName(user: Pick<AuthUser, 'firstName' | 'lastName' | 'ema
   if (!user) return '';
   const name = [user.firstName, user.lastName].filter(Boolean).join(' ').trim();
   return name || user.email;
+}
+
+/**
+ * Where a signed-in user should land when no more specific destination
+ * (an explicit `next`) applies — based on their real organization
+ * memberships, not a one-size-fits-all /dashboard. A user can belong to
+ * several organizations; this just takes the first one, since there's no
+ * org switcher yet to pick among them.
+ */
+export function defaultDashboardPath(user: AuthUser | null): string {
+  const memberships = user?.organizations ?? [];
+  if (memberships.some((m) => m.role === 'OWNER' || m.role === 'ADMIN')) return '/dashboard/team';
+  if (memberships.some((m) => m.role === 'INSTRUCTOR')) return '/dashboard/courses';
+  return '/dashboard';
 }
