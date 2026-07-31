@@ -7,7 +7,7 @@ import { mockUser } from '@/lib/mock-data';
 
 const individualNavItems = [
   { label: 'Overview', href: '/dashboard', icon: LayoutDashboard },
-  { label: 'My Courses', href: '/dashboard/courses', icon: BookOpen },
+  { label: 'Courses', href: '/dashboard/courses', icon: BookOpen },
   { label: 'Certificates', href: '/dashboard/certificates', icon: Award },
 ];
 
@@ -16,6 +16,10 @@ const organizationNavItems = [
   { label: 'Courses', href: '/dashboard/courses', icon: BookOpen },
   { label: 'Team', href: '/dashboard/team', icon: Users },
 ];
+
+function isNavItemActive(pathname: string, href: string) {
+  return pathname === href || (href !== '/dashboard' && pathname.startsWith(href + '/'));
+}
 
 function NavLink({ item, isActive, compact = false }: { item: { label: string; href: string; icon: typeof LayoutDashboard }; isActive: boolean; compact?: boolean }) {
   return (
@@ -60,7 +64,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {/* Nav */}
           <nav className="flex-1 px-2 py-2 space-y-0.5">
             {navItems.map((item) => (
-              <NavLink key={item.href} item={item} isActive={pathname === item.href} />
+              <NavLink key={item.href} item={item} isActive={isNavItemActive(pathname, item.href)} />
             ))}
           </nav>
 
@@ -83,7 +87,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="lg:hidden sticky top-0 z-30 bg-white border-b border-ink-200 px-4 py-2 overflow-x-auto no-scrollbar">
             <div className="flex gap-1 min-w-max">
               {[...navItems, { label: 'Settings', href: '/dashboard/settings', icon: Settings }].map((item) => (
-                <NavLink key={item.href} item={item} isActive={pathname === item.href} compact />
+                <NavLink key={item.href} item={item} isActive={isNavItemActive(pathname, item.href)} compact />
               ))}
             </div>
           </div>
