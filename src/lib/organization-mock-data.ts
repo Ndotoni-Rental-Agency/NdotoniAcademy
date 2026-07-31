@@ -41,8 +41,8 @@ export interface PendingInvitation {
 }
 
 export const mockOrganization: Organization = {
-  id: 'org-acme-logistics',
-  name: 'Acme Logistics Ltd',
+  id: 'org-ndotoni-academy',
+  name: 'Ndotoni Academy',
   type: 'COMPANY',
   memberCount: 5,
 };
@@ -61,7 +61,7 @@ export const mockTeamMembers: TeamMember[] = [
   {
     id: 'tm-2',
     name: 'Halima Ndosi',
-    email: 'halima.ndosi@acmelogistics.co.tz',
+    email: 'halima.ndosi@ndotoni.com',
     role: 'ADMIN',
     status: 'ACTIVE',
     joinedAt: '2026-04-10',
@@ -71,7 +71,7 @@ export const mockTeamMembers: TeamMember[] = [
   {
     id: 'tm-3',
     name: 'Brian Mollel',
-    email: 'brian.mollel@acmelogistics.co.tz',
+    email: 'brian.mollel@ndotoni.com',
     role: 'MEMBER',
     status: 'ACTIVE',
     joinedAt: '2026-05-01',
@@ -81,7 +81,7 @@ export const mockTeamMembers: TeamMember[] = [
   {
     id: 'tm-4',
     name: 'Faraja Sumari',
-    email: 'faraja.sumari@acmelogistics.co.tz',
+    email: 'faraja.sumari@ndotoni.com',
     role: 'MEMBER',
     status: 'ACTIVE',
     joinedAt: '2026-05-14',
@@ -91,7 +91,7 @@ export const mockTeamMembers: TeamMember[] = [
   {
     id: 'tm-5',
     name: 'Ibrahim Chuma',
-    email: 'ibrahim.chuma@acmelogistics.co.tz',
+    email: 'ibrahim.chuma@ndotoni.com',
     role: 'INSTRUCTOR',
     status: 'ACTIVE',
     joinedAt: '2026-06-02',
@@ -103,14 +103,14 @@ export const mockTeamMembers: TeamMember[] = [
 export const mockPendingInvitations: PendingInvitation[] = [
   {
     id: 'inv-1',
-    email: 'grace.mwanga@acmelogistics.co.tz',
+    email: 'grace.mwanga@ndotoni.com',
     role: 'MEMBER',
     invitedAt: '2026-07-24',
     status: 'PENDING',
   },
   {
     id: 'inv-2',
-    email: 'peter.laizer@acmelogistics.co.tz',
+    email: 'peter.laizer@ndotoni.com',
     role: 'ADMIN',
     invitedAt: '2026-07-27',
     status: 'PENDING',

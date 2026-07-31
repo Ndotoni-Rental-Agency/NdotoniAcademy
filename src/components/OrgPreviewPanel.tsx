@@ -30,6 +30,12 @@ export default function OrgPreviewPanel() {
           </span>
         </div>
 
+        <div className="flex items-center gap-3 text-xs text-ink-400 mb-4">
+          <span>{mockOrganization.memberCount} members</span>
+          <span className="w-1 h-1 rounded-full bg-ink-200" />
+          <span>{mockPendingInvitations.length} pending invites</span>
+        </div>
+
         <div className="space-y-2 mb-3">
           {members.map((m) => (
             <div key={m.id} className="flex items-center gap-3 py-1.5">

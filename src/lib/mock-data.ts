@@ -1201,8 +1201,8 @@ export const mockUser: UserProfile = {
     },
   ],
   organization: {
-    id: 'org-acme-logistics',
-    name: 'Acme Logistics Ltd',
+    id: 'org-ndotoni-academy',
+    name: 'Ndotoni Academy',
     role: 'OWNER',
   },
 };

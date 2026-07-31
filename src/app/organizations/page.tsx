@@ -110,8 +110,8 @@ export default function OrganizationsPage() {
             {[
               {
                 num: '1',
-                title: `Create ${mockOrganization.name}`,
-                desc: `Register as a ${mockOrganization.type.toLowerCase()} and you're the owner, with full control over settings, billing, and roles from day one.`,
+                title: 'Register your organization',
+                desc: `We'll use ${mockOrganization.name} as the example here. Register as a ${mockOrganization.type.toLowerCase()} and you're the owner, with full control over settings, billing, and roles from day one.`,
               },
               {
                 num: '2',

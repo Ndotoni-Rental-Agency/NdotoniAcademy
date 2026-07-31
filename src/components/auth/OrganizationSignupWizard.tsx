@@ -61,7 +61,7 @@ export default function OrganizationSignupWizard({ onComplete }: { onComplete: (
             <form onSubmit={(e) => { e.preventDefault(); setOrgStep(2); }} className="space-y-4">
               <div>
                 <label htmlFor="orgName" className="block text-sm font-semibold text-ink-700 mb-1.5">Organization name</label>
-                <input id="orgName" type="text" value={orgName} onChange={(e) => setOrgName(e.target.value)} placeholder="e.g. Acme Logistics Ltd" className={inputClass} required autoFocus />
+                <input id="orgName" type="text" value={orgName} onChange={(e) => setOrgName(e.target.value)} placeholder="e.g. Bahari Freight Ltd" className={inputClass} required autoFocus />
               </div>
               <div>
                 <label htmlFor="orgType" className="block text-sm font-semibold text-ink-700 mb-1.5">Organization type</label>
