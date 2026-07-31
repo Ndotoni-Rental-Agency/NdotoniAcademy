@@ -1,11 +1,15 @@
-import { Star, Users, TrendingUp, Plus } from 'lucide-react';
+import { Star, Users, TrendingUp, Plus, Wallet } from 'lucide-react';
 import { getCategoryTheme } from '@/lib/category-theme';
 import Avatar from './Avatar';
 import type { Course } from '@/lib/mock-data';
 
+const HYPOTHETICAL_PRICE_TZS = 15000;
+const INSTRUCTOR_SHARE = 0.8;
+
 export default function InstructorPreview({ course }: { course: Course }) {
   const theme = getCategoryTheme(course.category);
   const Icon = theme.icon;
+  const estimatedEarnings = Math.round(course.enrolledCount * HYPOTHETICAL_PRICE_TZS * INSTRUCTOR_SHARE);
 
   return (
     <div className="rounded-2xl border-2 border-ink-100 shadow-xl shadow-ink-900/5 overflow-hidden bg-white">
@@ -41,7 +45,7 @@ export default function InstructorPreview({ course }: { course: Course }) {
             <p className="text-sm font-bold text-ink-900 truncate">{course.title}</p>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             <div>
               <p className="flex items-center gap-1 text-[11px] text-ink-400 mb-0.5"><Users className="w-3 h-3" /> Enrolled</p>
               <p className="text-lg font-extrabold text-ink-900">{course.enrolledCount}</p>
@@ -54,8 +58,16 @@ export default function InstructorPreview({ course }: { course: Course }) {
               <p className="flex items-center gap-1 text-[11px] text-ink-400 mb-0.5"><Star className="w-3 h-3" /> Rating</p>
               <p className="text-lg font-extrabold text-ink-900">{course.rating}</p>
             </div>
+            <div>
+              <p className="flex items-center gap-1 text-[11px] text-ink-400 mb-0.5"><Wallet className="w-3 h-3" /> Est. earned</p>
+              <p className="text-lg font-extrabold text-brand-700">TZS {estimatedEarnings.toLocaleString()}</p>
+            </div>
           </div>
         </div>
+
+        <p className="text-[10px] text-ink-400 mt-3 text-center">
+          Estimate at TZS {HYPOTHETICAL_PRICE_TZS.toLocaleString()} per enrollment, {INSTRUCTOR_SHARE * 100}% instructor share
+        </p>
       </div>
     </div>
   );

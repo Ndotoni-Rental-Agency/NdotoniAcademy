@@ -1,33 +1,63 @@
 import type { Metadata } from 'next';
-import { ArrowRight, Video, HelpCircle, BarChart3, Gift } from 'lucide-react';
+import {
+  ArrowRight, Video, Layers, FileText, HelpCircle, MessageSquare,
+  DollarSign, PiggyBank, CalendarClock,
+} from 'lucide-react';
 import AuthButton from '@/components/AuthButton';
 import Reveal from '@/components/Reveal';
 import InstructorPreview from '@/components/InstructorPreview';
-import CertificatePreview from '@/components/CertificatePreview';
 import { courses } from '@/lib/mock-data';
 
 export const metadata: Metadata = {
   title: 'For Instructors',
-  description: 'Create courses and reach learners. The platform handles quizzes, progress tracking, and certificates for you. Free to publish.',
+  description: 'Teach what you know and get paid for it. Mix video, flashcards, written guides, and quizzes, then earn every time a learner enrolls.',
 };
 
 const featuredCourse = courses.find((c) => c.id === 'project-management')!;
 
-const steps = [
+const payoutStats = [
   {
-    num: '1',
-    title: 'Build your course',
-    desc: 'Add video lessons, written guides, and a quiz for every module. No design or development skills needed.',
+    icon: DollarSign,
+    title: 'Set your own price',
+    desc: 'Module 1 is always free to try. You set the price for the full course.',
   },
   {
-    num: '2',
-    title: 'Publish it',
-    desc: 'Free to list. Module 1 is always free for learners, so people can try your course before they commit.',
+    icon: PiggyBank,
+    title: 'Keep the majority',
+    desc: 'You keep the largest share of every enrollment. No hidden platform fees.',
   },
   {
-    num: '3',
-    title: 'Track results',
-    desc: 'Enrollment, completion rate, and ratings update live as learners work through your course.',
+    icon: CalendarClock,
+    title: 'Paid out monthly',
+    desc: 'Earnings are tallied automatically and paid out to you every month.',
+  },
+];
+
+const lessonFormats = [
+  {
+    icon: Video,
+    title: 'Video lessons',
+    tip: 'Ten minutes beats sixty. Record one focused idea per video.',
+  },
+  {
+    icon: Layers,
+    title: 'Flashcards',
+    tip: 'Best for vocabulary, definitions, and quick recall drills between lessons.',
+  },
+  {
+    icon: FileText,
+    title: 'Written guides',
+    tip: 'Walk through a real example. Theory alone rarely sticks.',
+  },
+  {
+    icon: HelpCircle,
+    title: 'Quizzes',
+    tip: 'Test what learners just watched or read, while it is still fresh.',
+  },
+  {
+    icon: MessageSquare,
+    title: 'Feedback',
+    tip: 'Leave a note on a learner’s quiz attempt when they need a nudge.',
   },
 ];
 
@@ -41,10 +71,10 @@ export default function InstructorsPage() {
             <Reveal y={16} mode="mount">
               <p className="text-sm font-bold text-brand-600 uppercase tracking-wide mb-3">For instructors</p>
               <h1 className="text-3xl sm:text-4xl lg:text-[2.75rem] font-extrabold text-ink-900 leading-[1.05] tracking-tight mb-4">
-                Teach what you know. Reach learners everywhere.
+                Teach what you know. Get paid for it.
               </h1>
               <p className="text-lg text-ink-500 leading-relaxed mb-6 max-w-md">
-                Create a course once. The platform handles quizzes, progress tracking, and certificates for you.
+                Build lessons your way, mix video, flashcards, and quizzes, then earn every time a learner enrolls.
               </p>
               <AuthButton
                 mode="signup"
@@ -56,9 +86,9 @@ export default function InstructorsPage() {
               <div className="flex flex-wrap gap-2">
                 {[
                   { icon: Video, label: 'Video lessons' },
-                  { icon: HelpCircle, label: 'Auto quizzes & certificates' },
-                  { icon: BarChart3, label: 'Live analytics' },
-                  { icon: Gift, label: 'Free to publish' },
+                  { icon: Layers, label: 'Flashcards' },
+                  { icon: HelpCircle, label: 'Auto-graded quizzes' },
+                  { icon: DollarSign, label: 'Get paid monthly' },
                 ].map((item) => (
                   <span key={item.label} className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 text-brand-700 text-xs font-bold px-3 py-1.5">
                     <item.icon className="w-3.5 h-3.5" /> {item.label}
@@ -74,52 +104,44 @@ export default function InstructorsPage() {
         </div>
       </section>
 
-      {/* How it works */}
-      <section className="border-t border-ink-100 bg-ink-50 py-14 sm:py-20">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-ink-900 text-center mb-12">From idea to published course</h2>
-          <div className="space-y-6">
-            {steps.map((item, i) => (
-              <Reveal
-                key={item.num}
-                x={-12}
-                delay={i * 0.1}
-                className="flex gap-4 items-start bg-white rounded-2xl border-2 border-ink-100 p-5"
-              >
-                <div className="w-9 h-9 rounded-full bg-indigo-600 text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
-                  {item.num}
+      {/* How you get paid */}
+      <section className="border-t border-ink-100 bg-brand-50/40 py-14 sm:py-20">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-ink-900">How you get paid</h2>
+            <p className="text-ink-500 mt-2">Straightforward, and entirely automatic.</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+            {payoutStats.map((item, i) => (
+              <Reveal key={item.title} y={12} delay={i * 0.08} className="bg-white rounded-2xl border-2 border-ink-100 p-6 text-center">
+                <div className="w-11 h-11 rounded-xl bg-brand-100 text-brand-700 flex items-center justify-center mx-auto mb-3">
+                  <item.icon className="w-5 h-5" />
                 </div>
-                <div>
-                  <h3 className="font-bold text-ink-900">{item.title}</h3>
-                  <p className="text-sm text-ink-500 mt-1">{item.desc}</p>
-                </div>
+                <h3 className="font-bold text-ink-900 mb-1">{item.title}</h3>
+                <p className="text-sm text-ink-500 leading-relaxed">{item.desc}</p>
               </Reveal>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Certificates carry your name */}
+      {/* Lesson formats and tools */}
       <section className="py-14 sm:py-20">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-            <Reveal y={12}>
-              <p className="text-sm font-bold text-brand-600 uppercase tracking-wide mb-3">Proof, with your name on it</p>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-ink-900 mb-4 leading-tight">
-                Every completion earns a certificate signed by you
-              </h2>
-              <p className="text-ink-500 leading-relaxed max-w-md">
-                When a learner finishes your course, they get a certificate with your name as instructor, their score, and a verifiable ID. It is proof of your teaching, not just theirs.
-              </p>
-            </Reveal>
-            <Reveal y={12} delay={0.1}>
-              <CertificatePreview
-                courseTitle={featuredCourse.title}
-                instructor={featuredCourse.instructor}
-                score={92}
-                points={featuredCourse.points}
-              />
-            </Reveal>
+          <div className="text-center mb-10">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-ink-900">Every lesson format, one toolkit</h2>
+            <p className="text-ink-500 mt-2">Mix and match to fit what you are teaching.</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {lessonFormats.map((item, i) => (
+              <Reveal key={item.title} y={12} delay={i * 0.06} className="rounded-2xl border-2 border-ink-100 p-5 hover:border-brand-200 hover:shadow-sm transition-all">
+                <div className="w-10 h-10 rounded-xl bg-brand-50 text-brand-700 flex items-center justify-center mb-3">
+                  <item.icon className="w-5 h-5" />
+                </div>
+                <h3 className="font-bold text-ink-900 mb-1">{item.title}</h3>
+                <p className="text-sm text-ink-500 leading-relaxed">{item.tip}</p>
+              </Reveal>
+            ))}
           </div>
         </div>
       </section>
