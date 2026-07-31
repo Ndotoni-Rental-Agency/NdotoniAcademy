@@ -1,4 +1,5 @@
 import { generateClient } from 'aws-amplify/api';
+import { fetchAuthSession } from 'aws-amplify/auth';
 import { configureAmplify } from '@/lib/amplify';
 
 // `any` is deliberate: generateClient()'s inferred return type recurses deep
@@ -25,13 +26,22 @@ function getClient() {
  * signed-in user. A call made while signed out fails with an auth error;
  * check `getCurrentUser()` first if that's a case you need to handle
  * gracefully (see src/app/invite/InviteClient.tsx for the pattern).
+ *
+ * Explicitly passes the ID token as `authToken` rather than relying on
+ * authMode: 'userPool''s default — Amplify always derives that default from
+ * the access token, which carries no profile claims (no email/given_name/
+ * family_name). The backend's ensureUser() needs `email` off the identity
+ * claims to materialize/look up the caller, so this has to be the ID token;
+ * AppSync's Cognito User Pools authorizer accepts either token type.
  */
 export class GraphQLClient {
   static async execute<T = unknown>(
     query: string,
     variables?: Record<string, unknown>
   ): Promise<T> {
-    const result = await getClient().graphql({ query, variables });
+    const session = await fetchAuthSession();
+    const authToken = session.tokens?.idToken?.toString();
+    const result = await getClient().graphql({ query, variables, authToken });
     if ('errors' in result && result.errors?.length) {
       throw new Error(result.errors[0].message);
     }
