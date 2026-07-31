@@ -80,7 +80,7 @@ export default function CoursesPageClient() {
                     Featured
                   </span>
                   <h2 className="text-2xl sm:text-3xl font-extrabold mb-3 leading-tight">{courses[0].title}</h2>
-                  <p className="text-indigo-100 mb-5 leading-relaxed">{courses[0].shortDescription}</p>
+                  <p className="text-indigo-100 mb-5 leading-relaxed line-clamp-2">{courses[0].shortDescription}</p>
                   <div className="flex flex-wrap gap-4 text-sm text-indigo-200 mb-6">
                     <span className="flex items-center gap-1.5"><BookOpen className="w-4 h-4" /> {courses[0].modules.length} modules</span>
                     <span className="flex items-center gap-1.5"><Clock className="w-4 h-4" /> {courses[0].duration}</span>

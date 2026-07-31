@@ -31,7 +31,7 @@ export default function OrganizationsPage() {
               <h1 className="text-3xl sm:text-4xl lg:text-[2.75rem] font-extrabold text-ink-900 leading-[1.05] tracking-tight mb-4">
                 Training that scales with your team.
               </h1>
-              <p className="text-lg text-ink-500 leading-relaxed mb-6 max-w-md">
+              <p className="text-base sm:text-lg text-ink-500 leading-relaxed mb-6 max-w-md">
                 Invite employees, assign courses, and see exactly who&apos;s finished what, all from one dashboard.
               </p>
               <AuthButton
@@ -44,9 +44,9 @@ export default function OrganizationsPage() {
 
               <div className="flex flex-wrap gap-2">
                 {[
-                  { icon: Mail, label: 'Email invites' },
-                  { icon: BookOpen, label: 'One-click assign' },
-                  { icon: BarChart3, label: 'Live progress' },
+                  { icon: Mail, label: 'Invites' },
+                  { icon: BookOpen, label: 'Assign' },
+                  { icon: BarChart3, label: 'Progress' },
                 ].map((item) => (
                   <span key={item.label} className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold px-3 py-1.5">
                     <item.icon className="w-3.5 h-3.5" /> {item.label}
@@ -92,7 +92,7 @@ export default function OrganizationsPage() {
                 Don&apos;t see what your team needs? Build it.
               </h2>
               <p className="text-ink-500 leading-relaxed max-w-md">
-                Your instructors can create courses specific to your organization, kept completely private. Or publish them to the public catalog and set a price, so any learner on Ndotoni Academy can take it too.
+                Your instructors can build courses private to your org, or publish them to the public catalog and set a price.
               </p>
             </Reveal>
             <Reveal y={12} delay={0.1}>
@@ -111,7 +111,7 @@ export default function OrganizationsPage() {
               {
                 num: '1',
                 title: 'Register your organization',
-                desc: `We'll use ${mockOrganization.name} as the example here. Register as a ${mockOrganization.type.toLowerCase()} and you're the owner, with full control over settings, billing, and roles from day one.`,
+                desc: `We'll use ${mockOrganization.name} as the example. Register as a ${mockOrganization.type.toLowerCase()} and you're the owner from day one.`,
               },
               {
                 num: '2',
@@ -156,7 +156,7 @@ export default function OrganizationsPage() {
                 See who&apos;s actually making progress
               </h2>
               <p className="text-ink-500 leading-relaxed max-w-md">
-                Assigning training is easy. Knowing whether it happened is the part that usually requires chasing people down. Every member&apos;s progress updates live, so you always know where the team stands without asking.
+                Assigning training is easy. Knowing whether it happened is the hard part. Every member&apos;s progress updates live, no chasing required.
               </p>
             </Reveal>
           </div>
@@ -173,7 +173,7 @@ export default function OrganizationsPage() {
                 Every completion earns a real certificate
               </h2>
               <p className="text-ink-500 leading-relaxed max-w-md">
-                When someone finishes a course, they get a certificate with their name, score, and a verifiable ID attached to it. Useful for your own training records, not just something to post online.
+                Every completion earns a certificate with their name, score, and a verifiable ID. Useful for your training records, not just something to post online.
               </p>
             </Reveal>
             <Reveal y={12} delay={0.1}>

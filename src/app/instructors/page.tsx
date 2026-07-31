@@ -26,7 +26,7 @@ export default function InstructorsPage() {
               <h1 className="text-3xl sm:text-4xl lg:text-[2.75rem] font-extrabold text-ink-900 leading-[1.05] tracking-tight mb-4">
                 Teach what you know. Get paid for it.
               </h1>
-              <p className="text-lg text-ink-500 leading-relaxed mb-6 max-w-md">
+              <p className="text-base sm:text-lg text-ink-500 leading-relaxed mb-6 max-w-md">
                 Build lessons your way, mix video, flashcards, and quizzes, then earn every time a learner enrolls.
               </p>
               <AuthButton
@@ -38,10 +38,10 @@ export default function InstructorsPage() {
 
               <div className="flex flex-wrap gap-2">
                 {[
-                  { icon: Video, label: 'Video lessons' },
+                  { icon: Video, label: 'Video' },
                   { icon: Layers, label: 'Flashcards' },
-                  { icon: HelpCircle, label: 'Auto-graded quizzes' },
-                  { icon: DollarSign, label: 'Get paid monthly' },
+                  { icon: HelpCircle, label: 'Quizzes' },
+                  { icon: DollarSign, label: 'Get paid' },
                 ].map((item) => (
                   <span key={item.label} className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 text-brand-700 text-xs font-bold px-3 py-1.5">
                     <item.icon className="w-3.5 h-3.5" /> {item.label}
@@ -67,7 +67,7 @@ export default function InstructorsPage() {
                 How you get paid
               </h2>
               <p className="text-ink-500 leading-relaxed max-w-md">
-                Set your own price for the full course. Module 1 stays free so learners can try before they buy. You keep the majority of every enrollment, and it lands in your account automatically every month, no invoices to chase.
+                Set your price. Keep the majority of every enrollment. Paid out automatically every month, no invoices to chase.
               </p>
             </Reveal>
             <Reveal y={12} delay={0.1}>
@@ -90,7 +90,7 @@ export default function InstructorsPage() {
                 Every lesson format, one toolkit
               </h2>
               <p className="text-ink-500 leading-relaxed max-w-md mb-5">
-                Build each module out of whatever teaches it best: a short video, a flashcard set for terms learners need to memorize, a written walkthrough, or a quiz. Leave feedback directly on a learner&apos;s quiz attempt when they need a nudge in the right direction.
+                Video, flashcards, a written guide, or a quiz. Mix whatever teaches it best, and leave feedback right where a learner needs it.
               </p>
               <div className="flex flex-wrap gap-2">
                 {[

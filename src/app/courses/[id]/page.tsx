@@ -92,7 +92,7 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
               </div>
 
               <h1 className="text-3xl sm:text-4xl lg:text-[3rem] font-extrabold leading-[1.05] tracking-tight mb-4">{course.title}</h1>
-              <p className="text-white/85 leading-relaxed mb-6 text-lg">{course.shortDescription}</p>
+              <p className="text-white/85 leading-relaxed mb-6 text-base sm:text-lg line-clamp-2 sm:line-clamp-none">{course.shortDescription}</p>
 
               {/* Highlights bar */}
               <div className="flex flex-wrap gap-3 text-sm text-white/90 mb-6">
