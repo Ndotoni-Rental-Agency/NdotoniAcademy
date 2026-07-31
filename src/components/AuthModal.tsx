@@ -52,11 +52,6 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin', acc
     router.push(next ?? defaultDashboardPath(user));
   }
 
-  function handleOrgComplete() {
-    onClose();
-    router.push('/dashboard/team');
-  }
-
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center">
       {/* Backdrop */}
@@ -103,7 +98,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin', acc
               onSuccess={handleIndividualSuccess}
             />
           ) : (
-            <OrganizationSignupWizard onComplete={handleOrgComplete} />
+            <OrganizationSignupWizard />
           )}
         </div>
       </div>

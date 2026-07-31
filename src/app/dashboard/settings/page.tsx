@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { CheckCircle2, Loader2, XCircle } from 'lucide-react';
+import { Building2, CheckCircle2, Loader2, XCircle } from 'lucide-react';
 import { useAuth, displayName } from '@/lib/auth-context';
 import { GraphQLClient } from '@/lib/graphql-client';
 import { updateProfile } from '@/graphql/mutations';
@@ -115,6 +116,30 @@ export default function SettingsPage() {
           )}
         </div>
       </form>
+
+      {/* Organization */}
+      {user.organizations.length === 0 && (
+        <div className="mt-12 pt-8 border-t border-ink-100">
+          <h2 className="text-sm font-bold text-ink-400 uppercase tracking-wide mb-3">Organization</h2>
+          <div className="flex items-center gap-4 rounded-2xl border-2 border-ink-100 p-4">
+            <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center flex-shrink-0">
+              <Building2 className="w-5 h-5 text-indigo-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-ink-900">Managing a team?</p>
+              <p className="text-xs text-ink-500 mt-0.5">
+                Create an organization to invite people, assign training, and track their progress. Your individual account stays as it is.
+              </p>
+            </div>
+            <Link
+              href="/dashboard/create-organization"
+              className="rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-700 transition-colors flex-shrink-0"
+            >
+              Create
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* Danger zone */}
       <div className="mt-12 pt-8 border-t border-ink-100">

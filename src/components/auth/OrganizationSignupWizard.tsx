@@ -2,13 +2,16 @@
 
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Mail, Plus, Trash2, PartyPopper, Check, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { signUp } from 'aws-amplify/auth';
+import { configureAmplify } from '@/lib/amplify';
+import { savePendingOrganization } from '@/lib/pending-organization';
 import { inputClass, orgTypes } from './shared';
 
-const stepLabels = ['Organization', 'Your account', 'Invite team'];
+const stepLabels = ['Organization', 'Your account'];
 
-export default function OrganizationSignupWizard({ onComplete }: { onComplete: () => void }) {
-  const [orgStep, setOrgStep] = useState<1 | 2 | 3 | 4>(1);
+export default function OrganizationSignupWizard() {
+  const [orgStep, setOrgStep] = useState<1 | 2 | 'check-email'>(1);
 
   const [orgName, setOrgName] = useState('');
   const [orgType, setOrgType] = useState('COMPANY');
@@ -20,38 +23,69 @@ export default function OrganizationSignupWizard({ onComplete }: { onComplete: (
   const [showPassword, setShowPassword] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
 
-  const [inviteEmails, setInviteEmails] = useState<string[]>(['']);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
-  function updateInviteEmail(i: number, value: string) {
-    setInviteEmails((prev) => prev.map((v, idx) => (idx === i ? value : v)));
+  async function handleCreateAccount(e: React.FormEvent) {
+    e.preventDefault();
+    setError('');
+    setSubmitting(true);
+    configureAmplify();
+
+    try {
+      await signUp({
+        username: email,
+        password,
+        options: {
+          userAttributes: {
+            email,
+            given_name: firstName,
+            family_name: lastName,
+          },
+        },
+      });
+      // Cognito needs the email confirmed before this account can sign in
+      // and actually create the organization (that mutation needs an
+      // authenticated caller) — so remember what they asked for here, and
+      // /dashboard/create-organization picks it up and pre-fills once
+      // they've confirmed and signed in for the first time.
+      savePendingOrganization({ name: orgName, type: orgType });
+      setOrgStep('check-email');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setSubmitting(false);
+    }
   }
 
-  function addInviteRow() {
-    if (inviteEmails.length < 3) setInviteEmails((prev) => [...prev, '']);
-  }
-
-  function removeInviteRow(i: number) {
-    setInviteEmails((prev) => prev.filter((_, idx) => idx !== i));
+  if (orgStep === 'check-email') {
+    return (
+      <div className="text-center">
+        <h2 className="text-2xl font-extrabold text-ink-900 mb-2">Check your email</h2>
+        <p className="text-sm text-ink-500">
+          We sent a confirmation link to <strong className="text-ink-700">{email}</strong>. Click it to activate your account, then sign in — you&apos;ll be prompted to finish creating{' '}
+          <strong className="text-ink-700">{orgName || 'your organization'}</strong>.
+        </p>
+      </div>
+    );
   }
 
   return (
     <>
       {/* Step progress */}
-      {orgStep < 4 && (
-        <div className="flex items-center gap-2 mb-6">
-          {stepLabels.map((label, i) => {
-            const step = (i + 1) as 1 | 2 | 3;
-            const isDone = orgStep > step;
-            const isCurrent = orgStep === step;
-            return (
-              <div key={label} className="flex-1">
-                <div className={`h-1.5 rounded-full transition-colors ${isDone || isCurrent ? 'bg-indigo-600' : 'bg-ink-100'}`} />
-                <p className={`text-[10px] mt-1.5 font-semibold ${isCurrent ? 'text-indigo-600' : 'text-ink-400'}`}>{label}</p>
-              </div>
-            );
-          })}
-        </div>
-      )}
+      <div className="flex items-center gap-2 mb-6">
+        {stepLabels.map((label, i) => {
+          const step = (i + 1) as 1 | 2;
+          const isDone = orgStep > step;
+          const isCurrent = orgStep === step;
+          return (
+            <div key={label} className="flex-1">
+              <div className={`h-1.5 rounded-full transition-colors ${isDone || isCurrent ? 'bg-indigo-600' : 'bg-ink-100'}`} />
+              <p className={`text-[10px] mt-1.5 font-semibold ${isCurrent ? 'text-indigo-600' : 'text-ink-400'}`}>{label}</p>
+            </div>
+          );
+        })}
+      </div>
 
       <AnimatePresence mode="wait">
         {orgStep === 1 && (
@@ -82,20 +116,20 @@ export default function OrganizationSignupWizard({ onComplete }: { onComplete: (
             <p className="text-sm text-ink-500 mb-6">
               You&apos;ll sign in to manage <strong className="text-ink-700">{orgName || 'your organization'}</strong>.
             </p>
-            <form onSubmit={(e) => { e.preventDefault(); setOrgStep(3); }} className="space-y-4">
+            <form onSubmit={handleCreateAccount} className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label htmlFor="orgFirstName" className="block text-sm font-semibold text-ink-700 mb-1.5">First Name</label>
-                  <input id="orgFirstName" type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First name" className={inputClass} autoFocus />
+                  <input id="orgFirstName" type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First name" className={inputClass} autoFocus disabled={submitting} />
                 </div>
                 <div>
                   <label htmlFor="orgLastName" className="block text-sm font-semibold text-ink-700 mb-1.5">Last Name</label>
-                  <input id="orgLastName" type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last name" className={inputClass} />
+                  <input id="orgLastName" type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last name" className={inputClass} disabled={submitting} />
                 </div>
               </div>
               <div>
                 <label htmlFor="orgEmail" className="block text-sm font-semibold text-ink-700 mb-1.5">Work email</label>
-                <input id="orgEmail" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com" className={inputClass} required />
+                <input id="orgEmail" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com" className={inputClass} required disabled={submitting} />
               </div>
               <div>
                 <label htmlFor="orgPassword" className="block text-sm font-semibold text-ink-700 mb-1.5">Password</label>
@@ -108,6 +142,8 @@ export default function OrganizationSignupWizard({ onComplete }: { onComplete: (
                     placeholder="At least 8 characters"
                     className={`${inputClass} pr-11`}
                     required
+                    minLength={8}
+                    disabled={submitting}
                   />
                   <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-400 hover:text-ink-600">
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -123,94 +159,22 @@ export default function OrganizationSignupWizard({ onComplete }: { onComplete: (
                 />
                 <span className="text-xs text-ink-500 leading-relaxed">I agree to the Terms and Privacy Policy</span>
               </label>
+
+              {error && <p className="text-sm text-red-600">{error}</p>}
+
               <div className="flex gap-3">
-                <button type="button" onClick={() => setOrgStep(1)} className="flex items-center justify-center gap-1.5 rounded-xl border border-ink-200 px-4 py-3 text-sm font-bold text-ink-700 hover:bg-ink-50 transition-colors">
+                <button type="button" onClick={() => setOrgStep(1)} disabled={submitting} className="flex items-center justify-center gap-1.5 rounded-xl border border-ink-200 px-4 py-3 text-sm font-bold text-ink-700 hover:bg-ink-50 transition-colors disabled:opacity-60">
                   <ArrowLeft className="w-4 h-4" />
                 </button>
-                <button type="submit" className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-indigo-600 px-6 py-3 text-sm font-bold text-white hover:bg-indigo-700 transition-colors">
-                  Continue <ArrowRight className="w-4 h-4" />
+                <button
+                  type="submit"
+                  disabled={submitting || !agreedToTerms}
+                  className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-indigo-600 px-6 py-3 text-sm font-bold text-white hover:bg-indigo-700 transition-colors disabled:opacity-60"
+                >
+                  {submitting ? 'Please wait…' : <>Create account <ArrowRight className="w-4 h-4" /></>}
                 </button>
               </div>
             </form>
-          </motion.div>
-        )}
-
-        {orgStep === 3 && (
-          <motion.div key="step3" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={{ duration: 0.2 }}>
-            <h2 className="text-2xl font-extrabold text-ink-900 mb-1">Invite your team</h2>
-            <p className="text-sm text-ink-500 mb-6">Optional. You can always invite people later from your team page.</p>
-            <div className="space-y-2.5 mb-4">
-              {inviteEmails.map((value, i) => (
-                <div key={i} className="relative flex items-center gap-2">
-                  <div className="relative flex-1">
-                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-400" />
-                    <input
-                      type="email"
-                      value={value}
-                      onChange={(e) => updateInviteEmail(i, e.target.value)}
-                      placeholder="colleague@company.com"
-                      className={`${inputClass} pl-10`}
-                    />
-                  </div>
-                  {inviteEmails.length > 1 && (
-                    <button type="button" onClick={() => removeInviteRow(i)} className="text-ink-300 hover:text-red-500 flex-shrink-0">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-            {inviteEmails.length < 3 && (
-              <button type="button" onClick={addInviteRow} className="flex items-center gap-1.5 text-sm font-bold text-indigo-600 hover:text-indigo-700 mb-6">
-                <Plus className="w-4 h-4" /> Add another
-              </button>
-            )}
-            <div className="flex gap-3">
-              <button type="button" onClick={() => setOrgStep(2)} className="flex items-center justify-center gap-1.5 rounded-xl border border-ink-200 px-4 py-3 text-sm font-bold text-ink-700 hover:bg-ink-50 transition-colors">
-                <ArrowLeft className="w-4 h-4" />
-              </button>
-              <button type="button" onClick={() => setOrgStep(4)} className="flex-1 rounded-xl border border-ink-200 px-6 py-3 text-sm font-bold text-ink-600 hover:bg-ink-50 transition-colors">
-                Skip for now
-              </button>
-              <button type="button" onClick={() => setOrgStep(4)} className="flex-1 rounded-xl bg-indigo-600 px-6 py-3 text-sm font-bold text-white hover:bg-indigo-700 transition-colors">
-                Send invites
-              </button>
-            </div>
-          </motion.div>
-        )}
-
-        {orgStep === 4 && (
-          <motion.div key="step4" initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.25 }} className="text-center py-4">
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.1, type: 'spring', stiffness: 200, damping: 12 }}
-              className="w-16 h-16 rounded-2xl bg-indigo-100 flex items-center justify-center mx-auto mb-5"
-            >
-              <PartyPopper className="w-7 h-7 text-indigo-600" />
-            </motion.div>
-            <h2 className="text-2xl font-extrabold text-ink-900 mb-2">
-              {orgName || 'Your organization'} is ready
-            </h2>
-            <p className="text-sm text-ink-500 mb-8 max-w-xs mx-auto">
-              You&apos;re the owner. Assign training, manage roles, and invite more people any time from your team page.
-            </p>
-            <div className="space-y-2 mb-8 text-left bg-ink-50 rounded-xl p-4">
-              <div className="flex items-center gap-2 text-sm text-ink-700">
-                <Check className="w-4 h-4 text-brand-600 flex-shrink-0" /> Organization created
-              </div>
-              <div className="flex items-center gap-2 text-sm text-ink-700">
-                <Check className="w-4 h-4 text-brand-600 flex-shrink-0" /> You&apos;re set as owner
-              </div>
-              {inviteEmails.some((e) => e.trim()) && (
-                <div className="flex items-center gap-2 text-sm text-ink-700">
-                  <Check className="w-4 h-4 text-brand-600 flex-shrink-0" /> Invitations sent
-                </div>
-              )}
-            </div>
-            <button onClick={onComplete} className="w-full rounded-xl bg-indigo-600 px-6 py-3 text-sm font-bold text-white hover:bg-indigo-700 transition-colors">
-              Go to your team page
-            </button>
           </motion.div>
         )}
       </AnimatePresence>
