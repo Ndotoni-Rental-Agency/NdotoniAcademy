@@ -4,6 +4,7 @@ import './globals.css';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ScrollToTop from '@/components/ScrollToTop';
+import Providers from './Providers';
 import { SITE_URL, SITE_NAME } from '@/lib/site';
 
 const dmSans = DM_Sans({
@@ -47,10 +48,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${dmSans.variable} ${playfair.variable} font-sans bg-white text-ink-900 flex flex-col min-h-screen`}>
-        <ScrollToTop />
-        <Navbar />
-        <div className="flex-1">{children}</div>
-        <Footer />
+        <Providers>
+          <ScrollToTop />
+          <Navbar />
+          <div className="flex-1">{children}</div>
+          <Footer />
+        </Providers>
       </body>
     </html>
   );

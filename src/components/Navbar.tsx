@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation';
 import { Menu, X } from 'lucide-react';
 import AuthModal from './AuthModal';
 import Avatar from './Avatar';
-import { mockUser } from '@/lib/mock-data';
+import { useAuth, displayName } from '@/lib/auth-context';
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -15,6 +15,7 @@ export default function Navbar() {
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
   const pathname = usePathname();
   const isDashboard = pathname.startsWith('/dashboard');
+  const { user } = useAuth();
 
   const navLinks = [
     { href: '/courses', label: 'Courses' },
@@ -68,7 +69,7 @@ export default function Navbar() {
             <div className="hidden md:flex items-center gap-3">
               {isDashboard ? (
                 <Link href="/dashboard" className="rounded-full ring-2 ring-transparent hover:ring-indigo-200 transition-all">
-                  <Avatar name={mockUser.name} size="md" />
+                  <Avatar name={displayName(user)} imageUrl={user?.avatarUrl ?? undefined} size="md" />
                 </Link>
               ) : (
                 <>

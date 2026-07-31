@@ -2,22 +2,28 @@
 
 import Link from 'next/link';
 import { BookOpen, Award, Zap, Download, Building2, UserPlus, Users, Mail, TrendingUp, ArrowRight } from 'lucide-react';
-import { mockUser, courses, getCourse } from '@/lib/mock-data';
+import { courses, getCourse, demoEnrolledCourses, demoCertificates, demoPoints } from '@/lib/mock-data';
 import { getCategoryTheme } from '@/lib/category-theme';
-import { mockOrganization, mockTeamMembers, mockPendingInvitations, roleBadgeClass, getTeamCourseUsage } from '@/lib/organization-mock-data';
+import { mockTeamMembers, mockPendingInvitations, roleBadgeClass, getTeamCourseUsage } from '@/lib/organization-mock-data';
+import { useAuth, displayName, type AuthUser } from '@/lib/auth-context';
 import EnrolledCourseCard from '@/components/EnrolledCourseCard';
 import CourseCard from '@/components/CourseCard';
 import Avatar from '@/components/Avatar';
 
 export default function DashboardPage() {
-  return mockUser.organization ? <OrganizationOverview /> : <IndividualOverview />;
+  const { user } = useAuth();
+  if (!user) return null; // DashboardLayout already redirects/loads before this can render
+  const membership = user.organizations[0];
+  return membership?.organization
+    ? <OrganizationOverview user={user} orgName={membership.organization.name} />
+    : <IndividualOverview user={user} />;
 }
 
 // ============================================================
 // Organizations manage a team; they don't take courses themselves.
 // This is a fully separate experience from the individual dashboard below.
 // ============================================================
-function OrganizationOverview() {
+function OrganizationOverview({ user, orgName }: { user: AuthUser; orgName: string }) {
   const avgProgress = Math.round(
     mockTeamMembers.reduce((sum, m) => sum + m.trainingProgress, 0) / mockTeamMembers.length
   );
@@ -29,16 +35,16 @@ function OrganizationOverview() {
     <div className="p-6 lg:p-8 max-w-5xl">
       <div className="mb-8">
         <h1 className="text-2xl font-extrabold text-ink-900">
-          Welcome back, {mockUser.name.split(' ')[0]}
+          Welcome back, {(user.firstName || displayName(user)).split(' ')[0]}
         </h1>
-        <p className="text-sm text-ink-500 mt-1">Here&apos;s how {mockOrganization.name} is doing.</p>
+        <p className="text-sm text-ink-500 mt-1">Here&apos;s how {orgName} is doing.</p>
       </div>
 
       {/* Bold stat tiles */}
       <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-8">
         <div className="rounded-2xl bg-indigo-600 text-white p-4 sm:p-5">
           <Users className="w-5 h-5 text-white/70 mb-3" />
-          <p className="text-2xl sm:text-3xl font-extrabold leading-none">{mockOrganization.memberCount}</p>
+          <p className="text-2xl sm:text-3xl font-extrabold leading-none">{mockTeamMembers.length}</p>
           <p className="text-xs text-white/80 mt-1">Members</p>
         </div>
         <div className="rounded-2xl bg-warm-600 text-white p-4 sm:p-5">
@@ -157,15 +163,13 @@ function OrganizationOverview() {
 // ============================================================
 // Individual learners: personal courses, certificates, and points.
 // ============================================================
-function IndividualOverview() {
-  const user = mockUser;
-
+function IndividualOverview({ user }: { user: AuthUser }) {
   return (
     <div className="p-6 lg:p-8 max-w-5xl">
       {/* Welcome */}
       <div className="mb-8">
         <h1 className="text-2xl font-extrabold text-ink-900">
-          Welcome back, {user.name.split(' ')[0]}
+          Welcome back, {(user.firstName || displayName(user)).split(' ')[0]}
         </h1>
         <p className="text-sm text-ink-500 mt-1">Pick up where you left off.</p>
       </div>
@@ -174,18 +178,18 @@ function IndividualOverview() {
       <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-10">
         <div className="rounded-2xl bg-indigo-600 text-white p-4 sm:p-5">
           <BookOpen className="w-5 h-5 text-white/70 mb-3" />
-          <p className="text-2xl sm:text-3xl font-extrabold leading-none">{user.enrolledCourses.length}</p>
+          <p className="text-2xl sm:text-3xl font-extrabold leading-none">{demoEnrolledCourses.length}</p>
           <p className="text-xs text-white/80 mt-1">Enrolled</p>
         </div>
         <div className="rounded-2xl bg-warm-600 text-white p-4 sm:p-5">
           <Award className="w-5 h-5 text-white/70 mb-3" />
-          <p className="text-2xl sm:text-3xl font-extrabold leading-none">{user.certificates.length}</p>
+          <p className="text-2xl sm:text-3xl font-extrabold leading-none">{demoCertificates.length}</p>
           <p className="text-xs text-white/80 mt-1">Certificates</p>
         </div>
         <div className="rounded-2xl bg-brand-600 text-white p-4 sm:p-5">
           <Zap className="w-5 h-5 text-white/70 mb-3" />
           <p className="text-2xl sm:text-3xl font-extrabold leading-none">
-            {user.pointsEarned}<span className="text-sm font-semibold text-white/60">/{user.pointsTarget}</span>
+            {demoPoints.earned}<span className="text-sm font-semibold text-white/60">/{demoPoints.target}</span>
           </p>
           <p className="text-xs text-white/80 mt-1">Points</p>
         </div>
@@ -195,18 +199,18 @@ function IndividualOverview() {
       <section className="mb-10">
         <h2 className="text-sm font-bold text-ink-400 uppercase tracking-wide mb-4">Continue learning</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
-          {user.enrolledCourses.map((enrolled) => (
+          {demoEnrolledCourses.map((enrolled) => (
             <EnrolledCourseCard key={enrolled.courseId} enrolled={enrolled} course={getCourse(enrolled.courseId)} />
           ))}
         </div>
       </section>
 
       {/* Certificates: colored cards */}
-      {user.certificates.length > 0 && (
+      {demoCertificates.length > 0 && (
         <section className="mb-10">
           <h2 className="text-sm font-bold text-ink-400 uppercase tracking-wide mb-4">Certificates</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-            {user.certificates.map((cert) => {
+            {demoCertificates.map((cert) => {
               const theme = getCategoryTheme(courses.find((c) => c.title === cert.courseTitle)?.category ?? '');
               return (
                 <div key={cert.id} className={`flex items-center gap-4 rounded-2xl border-2 ${theme.border} p-4`}>

@@ -3,8 +3,9 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Award, Download } from 'lucide-react';
-import { mockUser, courses, Course, Certificate } from '@/lib/mock-data';
+import { courses, demoCertificates, Course, Certificate } from '@/lib/mock-data';
 import { getCategoryTheme } from '@/lib/category-theme';
+import { useAuth, displayName } from '@/lib/auth-context';
 
 const accentHex: Record<string, string> = {
   'Project Management': '#4f46e5',
@@ -95,23 +96,24 @@ function openCertificate(cert: Certificate, userName: string, course?: Course) {
 
 export default function CertificatesPage() {
   const router = useRouter();
-  const user = mockUser;
+  const { user } = useAuth();
+  const org = user?.organizations[0]?.organization;
 
   // Organizations don't take courses themselves; this page only applies to individual accounts.
   useEffect(() => {
-    if (user.organization) router.replace('/dashboard');
-  }, [user.organization, router]);
+    if (org) router.replace('/dashboard');
+  }, [org, router]);
 
-  if (user.organization) return null;
+  if (!user || org) return null; // no user yet: DashboardLayout is still loading/redirecting
 
   return (
     <div className="p-6 lg:p-8 max-w-5xl">
       <h1 className="text-2xl font-extrabold text-ink-900 mb-1">Certificates</h1>
       <p className="text-sm text-ink-500 mb-8">Certificates you have earned by completing courses.</p>
 
-      {user.certificates.length > 0 ? (
+      {demoCertificates.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-          {user.certificates.map((cert) => {
+          {demoCertificates.map((cert) => {
             const course = courses.find((c) => c.title === cert.courseTitle);
             const theme = getCategoryTheme(course?.category ?? '');
             return (
@@ -130,7 +132,7 @@ export default function CertificatesPage() {
                     </p>
                   </div>
                   <button
-                    onClick={() => openCertificate(cert, user.name, course)}
+                    onClick={() => openCertificate(cert, displayName(user), course)}
                     className={`flex items-center gap-1.5 text-xs font-bold text-white ${theme.solidBg} ${theme.solidBgHover} px-3 py-2 rounded-lg transition-colors flex-shrink-0`}
                   >
                     <Download className="w-3.5 h-3.5" /> Download

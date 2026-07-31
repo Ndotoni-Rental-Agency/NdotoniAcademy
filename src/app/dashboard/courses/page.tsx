@@ -3,18 +3,21 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Plus, Lock, Globe, Users, Wallet } from 'lucide-react';
-import { mockUser, courses } from '@/lib/mock-data';
+import { courses, demoEnrolledCourses } from '@/lib/mock-data';
 import { getCategoryTheme } from '@/lib/category-theme';
 import { getTeamCourseUsage, type TeamCourse } from '@/lib/organization-mock-data';
 import { INSTRUCTOR_SHARE } from '@/lib/instructor-pricing';
 import { initialTeachingCourses, type TeachingCourse } from '@/lib/teaching-mock-data';
+import { useAuth } from '@/lib/auth-context';
 import EnrolledCourseCard from '@/components/EnrolledCourseCard';
 import CourseCard from '@/components/CourseCard';
 
 const teachingCategories = ['Project Management', 'Marketing', 'Technology', 'Design'];
 
 export default function CoursesPage() {
-  return mockUser.organization ? <OrganizationCoursesPage /> : <IndividualCoursesPage />;
+  const { user } = useAuth();
+  if (!user) return null; // DashboardLayout redirects/loads before this can render
+  return user.organizations[0]?.organization ? <OrganizationCoursesPage /> : <IndividualCoursesPage />;
 }
 
 // ============================================================
@@ -138,8 +141,7 @@ function OrganizationCoursesPage() {
 // teach, and more to browse.
 // ============================================================
 function IndividualCoursesPage() {
-  const user = mockUser;
-  const enrolledIds = new Set(user.enrolledCourses.map((e) => e.courseId));
+  const enrolledIds = new Set(demoEnrolledCourses.map((e) => e.courseId));
   const moreCourses = courses.filter((c) => !enrolledIds.has(c.id));
 
   const [teachingCourses, setTeachingCourses] = useState<TeachingCourse[]>(initialTeachingCourses);
@@ -179,9 +181,9 @@ function IndividualCoursesPage() {
       {/* Learning */}
       <section className="mb-12">
         <h2 className="text-sm font-bold text-ink-400 uppercase tracking-wide mb-4">Learning</h2>
-        {user.enrolledCourses.length > 0 ? (
+        {demoEnrolledCourses.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
-            {user.enrolledCourses.map((enrolled) => {
+            {demoEnrolledCourses.map((enrolled) => {
               const course = courses.find(c => c.id === enrolled.courseId);
               return <EnrolledCourseCard key={enrolled.courseId} enrolled={enrolled} course={course} />;
             })}

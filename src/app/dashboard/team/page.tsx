@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { Mail, X, RotateCw, UserPlus, BookOpen, Check, Upload, FileText } from 'lucide-react';
-import { mockUser } from '@/lib/mock-data';
+import { useAuth } from '@/lib/auth-context';
 import {
   mockTeamMembers,
   mockPendingInvitations,
@@ -36,6 +36,7 @@ function detectRole(line: string): MembershipRole | null {
 }
 
 export default function TeamPage() {
+  const { user } = useAuth();
   const [members, setMembers] = useState<TeamMember[]>(mockTeamMembers);
   const [invitations, setInvitations] = useState<PendingInvitation[]>(mockPendingInvitations);
   const [inviteMode, setInviteMode] = useState<'single' | 'bulk'>('single');
@@ -54,7 +55,7 @@ export default function TeamPage() {
   const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([]);
   const [assignConfirmed, setAssignConfirmed] = useState(false);
 
-  if (!mockUser.organization) return null;
+  if (!user?.organizations[0]?.organization) return null;
 
   const existingEmails = new Set([
     ...members.map((m) => m.email.toLowerCase()),
