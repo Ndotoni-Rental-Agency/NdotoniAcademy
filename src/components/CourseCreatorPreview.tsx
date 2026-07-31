@@ -10,7 +10,7 @@ export default function CourseCreatorPreview() {
           <span className="w-2.5 h-2.5 rounded-full bg-warm-400" />
           <span className="w-2.5 h-2.5 rounded-full bg-brand-400" />
         </div>
-        <span className="ml-2 text-xs text-ink-400 font-mono">app.ndotoni.com/instructor/new-course</span>
+        <span className="ml-2 text-xs text-ink-400 font-mono">academy.ndotoni.com/instructor/new-course</span>
       </div>
 
       <div className="p-5 sm:p-6">

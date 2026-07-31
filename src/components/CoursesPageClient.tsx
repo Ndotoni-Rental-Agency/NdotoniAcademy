@@ -6,14 +6,12 @@ import { motion } from 'framer-motion';
 import { Search, BookOpen, Clock, ArrowRight, Users, Award } from 'lucide-react';
 import { courses } from '@/lib/mock-data';
 import CourseCard from '@/components/CourseCard';
-import AuthModal from '@/components/AuthModal';
 
 const categories = ['All', 'Project Management', 'Marketing', 'Design', 'Technology'];
 
 export default function CoursesPageClient() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const [authOpen, setAuthOpen] = useState(false);
 
   const filteredCourses = courses.filter((course) => {
     const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -136,16 +134,14 @@ export default function CoursesPageClient() {
             <h2 className="text-xl font-extrabold text-ink-900">Want to teach?</h2>
           </div>
           <p className="text-ink-500 mb-6 max-w-md mx-auto">Share your expertise. Create a course, reach learners, and earn from your knowledge.</p>
-          <button
-            onClick={() => setAuthOpen(true)}
+          <Link
+            href="/instructors"
             className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-ink-200 px-6 py-3 text-sm font-bold text-ink-700 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700 transition-colors"
           >
             Become an instructor <ArrowRight className="w-4 h-4" />
-          </button>
+          </Link>
         </div>
       </section>
-
-      <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} initialMode="signup" />
     </main>
   );
 }

@@ -15,7 +15,7 @@ export default function TeamProgressPreview() {
           <span className="w-2.5 h-2.5 rounded-full bg-warm-400" />
           <span className="w-2.5 h-2.5 rounded-full bg-brand-400" />
         </div>
-        <span className="ml-2 text-xs text-ink-400 font-mono">app.ndotoni.com/dashboard/team</span>
+        <span className="ml-2 text-xs text-ink-400 font-mono">academy.ndotoni.com/dashboard/team</span>
       </div>
 
       <div className="p-5 sm:p-6">

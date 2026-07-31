@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight, BookOpen, Users, Award, Zap } from 'lucide-react';
-import AuthButton from '@/components/AuthButton';
 import Reveal from '@/components/Reveal';
 
 export const metadata: Metadata = {
@@ -104,12 +103,12 @@ export default function AboutPage() {
             <Link href="/courses" className="inline-flex items-center justify-center rounded-full bg-indigo-600 px-7 py-3 text-sm font-bold text-white hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-600/20">
               Start learning
             </Link>
-            <AuthButton
-              mode="signup"
+            <Link
+              href="/instructors"
               className="inline-flex items-center gap-1.5 justify-center rounded-full border-2 border-ink-200 px-7 py-3 text-sm font-bold text-ink-700 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700 transition-colors"
             >
               Become an instructor <ArrowRight className="w-4 h-4" />
-            </AuthButton>
+            </Link>
           </div>
         </div>
       </section>
