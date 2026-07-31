@@ -8,6 +8,7 @@ import { courses } from '@/lib/mock-data';
 import CourseCard from '@/components/CourseCard';
 
 const categories = ['All', 'Project Management', 'Marketing', 'Design', 'Technology'];
+const featuredCourse = courses.find((c) => c.id === 'digital-marketing') ?? courses[0];
 
 export default function CoursesPageClient() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -70,7 +71,7 @@ export default function CoursesPageClient() {
             transition={{ delay: 0.1 }}
           >
             <Link
-              href={`/courses/${courses[0].id}`}
+              href={`/courses/${featuredCourse.id}`}
               className="block rounded-3xl overflow-hidden bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-700 hover:to-indigo-600 transition-all group"
             >
               <div className="flex flex-col md:flex-row">
@@ -79,12 +80,12 @@ export default function CoursesPageClient() {
                   <span className="inline-block text-[11px] font-bold uppercase tracking-wide bg-white/20 px-3 py-1 rounded-full mb-4">
                     Featured
                   </span>
-                  <h2 className="text-2xl sm:text-3xl font-extrabold mb-3 leading-tight">{courses[0].title}</h2>
-                  <p className="text-indigo-100 mb-5 leading-relaxed line-clamp-2">{courses[0].shortDescription}</p>
+                  <h2 className="text-2xl sm:text-3xl font-extrabold mb-3 leading-tight">{featuredCourse.title}</h2>
+                  <p className="text-indigo-100 mb-5 leading-relaxed line-clamp-2">{featuredCourse.shortDescription}</p>
                   <div className="flex flex-wrap gap-4 text-sm text-indigo-200 mb-6">
-                    <span className="flex items-center gap-1.5"><BookOpen className="w-4 h-4" /> {courses[0].modules.length} modules</span>
-                    <span className="flex items-center gap-1.5"><Clock className="w-4 h-4" /> {courses[0].duration}</span>
-                    <span className="flex items-center gap-1.5"><Users className="w-4 h-4" /> {courses[0].enrolledCount}+ enrolled</span>
+                    <span className="flex items-center gap-1.5"><BookOpen className="w-4 h-4" /> {featuredCourse.modules.length} modules</span>
+                    <span className="flex items-center gap-1.5"><Clock className="w-4 h-4" /> {featuredCourse.duration}</span>
+                    <span className="flex items-center gap-1.5"><Users className="w-4 h-4" /> {featuredCourse.enrolledCount}+ enrolled</span>
                   </div>
                   <span className="inline-flex items-center gap-2 text-sm font-bold text-white group-hover:gap-3 transition-all">
                     Start free module <ArrowRight className="w-4 h-4" />
