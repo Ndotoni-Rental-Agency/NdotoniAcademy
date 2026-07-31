@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { Menu, X } from 'lucide-react';
@@ -35,11 +36,9 @@ export default function Navbar() {
         <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-14 items-center justify-between">
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-2.5">
-              <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-extrabold text-sm">N</span>
-              </div>
-              <span className="font-extrabold text-ink-900 hidden sm:block">
+            <Link href="/" className="flex items-center gap-1.5">
+              <Image src="/ndotoni-academy-icon.png" alt="Ndotoni" width={36} height={36} priority className="object-contain" />
+              <span className="text-lg font-bold text-ink-900">
                 Ndotoni Academy
               </span>
             </Link>

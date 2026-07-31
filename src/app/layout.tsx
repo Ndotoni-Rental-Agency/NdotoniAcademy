@@ -27,6 +27,16 @@ export const metadata: Metadata = {
     template: `%s | ${SITE_NAME}`,
   },
   description: 'Expert-led video courses, interactive quizzes, and real certificates. Learn at your pace or teach what you know.',
+  icons: {
+    icon: [
+      { url: '/favicon/favicon.ico', sizes: 'any' },
+      { url: '/favicon/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/ndotoni-academy.png', sizes: '1081x1081', type: 'image/png' },
+    ],
+    apple: [{ url: '/favicon/apple-touch-icon.png' }],
+  },
+  manifest: '/favicon/site.webmanifest',
 };
 
 export default function RootLayout({

@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { Award } from 'lucide-react';
 
 export default function CertificatePreview({
@@ -26,9 +27,7 @@ export default function CertificatePreview({
         <div className="border border-warm-400 m-1.5 rounded-lg px-6 py-9 sm:px-12 sm:py-12 text-center">
           {/* Brand mark */}
           <div className="flex items-center justify-center gap-2 mb-5">
-            <div className="w-6 h-6 bg-indigo-600 rounded-md flex items-center justify-center">
-              <span className="text-white font-extrabold text-[11px]">N</span>
-            </div>
+            <Image src="/ndotoni-academy-icon.png" alt="" width={22} height={22} className="object-contain" />
             <span className="text-xs font-bold tracking-[0.15em] text-ink-500 uppercase">Ndotoni Academy</span>
           </div>
 

@@ -36,7 +36,7 @@ function openCertificate(cert: Certificate, userName: string, course?: Course) {
           .frame-outer { border: 3px solid rgba(17,24,39,0.85); margin: 12px; border-radius: 12px; }
           .frame-inner { border: 1px solid #fbbf24; margin: 6px; border-radius: 10px; padding: 40px 36px; text-align: center; }
           .brand { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 20px; }
-          .brand .mark { width: 24px; height: 24px; background: ${accent}; border-radius: 6px; color: white; font-weight: 800; font-size: 11px; display: flex; align-items: center; justify-content: center; }
+          .brand .mark { width: 24px; height: 24px; object-fit: contain; }
           .brand .word { font-size: 12px; font-weight: 700; letter-spacing: 0.15em; color: #6b7280; text-transform: uppercase; }
           .seal { width: 64px; height: 64px; border-radius: 50%; margin: 0 auto 20px; background: radial-gradient(circle at 35% 30%, #fcd34d, #d97706); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(217,119,6,0.35); }
           .seal svg { width: 28px; height: 28px; color: white; }
@@ -60,7 +60,7 @@ function openCertificate(cert: Certificate, userName: string, course?: Course) {
           <div class="frame-outer">
             <div class="frame-inner">
               <div class="brand">
-                <div class="mark">N</div>
+                <img class="mark" src="${window.location.origin}/ndotoni-academy-icon.png" alt="" />
                 <span class="word">Ndotoni Academy</span>
               </div>
               <div class="seal">

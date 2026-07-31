@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 
 export default function Footer() {
@@ -13,11 +14,9 @@ export default function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-extrabold text-xs">N</span>
-              </div>
-              <span className="font-extrabold text-ink-900">Ndotoni Academy</span>
+            <div className="flex items-center gap-2 mb-4">
+              <Image src="/ndotoni-academy-icon.png" alt="Ndotoni" width={32} height={32} className="object-contain" />
+              <span className="text-lg font-bold text-ink-900">Ndotoni Academy</span>
             </div>
             <p className="text-sm text-ink-500 leading-relaxed">
               Learn from experts. Earn certificates. Grow your career.
