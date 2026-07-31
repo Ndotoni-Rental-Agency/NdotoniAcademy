@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Menu, X } from 'lucide-react';
 import AuthModal from './AuthModal';
 import Avatar from './Avatar';
@@ -14,8 +14,15 @@ export default function Navbar() {
   const [authOpen, setAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
   const pathname = usePathname();
+  const router = useRouter();
   const isDashboard = pathname.startsWith('/dashboard');
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
+
+  async function handleSignOut() {
+    await signOut();
+    setMobileOpen(false);
+    router.push('/');
+  }
 
   const navLinks = [
     { href: '/courses', label: 'Courses' },
@@ -67,10 +74,18 @@ export default function Navbar() {
 
             {/* Right side */}
             <div className="hidden md:flex items-center gap-3">
-              {isDashboard ? (
-                <Link href="/dashboard" className="rounded-full ring-2 ring-transparent hover:ring-indigo-200 transition-all">
-                  <Avatar name={displayName(user)} imageUrl={user?.avatarUrl ?? undefined} size="md" />
-                </Link>
+              {user ? (
+                <>
+                  <Link
+                    href="/dashboard"
+                    className="text-sm font-semibold text-ink-600 hover:text-ink-900 px-3 py-2"
+                  >
+                    Dashboard
+                  </Link>
+                  <Link href="/dashboard" className="rounded-full ring-2 ring-transparent hover:ring-indigo-200 transition-all">
+                    <Avatar name={displayName(user)} imageUrl={user.avatarUrl ?? undefined} size="md" />
+                  </Link>
+                </>
               ) : (
                 <>
                   <button
@@ -114,7 +129,23 @@ export default function Navbar() {
                   {link.label}
                 </Link>
               ))}
-              {!isDashboard && (
+              {user ? (
+                <div className="pt-3 space-y-1 border-t border-ink-200 mt-2">
+                  <Link
+                    href="/dashboard"
+                    className="block px-3 py-2.5 rounded-lg text-sm font-semibold text-ink-700 hover:bg-ink-50"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    Dashboard
+                  </Link>
+                  <button
+                    onClick={handleSignOut}
+                    className="block w-full text-left px-3 py-2.5 rounded-lg text-sm font-semibold text-red-600"
+                  >
+                    Sign out
+                  </button>
+                </div>
+              ) : (
                 <div className="pt-3 space-y-2 border-t border-ink-200 mt-2">
                   <button
                     onClick={() => openAuth('signin')}
