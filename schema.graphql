@@ -1,0 +1,124 @@
+schema {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}
+
+type Mutation {
+
+  acceptInvitation(token: String!): OrganizationMembership 
+  changeMemberRole(organizationId: ID!, role: MembershipRole!, userId: ID!): OrganizationMembership 
+  createOrganization(input: CreateOrganizationInput!): Organization 
+  inviteMember(email: AWSEmail!, organizationId: ID!, role: MembershipRole!): OrganizationInvitation 
+  removeMember(organizationId: ID!, userId: ID!): Boolean 
+  revokeInvitation(email: AWSEmail!, organizationId: ID!): Boolean 
+  updateProfile(input: UpdateUserProfileInput!): User 
+}
+
+type Organization {
+  createdAt: AWSDateTime!
+  id: ID!
+  members: [OrganizationMembership!]!
+  name: String!
+  slug: String!
+  status: OrganizationStatus!
+  type: OrganizationType!
+}
+
+type OrganizationInvitation {
+  createdAt: AWSDateTime!
+  email: AWSEmail!
+  expiresAt: AWSDateTime!
+  id: ID!
+  organization: Organization
+  organizationId: ID!
+  role: MembershipRole!
+  status: InvitationStatus!
+}
+
+type OrganizationMembership {
+  id: ID!
+  joinedAt: AWSDateTime
+  organization: Organization
+  organizationId: ID!
+  permissions: [String!]!
+  role: MembershipRole!
+  status: MembershipStatus!
+  user: User
+  userId: ID!
+}
+
+type Query {
+
+  invitationsForOrganization(organizationId: ID!): [OrganizationInvitation!]! 
+  me: User 
+  organization(id: ID!): Organization 
+  organizationBySlug(slug: String!): Organization 
+}
+
+type Subscription {
+
+  organizationMemberJoined(organizationId: ID!): OrganizationMembership  
+}
+
+type User {
+  avatarUrl: AWSURL
+  createdAt: AWSDateTime!
+  email: AWSEmail!
+  firstName: String
+  id: ID!
+  lastName: String
+  organizations: [OrganizationMembership!]!
+  status: UserStatus!
+  updatedAt: AWSDateTime!
+}
+
+enum InvitationStatus {
+  ACCEPTED
+  EXPIRED
+  PENDING
+}
+
+enum MembershipRole {
+  ADMIN
+  INSTRUCTOR
+  MEMBER
+  OWNER
+}
+
+enum MembershipStatus {
+  ACTIVE
+  INVITED
+  REMOVED
+}
+
+enum OrganizationStatus {
+  ACTIVE
+  PENDING
+  SUSPENDED
+}
+
+enum OrganizationType {
+  COMPANY
+  GOVERNMENT
+  NGO
+  OTHER
+  SCHOOL
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+input CreateOrganizationInput {
+  name: String!
+  slug: String!
+  type: OrganizationType!
+}
+
+input UpdateUserProfileInput {
+  avatarUrl: AWSURL
+  firstName: String
+  lastName: String
+}

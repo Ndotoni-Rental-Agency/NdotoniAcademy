@@ -1,10 +1,32 @@
-export default function SocialLoginButtons({ onSocialLogin }: { onSocialLogin: () => void }) {
+'use client';
+
+import { useState } from 'react';
+import { signInWithRedirect } from 'aws-amplify/auth';
+import { configureAmplify } from '@/lib/amplify';
+
+export default function SocialLoginButtons() {
+  const [error, setError] = useState('');
+
+  async function handleSocialSignIn(provider: 'Google' | 'Apple') {
+    setError('');
+    configureAmplify();
+    try {
+      // Navigates the browser away to the provider's sign-in page — there's
+      // no promise to await for "success" here. Cognito redirects back to
+      // NEXT_PUBLIC_SITE_URL + /auth/callback afterward (see amplify.ts),
+      // which is where the rest of the flow continues.
+      await signInWithRedirect({ provider });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    }
+  }
+
   return (
     <>
       <div className="space-y-3 mb-5">
         <button
           type="button"
-          onClick={onSocialLogin}
+          onClick={() => handleSocialSignIn('Google')}
           className="w-full flex items-center justify-center gap-3 rounded-xl border border-ink-200 px-4 py-3 text-sm font-semibold text-ink-700 hover:bg-ink-50 hover:border-ink-300 transition-all"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -18,7 +40,7 @@ export default function SocialLoginButtons({ onSocialLogin }: { onSocialLogin: (
 
         <button
           type="button"
-          onClick={onSocialLogin}
+          onClick={() => handleSocialSignIn('Apple')}
           className="w-full flex items-center justify-center gap-3 rounded-xl border border-ink-200 px-4 py-3 text-sm font-semibold text-ink-700 hover:bg-ink-50 hover:border-ink-300 transition-all"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
@@ -27,6 +49,8 @@ export default function SocialLoginButtons({ onSocialLogin }: { onSocialLogin: (
           Continue with Apple
         </button>
       </div>
+
+      {error && <p className="text-sm text-red-600 text-center mb-5">{error}</p>}
 
       {/* Divider */}
       <div className="relative mb-5">
