@@ -4,26 +4,41 @@ import { useState, useRef } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { 
-  ChevronLeft, ChevronRight, Clock, Play, Lock, CheckCircle2, 
+import {
+  ChevronLeft, ChevronRight, Clock, Play, Lock, LogIn, Loader2, CheckCircle2,
   ArrowRight, BookOpen, HelpCircle, ListChecks, FileText
 } from 'lucide-react';
 import { getCourse, getModule } from '@/lib/mock-data';
 import { getCategoryTheme } from '@/lib/category-theme';
+import { useAuth } from '@/lib/auth-context';
 import Quiz from '@/components/Quiz';
 import ModuleContent from '@/components/ModuleContent';
 import VideoPlayer from '@/components/VideoPlayer';
+
+// Guest browsing is only ever offered for a course's first (free) module —
+// once granted, it should stick across every free module a guest opens in
+// this tab, not just the one they said yes on.
+const GUEST_STORAGE_KEY = 'academy-guest-explore';
 
 export default function ModulePage() {
   const params = useParams();
   const courseId = params.id as string;
   const moduleId = params.moduleId as string;
+  const { user, loading: authLoading } = useAuth();
 
   const course = getCourse(courseId);
   const mod = getModule(courseId, moduleId);
   const [activeSection, setActiveSection] = useState<'video' | 'content' | 'quiz'>('video');
   const [quizPassed, setQuizPassed] = useState(false);
+  const [continuedAsGuest, setContinuedAsGuest] = useState(
+    () => typeof window !== 'undefined' && sessionStorage.getItem(GUEST_STORAGE_KEY) === '1'
+  );
   const contentRef = useRef<HTMLDivElement>(null);
+
+  function handleContinueAsGuest() {
+    sessionStorage.setItem(GUEST_STORAGE_KEY, '1');
+    setContinuedAsGuest(true);
+  }
 
   function switchSection(section: 'video' | 'content' | 'quiz') {
     setActiveSection(section);
@@ -45,27 +60,79 @@ export default function ModulePage() {
   }
 
   const theme = getCategoryTheme(course.category);
+  const returnTo = `/courses/${courseId}/modules/${moduleId}`;
 
-  // Gated module
-  if (!mod.isFree) {
+  // Auth state hasn't resolved yet — wait rather than flash the wrong gate
+  // (e.g. the guest prompt for someone who turns out to be signed in).
+  if (authLoading) {
+    return (
+      <main className="min-h-screen bg-white flex items-center justify-center">
+        <Loader2 className="w-7 h-7 text-ink-300 animate-spin" />
+      </main>
+    );
+  }
+
+  // Free module, signed out, hasn't already chosen to browse as a guest.
+  if (mod.isFree && !user && !continuedAsGuest) {
+    return (
+      <main className="min-h-screen bg-white flex items-center justify-center px-4">
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="text-center max-w-sm">
+          <div className={`w-14 h-14 rounded-2xl ${theme.softBg} flex items-center justify-center mx-auto mb-5`}>
+            <LogIn className={`w-6 h-6 ${theme.solidText}`} />
+          </div>
+          <h2 className="text-xl font-extrabold text-ink-900 mb-2">Sign in to save your progress</h2>
+          <p className="text-sm text-ink-500 mb-6">
+            This first module is free to explore. Sign in to track your progress and pick up where you left off — or continue without an account.
+          </p>
+          <div className="flex flex-col gap-2.5">
+            <Link
+              href={`/login?next=${encodeURIComponent(returnTo)}`}
+              className={`inline-flex items-center justify-center rounded-xl ${theme.solidBg} px-5 py-2.5 text-sm font-bold text-white ${theme.solidBgHover} transition-colors`}
+            >
+              Sign in
+            </Link>
+            <Link
+              href={`/login?mode=signup&next=${encodeURIComponent(returnTo)}`}
+              className="inline-flex items-center justify-center rounded-xl border border-ink-200 px-5 py-2.5 text-sm font-bold text-ink-700 hover:bg-ink-50 transition-colors"
+            >
+              Create an account
+            </Link>
+            <button
+              onClick={handleContinueAsGuest}
+              className="text-sm font-semibold text-ink-400 hover:text-ink-600 transition-colors pt-1"
+            >
+              Continue as guest
+            </button>
+          </div>
+        </motion.div>
+      </main>
+    );
+  }
+
+  // Every module after the first always requires a real, signed-in account —
+  // guest browsing never extends past the free preview.
+  if (!mod.isFree && !user) {
     return (
       <main className="min-h-screen bg-white flex items-center justify-center px-4">
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="text-center max-w-sm">
           <div className="w-14 h-14 rounded-2xl bg-ink-100 flex items-center justify-center mx-auto mb-5">
             <Lock className="w-6 h-6 text-ink-400" />
           </div>
-          <h2 className="text-xl font-extrabold text-ink-900 mb-2">Sign up to continue</h2>
+          <h2 className="text-xl font-extrabold text-ink-900 mb-2">Sign in to continue</h2>
           <p className="text-sm text-ink-500 mb-6">
-            Module 1 is free. Sign up to access the full course and earn your certificate.
+            Module 1 is free to explore as a guest, but every module after that needs a real account so your progress is saved.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link href="/login?mode=signup" className={`inline-flex items-center justify-center rounded-xl ${theme.solidBg} px-5 py-2.5 text-sm font-bold text-white ${theme.solidBgHover} transition-colors`}>
+            <Link href={`/login?next=${encodeURIComponent(returnTo)}`} className={`inline-flex items-center justify-center rounded-xl ${theme.solidBg} px-5 py-2.5 text-sm font-bold text-white ${theme.solidBgHover} transition-colors`}>
+              Sign in
+            </Link>
+            <Link href={`/login?mode=signup&next=${encodeURIComponent(returnTo)}`} className="inline-flex items-center justify-center rounded-xl border border-ink-200 px-5 py-2.5 text-sm font-bold text-ink-700 hover:bg-ink-50 transition-colors">
               Sign up
             </Link>
-            <Link href={`/courses/${courseId}`} className="inline-flex items-center justify-center rounded-xl border border-ink-200 px-5 py-2.5 text-sm font-bold text-ink-700 hover:bg-ink-50 transition-colors">
-              Back to course
-            </Link>
           </div>
+          <Link href={`/courses/${courseId}`} className="inline-block mt-4 text-sm font-semibold text-ink-400 hover:text-ink-600 transition-colors">
+            Back to course
+          </Link>
         </motion.div>
       </main>
     );
@@ -153,7 +220,7 @@ export default function ModulePage() {
                 <div className="space-y-0.5">
                   {course.modules.map((m, i) => {
                     const isCurrent = m.id === mod.id;
-                    const isAccessible = m.isFree;
+                    const isAccessible = m.isFree || Boolean(user);
                     return (
                       <div key={m.id}>
                         {isAccessible ? (
@@ -276,19 +343,22 @@ export default function ModulePage() {
                       <p className="font-bold text-ink-900">Module complete!</p>
                       <p className="text-sm text-ink-500">
                         {nextModule
-                          ? nextModule.isFree ? `Next: ${nextModule.title}` : 'Sign up for the full course'
+                          ? nextModule.isFree || user ? `Next: ${nextModule.title}` : 'Sign in for the full course'
                           : 'You finished all free modules!'}
                       </p>
                     </div>
                   </div>
                   {nextModule ? (
-                    nextModule.isFree ? (
+                    nextModule.isFree || user ? (
                       <Link href={`/courses/${courseId}/modules/${nextModule.id}`} className={`inline-flex items-center gap-1.5 rounded-xl ${theme.solidBg} px-5 py-2.5 text-sm font-bold text-white ${theme.solidBgHover} transition-colors whitespace-nowrap`}>
                         Next module <ArrowRight className="w-4 h-4" />
                       </Link>
                     ) : (
-                      <Link href="/login?mode=signup" className={`inline-flex items-center rounded-xl ${theme.solidBg} px-5 py-2.5 text-sm font-bold text-white ${theme.solidBgHover} transition-colors whitespace-nowrap`}>
-                        Sign up to continue
+                      <Link
+                        href={`/login?next=${encodeURIComponent(`/courses/${courseId}/modules/${nextModule.id}`)}`}
+                        className={`inline-flex items-center rounded-xl ${theme.solidBg} px-5 py-2.5 text-sm font-bold text-white ${theme.solidBgHover} transition-colors whitespace-nowrap`}
+                      >
+                        Sign in to continue
                       </Link>
                     )
                   ) : (
@@ -309,7 +379,7 @@ export default function ModulePage() {
                     <ChevronLeft className="w-4 h-4" /> Previous module
                   </Link>
                 ) : <div />}
-                {nextModule && nextModule.isFree && (
+                {nextModule && (nextModule.isFree || user) && (
                   <Link
                     href={`/courses/${courseId}/modules/${nextModule.id}`}
                     className="flex items-center gap-1.5 text-sm font-semibold text-ink-500 hover:text-ink-900 transition-colors"

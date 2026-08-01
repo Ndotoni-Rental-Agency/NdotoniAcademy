@@ -219,7 +219,7 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
                     </Link>
                   ) : (
                     <span className="text-xs font-medium text-ink-400 bg-ink-100 px-3 py-1.5 rounded-lg">
-                      Enrolled only
+                      Sign in required
                     </span>
                   )}
                 </div>
