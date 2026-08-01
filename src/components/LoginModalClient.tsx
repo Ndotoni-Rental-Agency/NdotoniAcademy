@@ -8,6 +8,7 @@ function LoginModal() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const mode = searchParams.get('mode') === 'signup' ? 'signup' : 'signin';
+  const next = searchParams.get('next') || undefined;
 
   function close() {
     if (window.history.length > 1) {
@@ -17,7 +18,7 @@ function LoginModal() {
     }
   }
 
-  return <AuthModal isOpen onClose={close} initialMode={mode} />;
+  return <AuthModal isOpen onClose={close} initialMode={mode} next={next} />;
 }
 
 export default function LoginModalClient() {
