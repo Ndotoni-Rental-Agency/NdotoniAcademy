@@ -8,7 +8,7 @@ import { confirmResetPassword } from 'aws-amplify/auth';
 import { configureAmplify } from '@/lib/amplify';
 import { inputClass } from '@/components/auth/shared';
 
-type Status = 'form' | 'submitting' | 'success' | 'missing-params';
+type Status = 'form' | 'submitting' | 'success' | 'missing-params' | 'link-invalid';
 
 function ResetPassword() {
   const searchParams = useSearchParams();
@@ -38,6 +38,15 @@ function ResetPassword() {
       await confirmResetPassword({ username, confirmationCode: code, newPassword });
       setStatus('success');
     } catch (err) {
+      // Checking .name (the underlying Cognito exception type) rather than
+      // matching .message text — more reliable, and lets us replace
+      // Cognito's raw "Invalid code provided..." with a clearer dedicated
+      // screen instead of showing that text inline above the same form.
+      const name = err instanceof Error ? err.name : '';
+      if (name === 'ExpiredCodeException' || name === 'CodeMismatchException') {
+        setStatus('link-invalid');
+        return;
+      }
       setStatus('form');
       setError(err instanceof Error ? err.message : String(err));
     }
@@ -56,6 +65,26 @@ function ResetPassword() {
         <Link
           href="/login"
           className="inline-block w-full rounded-xl border border-ink-200 px-6 py-3 text-sm font-bold text-ink-700 hover:bg-ink-50 transition-colors"
+        >
+          Back to sign in
+        </Link>
+      </div>
+    );
+  }
+
+  if (status === 'link-invalid') {
+    return (
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 text-center">
+        <div className="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center mx-auto mb-5">
+          <XCircle className="w-7 h-7 text-red-600" />
+        </div>
+        <h1 className="text-xl font-extrabold text-ink-900 mb-1.5">This link has expired or was already used</h1>
+        <p className="text-sm text-ink-500 mb-6">
+          Password reset links only work once and expire after a while, for your security. Request a new one to keep going.
+        </p>
+        <Link
+          href="/login"
+          className="inline-block w-full rounded-xl bg-indigo-600 px-6 py-3 text-sm font-bold text-white hover:bg-indigo-700 transition-colors"
         >
           Back to sign in
         </Link>

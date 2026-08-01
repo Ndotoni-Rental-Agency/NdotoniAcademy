@@ -31,7 +31,13 @@ function ConfirmEmail() {
           return;
         }
         setStatus('error');
-        setError(message);
+        // .name is the underlying Cognito exception type — more reliable
+        // than matching .message text. For an expired/reused code, prefer
+        // the friendly fallback text (below, in the 'error' render branch)
+        // over Cognito's raw "Invalid code provided..." message.
+        const name = err instanceof Error ? err.name : '';
+        const isExpiredOrMismatched = name === 'ExpiredCodeException' || name === 'CodeMismatchException';
+        setError(isExpiredOrMismatched ? '' : message);
       });
   }, [username, code]);
 
