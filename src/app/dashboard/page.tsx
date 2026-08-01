@@ -1,13 +1,17 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
-import { Award, Download, Building2, Mail, Sparkles } from 'lucide-react';
+import { Award, Download, Building2, Loader2, Mail, Sparkles } from 'lucide-react';
 import { courses, getCourse, demoEnrolledCourses, demoCertificates, demoPoints, demoStreakDays } from '@/lib/mock-data';
 import { mockTeamMembers, mockPendingInvitations, roleBadgeClass, getTeamCourseUsage, getOrgRevenueEstimate } from '@/lib/organization-mock-data';
 import { initialTeachingCourses, recentStudentActivity } from '@/lib/teaching-mock-data';
 import { INSTRUCTOR_SHARE } from '@/lib/instructor-pricing';
 import { useAuth, dashboardModeFor, type AuthUser } from '@/lib/auth-context';
 import { accentByMode } from '@/lib/dashboard-accent';
+import { GraphQLClient } from '@/lib/graphql-client';
+import { requestInstructorRole } from '@/graphql/mutations';
+import type { RequestInstructorRoleMutation, RequestInstructorRoleMutationVariables } from '@/API';
 import EnrolledCourseCard from '@/components/EnrolledCourseCard';
 import CourseCard from '@/components/CourseCard';
 import ProgressRing from '@/components/ProgressRing';
@@ -371,13 +375,33 @@ function InstructorOverview({ user }: { user: AuthUser }) {
 // self-picked from the catalog or assigned by an org — same list either way.
 // ============================================================
 function LearnerOverview({ user }: { user: AuthUser }) {
-  const { setWantsToTeach } = useAuth();
+  const { setWantsToTeach, refetch } = useAuth();
   const accent = accentByMode.learner;
   const membership = user.organizations[0];
   const org = membership?.organization;
+  const isPlainMember = membership?.role === 'MEMBER';
   const [primary] = demoEnrolledCourses;
   const primaryCourse = primary ? getCourse(primary.courseId) : undefined;
   const currentModuleTitle = primaryCourse?.modules.find((m) => m.order === primary?.currentModule)?.title;
+
+  const [requesting, setRequesting] = useState(false);
+  const [requestError, setRequestError] = useState('');
+
+  async function handleRequestInstructor() {
+    if (!membership) return;
+    setRequesting(true);
+    setRequestError('');
+    try {
+      await GraphQLClient.execute<RequestInstructorRoleMutation>(requestInstructorRole, {
+        organizationId: membership.organizationId,
+      } satisfies RequestInstructorRoleMutationVariables);
+      await refetch();
+    } catch (err) {
+      setRequestError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setRequesting(false);
+    }
+  }
 
   return (
     <div className="p-6 lg:p-8 max-w-5xl">
@@ -486,10 +510,8 @@ function LearnerOverview({ user }: { user: AuthUser }) {
       )}
 
       {/* Switch to instructor mode — only for someone with no organization
-          at all (org membership already has its own path, via Settings'
-          "request to become an instructor" for a plain MEMBER). Clicking
-          this re-renders this same page as InstructorOverview immediately —
-          no navigation needed. */}
+          at all. Clicking this re-renders this same page as
+          InstructorOverview immediately — no navigation needed. */}
       {!org && (
         <section className="mb-6">
           <div className="flex items-center gap-4 rounded-2xl border border-ink-200 bg-white p-4 sm:p-5">
@@ -506,6 +528,41 @@ function LearnerOverview({ user }: { user: AuthUser }) {
             >
               Switch
             </button>
+          </div>
+        </section>
+      )}
+
+      {/* A plain MEMBER's own path to teaching — entirely internal to this
+          org, separate from the no-org toggle above. Only the OWNER can
+          actually promote (via the Team page), so this just sends the ask —
+          same request Settings' Teaching section offers, surfaced here too
+          since this is the page a member actually lands on. */}
+      {isPlainMember && (
+        <section className="mb-6">
+          <div className="flex items-center gap-4 rounded-2xl border border-ink-200 bg-white p-4 sm:p-5">
+            <div className="w-10 h-10 rounded-xl bg-coral-50 flex items-center justify-center flex-shrink-0">
+              <Sparkles className="w-5 h-5 text-coral-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-ink-900">
+                {membership?.wantsToBeInstructor ? 'Request sent' : `Want to teach at ${org?.name ?? 'your organization'}?`}
+              </p>
+              <p className="text-xs text-ink-500 mt-0.5">
+                {membership?.wantsToBeInstructor
+                  ? `Waiting on ${org?.name ?? 'your organization'}'s owner to approve.`
+                  : `Ask ${org?.name ?? 'your organization'}'s owner to make you an instructor there.`}
+              </p>
+              {requestError && <p className="text-xs text-coral-600 mt-1">{requestError}</p>}
+            </div>
+            {!membership?.wantsToBeInstructor && (
+              <button
+                onClick={handleRequestInstructor}
+                disabled={requesting}
+                className="rounded-xl bg-coral-600 px-4 py-2 text-xs font-bold text-white hover:bg-coral-700 transition-colors flex-shrink-0 disabled:opacity-60"
+              >
+                {requesting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Request'}
+              </button>
+            )}
           </div>
         </section>
       )}
