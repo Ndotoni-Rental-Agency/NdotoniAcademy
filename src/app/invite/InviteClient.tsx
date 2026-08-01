@@ -47,6 +47,7 @@ function Invite() {
         await refetch();
         setStatus('success');
       } catch (err) {
+        console.error('[invite] acceptInvitation failed ->', err);
         const message = err instanceof Error ? err.message : String(err);
         // A brand-new signup already had this invitation auto-accepted by the
         // post-confirmation trigger before this page ever ran — not an error.

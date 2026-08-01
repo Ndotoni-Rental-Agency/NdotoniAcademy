@@ -34,6 +34,30 @@ function getClient() {
  * claims to materialize/look up the caller, so this has to be the ID token;
  * AppSync's Cognito User Pools authorizer accepts either token type.
  */
+// Amplify's own `graphql()` call doesn't consistently resolve with an
+// `{ errors }` result — depending on the failure (a GraphQL error vs. a
+// network/auth failure before the request even completes), it can also
+// *reject* with a raw, non-Error object shaped like `{ errors: [...] }`.
+// Callers all do `err instanceof Error ? err.message : String(err)`, and
+// `String()` on a plain object yields the useless "[object Object]" — so
+// this extracts a real message from whatever shape shows up, and every
+// throw path logs the untouched original for debugging.
+function extractMessage(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  if (typeof err === 'string') return err;
+  if (err && typeof err === 'object' && 'errors' in err) {
+    const errors = (err as { errors?: unknown }).errors;
+    if (Array.isArray(errors) && errors.length && typeof errors[0]?.message === 'string') {
+      return errors[0].message;
+    }
+  }
+  try {
+    return JSON.stringify(err);
+  } catch {
+    return String(err);
+  }
+}
+
 export class GraphQLClient {
   static async execute<T = unknown>(
     query: string,
@@ -41,10 +65,17 @@ export class GraphQLClient {
   ): Promise<T> {
     const session = await fetchAuthSession();
     const authToken = session.tokens?.idToken?.toString();
-    const result = await getClient().graphql({ query, variables, authToken });
-    if ('errors' in result && result.errors?.length) {
-      throw new Error(result.errors[0].message);
+    try {
+      const result = await getClient().graphql({ query, variables, authToken });
+      if ('errors' in result && result.errors?.length) {
+        console.error('[GraphQLClient] GraphQL errors ->', result.errors);
+        throw new Error(result.errors[0].message);
+      }
+      return (result as { data: T }).data;
+    } catch (err) {
+      if (err instanceof Error) throw err;
+      console.error('[GraphQLClient] request failed ->', err);
+      throw new Error(extractMessage(err));
     }
-    return (result as { data: T }).data;
   }
 }
