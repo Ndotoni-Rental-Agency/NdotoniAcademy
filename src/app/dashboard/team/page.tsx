@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { Mail, X, RotateCw, UserPlus, BookOpen, Check, Upload, FileText } from 'lucide-react';
-import { useAuth } from '@/lib/auth-context';
+import { useAuth, dashboardModeFor } from '@/lib/auth-context';
 import {
   mockTeamMembers,
   mockPendingInvitations,
@@ -55,7 +55,11 @@ export default function TeamPage() {
   const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([]);
   const [assignConfirmed, setAssignConfirmed] = useState(false);
 
-  if (!user?.organizations[0]?.organization) return null;
+  // Team management is an OWNER/ADMIN surface — an INSTRUCTOR or plain
+  // MEMBER also belongs to an organization, but has no permission to
+  // invite/remove people or change roles, so they don't get this page even
+  // by navigating here directly.
+  if (!user || dashboardModeFor(user) !== 'organization') return null;
 
   const existingEmails = new Set([
     ...members.map((m) => m.email.toLowerCase()),

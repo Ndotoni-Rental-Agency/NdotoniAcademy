@@ -106,16 +106,31 @@ export function displayName(user: Pick<AuthUser, 'firstName' | 'lastName' | 'ema
   return name || user.email;
 }
 
+export type DashboardMode = 'learner' | 'instructor' | 'organization';
+
+/**
+ * Which dashboard shell a signed-in user sees — driven by their real role
+ * in the first organization they belong to (there's no org switcher yet
+ * for someone in several), not just whether they have one at all. OWNER/
+ * ADMIN manage the org; INSTRUCTOR teaches (and may still have training
+ * assigned to them); everyone else — a plain MEMBER, or no org at all —
+ * gets the learner shell.
+ */
+export function dashboardModeFor(user: AuthUser | null): DashboardMode {
+  const role = user?.organizations[0]?.role;
+  if (role === 'OWNER' || role === 'ADMIN') return 'organization';
+  if (role === 'INSTRUCTOR') return 'instructor';
+  return 'learner';
+}
+
 /**
  * Where a signed-in user should land when no more specific destination
- * (an explicit `next`) applies — based on their real organization
- * memberships, not a one-size-fits-all /dashboard. A user can belong to
- * several organizations; this just takes the first one, since there's no
- * org switcher yet to pick among them.
+ * (an explicit `next`) applies.
  */
 export function defaultDashboardPath(user: AuthUser | null): string {
-  const memberships = user?.organizations ?? [];
-  if (memberships.some((m) => m.role === 'OWNER' || m.role === 'ADMIN')) return '/dashboard/team';
-  if (memberships.some((m) => m.role === 'INSTRUCTOR')) return '/dashboard/courses';
-  return '/dashboard';
+  switch (dashboardModeFor(user)) {
+    case 'organization': return '/dashboard/team';
+    case 'instructor': return '/dashboard/courses';
+    default: return '/dashboard';
+  }
 }

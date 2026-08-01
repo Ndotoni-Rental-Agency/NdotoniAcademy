@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Award, Download } from 'lucide-react';
 import { courses, demoCertificates, Course, Certificate } from '@/lib/mock-data';
 import { getCategoryTheme } from '@/lib/category-theme';
-import { useAuth, displayName } from '@/lib/auth-context';
+import { useAuth, displayName, dashboardModeFor } from '@/lib/auth-context';
 
 const accentHex: Record<string, string> = {
   'Project Management': '#4f46e5',
@@ -97,14 +97,15 @@ function openCertificate(cert: Certificate, userName: string, course?: Course) {
 export default function CertificatesPage() {
   const router = useRouter();
   const { user } = useAuth();
-  const org = user?.organizations[0]?.organization;
+  // Only OWNER/ADMIN don't take courses themselves — a plain MEMBER or an
+  // INSTRUCTOR is still a learner too and keeps this page.
+  const isOrgManager = user ? dashboardModeFor(user) === 'organization' : false;
 
-  // Organizations don't take courses themselves; this page only applies to individual accounts.
   useEffect(() => {
-    if (org) router.replace('/dashboard');
-  }, [org, router]);
+    if (isOrgManager) router.replace('/dashboard');
+  }, [isOrgManager, router]);
 
-  if (!user || org) return null; // no user yet: DashboardLayout is still loading/redirecting
+  if (!user || isOrgManager) return null; // no user yet: DashboardLayout is still loading/redirecting
 
   return (
     <div className="p-6 lg:p-8 max-w-5xl">

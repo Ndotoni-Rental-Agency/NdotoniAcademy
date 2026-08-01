@@ -4,26 +4,32 @@ import Link from 'next/link';
 import { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { LayoutDashboard, BookOpen, Award, Settings, LogOut, Users, Building2, Loader2 } from 'lucide-react';
-import { useAuth, displayName } from '@/lib/auth-context';
+import { useAuth, displayName, dashboardModeFor, type DashboardMode } from '@/lib/auth-context';
 
-const individualNavItems = [
-  { label: 'Overview', href: '/dashboard', icon: LayoutDashboard },
-  { label: 'Courses', href: '/dashboard/courses', icon: BookOpen },
-  { label: 'Certificates', href: '/dashboard/certificates', icon: Award },
-  { label: 'Create organization', href: '/dashboard/create-organization', icon: Building2 },
-];
+type NavItem = { label: string; href: string; icon: typeof LayoutDashboard };
 
-const organizationNavItems = [
-  { label: 'Overview', href: '/dashboard', icon: LayoutDashboard },
-  { label: 'Courses', href: '/dashboard/courses', icon: BookOpen },
-  { label: 'Team', href: '/dashboard/team', icon: Users },
-];
+const navItemsByMode: Record<DashboardMode, NavItem[]> = {
+  learner: [
+    { label: 'Overview', href: '/dashboard', icon: LayoutDashboard },
+    { label: 'Courses', href: '/dashboard/courses', icon: BookOpen },
+    { label: 'Certificates', href: '/dashboard/certificates', icon: Award },
+  ],
+  instructor: [
+    { label: 'Overview', href: '/dashboard', icon: LayoutDashboard },
+    { label: 'My Courses', href: '/dashboard/courses', icon: BookOpen },
+  ],
+  organization: [
+    { label: 'Overview', href: '/dashboard', icon: LayoutDashboard },
+    { label: 'Courses', href: '/dashboard/courses', icon: BookOpen },
+    { label: 'Team', href: '/dashboard/team', icon: Users },
+  ],
+};
 
 function isNavItemActive(pathname: string, href: string) {
   return pathname === href || (href !== '/dashboard' && pathname.startsWith(href + '/'));
 }
 
-function NavLink({ item, isActive, compact = false }: { item: { label: string; href: string; icon: typeof LayoutDashboard }; isActive: boolean; compact?: boolean }) {
+function NavLink({ item, isActive, compact = false }: { item: NavItem; isActive: boolean; compact?: boolean }) {
   return (
     <Link
       href={item.href}
@@ -70,17 +76,29 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const membership = user.organizations[0];
   const org = membership?.organization;
-  const navItems = org ? organizationNavItems : individualNavItems;
+  const mode = dashboardModeFor(user);
+  const navItems = navItemsByMode[mode];
+  // A plain MEMBER still sees the learner shell (mode === 'learner'), but
+  // this is what tells the sidebar identity block to show their org instead
+  // of "Individual account" — mode alone can't distinguish the two.
+  const isOrgMember = mode !== 'organization' && Boolean(org);
 
   return (
     <>
       <div className="flex h-[calc(100vh-56px)]">
         {/* Sidebar */}
         <aside className="hidden lg:flex lg:flex-col w-56 border-r border-ink-200 bg-white flex-shrink-0">
-          {org ? (
+          {mode === 'organization' && org ? (
             <div className="px-4 pt-4 pb-3 border-b border-ink-100 mb-2">
               <p className="text-xs font-extrabold text-ink-900 truncate">{org.name}</p>
               <p className="text-[10px] text-ink-400 capitalize">{membership.role.toLowerCase()} account</p>
+            </div>
+          ) : isOrgMember && org ? (
+            <div className="px-4 pt-4 pb-3 border-b border-ink-100 mb-2">
+              <p className="text-xs font-extrabold text-ink-900 truncate">{displayName(user)}</p>
+              <p className="text-[10px] text-ink-400 truncate">
+                {mode === 'instructor' ? 'Instructor at' : 'Member at'} {org.name}
+              </p>
             </div>
           ) : (
             <div className="px-4 pt-4 pb-3 border-b border-ink-100 mb-2">
@@ -94,6 +112,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {navItems.map((item) => (
               <NavLink key={item.href} item={item} isActive={isNavItemActive(pathname, item.href)} />
             ))}
+            {mode === 'learner' && !org && (
+              <NavLink
+                item={{ label: 'Create organization', href: '/dashboard/create-organization', icon: Building2 }}
+                isActive={isNavItemActive(pathname, '/dashboard/create-organization')}
+              />
+            )}
           </nav>
 
           {/* Settings + Sign out */}
@@ -114,7 +138,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {/* Mobile nav */}
           <div className="lg:hidden sticky top-0 z-30 bg-white border-b border-ink-200 px-4 py-2 overflow-x-auto no-scrollbar">
             <div className="flex gap-1 min-w-max">
-              {[...navItems, { label: 'Settings', href: '/dashboard/settings', icon: Settings }].map((item) => (
+              {[
+                ...navItems,
+                ...(mode === 'learner' && !org
+                  ? [{ label: 'Create organization', href: '/dashboard/create-organization', icon: Building2 }]
+                  : []),
+                { label: 'Settings', href: '/dashboard/settings', icon: Settings },
+              ].map((item) => (
                 <NavLink key={item.href} item={item} isActive={isNavItemActive(pathname, item.href)} compact />
               ))}
             </div>
