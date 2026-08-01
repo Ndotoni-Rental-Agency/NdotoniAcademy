@@ -10,6 +10,21 @@ import type { MeQuery } from '@/API';
 
 export type AuthUser = NonNullable<MeQuery['me']>;
 
+// Instructor is otherwise strictly a per-organization MembershipRole — the
+// backend has no concept of an independent instructor at all. For someone
+// with no organization, "instructor mode" is purely a local preference (this
+// codebase's established pattern for illustrative, not-backend-real state —
+// see teaching-mock-data.ts), scoped per account so it doesn't leak across
+// different accounts signed into the same browser.
+function wantsToTeachKey(userId: string): string {
+  return `academy-wants-to-teach:${userId}`;
+}
+
+function readWantsToTeach(userId: string): boolean {
+  if (typeof window === 'undefined') return false;
+  return localStorage.getItem(wantsToTeachKey(userId)) === '1';
+}
+
 interface AuthContextValue {
   /** null while signed out, populated once the `me` query resolves. */
   user: AuthUser | null;
@@ -24,6 +39,9 @@ interface AuthContextValue {
    */
   refetch: () => Promise<AuthUser | null>;
   signOut: () => Promise<void>;
+  /** Only meaningful for a user with no organization — see dashboardModeFor. */
+  wantsToTeach: boolean;
+  setWantsToTeach: (next: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -31,6 +49,7 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [wantsToTeach, setWantsToTeachState] = useState(false);
 
   const fetchUser = useCallback(async (): Promise<AuthUser | null> => {
     configureAmplify();
@@ -43,15 +62,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('[auth] me query ->', data);
       const nextUser = data.me ?? null;
       setUser(nextUser);
+      setWantsToTeachState(nextUser ? readWantsToTeach(nextUser.id) : false);
       return nextUser;
     } catch (err) {
       console.error('[auth] fetchUser failed ->', err);
       setUser(null);
+      setWantsToTeachState(false);
       return null;
     } finally {
       setLoading(false);
     }
   }, []);
+
+  const setWantsToTeach = useCallback(
+    (next: boolean) => {
+      if (user && typeof window !== 'undefined') {
+        const key = wantsToTeachKey(user.id);
+        if (next) localStorage.setItem(key, '1');
+        else localStorage.removeItem(key);
+      }
+      setWantsToTeachState(next);
+    },
+    [user]
+  );
 
   useEffect(() => {
     (async () => {
@@ -84,10 +117,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(async () => {
     await amplifySignOut();
     setUser(null);
+    setWantsToTeachState(false);
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, refetch: fetchUser, signOut }}>
+    <AuthContext.Provider value={{ user, loading, refetch: fetchUser, signOut, wantsToTeach, setWantsToTeach }}>
       {children}
     </AuthContext.Provider>
   );
@@ -115,11 +149,19 @@ export type DashboardMode = 'learner' | 'instructor' | 'organization';
  * ADMIN manage the org; INSTRUCTOR teaches (and may still have training
  * assigned to them); everyone else — a plain MEMBER, or no org at all —
  * gets the learner shell.
+ *
+ * `wantsToTeach` (see AuthContext) only applies to someone with no
+ * organization at all — the backend has no "instructor" concept outside a
+ * membership, so it can only ever be a local preference, and only for
+ * someone whose real role isn't already decided by an org they belong to. A
+ * plain org MEMBER can't self-promote this way; that's still exclusively an
+ * OWNER/ADMIN action via changeMemberRole.
  */
-export function dashboardModeFor(user: AuthUser | null): DashboardMode {
+export function dashboardModeFor(user: AuthUser | null, wantsToTeach = false): DashboardMode {
   const role = user?.organizations[0]?.role;
   if (role === 'OWNER' || role === 'ADMIN') return 'organization';
   if (role === 'INSTRUCTOR') return 'instructor';
+  if (!user?.organizations[0] && wantsToTeach) return 'instructor';
   return 'learner';
 }
 
@@ -127,8 +169,8 @@ export function dashboardModeFor(user: AuthUser | null): DashboardMode {
  * Where a signed-in user should land when no more specific destination
  * (an explicit `next`) applies.
  */
-export function defaultDashboardPath(user: AuthUser | null): string {
-  switch (dashboardModeFor(user)) {
+export function defaultDashboardPath(user: AuthUser | null, wantsToTeach = false): string {
+  switch (dashboardModeFor(user, wantsToTeach)) {
     case 'organization': return '/dashboard/team';
     case 'instructor': return '/dashboard/courses';
     default: return '/dashboard';

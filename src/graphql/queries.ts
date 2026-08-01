@@ -38,6 +38,7 @@ export const me = /* GraphQL */ `query Me {
     email
     firstName
     id
+    instructorStatus
     lastName
     organizations {
       id

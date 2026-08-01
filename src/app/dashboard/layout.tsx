@@ -64,7 +64,7 @@ function NavLink({
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, loading, signOut } = useAuth();
+  const { user, loading, signOut, wantsToTeach } = useAuth();
 
   useEffect(() => {
     if (!loading && !user) {
@@ -90,7 +90,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const membership = user.organizations[0];
   const org = membership?.organization;
-  const mode = dashboardModeFor(user);
+  const mode = dashboardModeFor(user, wantsToTeach);
   const navItems = navItemsByMode[mode];
   const accent = accentByMode[mode];
   // A plain MEMBER still sees the learner shell (mode === 'learner'), but
@@ -118,7 +118,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           ) : (
             <div className="px-4 pt-4 pb-3 border-b border-ink-100 mb-2">
               <p className="text-xs font-extrabold text-ink-900 truncate">{displayName(user)}</p>
-              <p className="text-[10px] text-ink-400">Individual account</p>
+              <p className="text-[10px] text-ink-400">
+                {mode === 'instructor' ? 'Independent instructor' : 'Individual account'}
+              </p>
             </div>
           )}
 
@@ -127,7 +129,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {navItems.map((item) => (
               <NavLink key={item.href} item={item} isActive={isNavItemActive(pathname, item.href)} accent={accent} />
             ))}
-            {mode === 'learner' && !org && (
+            {!org && (
               <NavLink
                 item={{ label: 'Create organization', href: '/dashboard/create-organization', icon: Building2 }}
                 isActive={isNavItemActive(pathname, '/dashboard/create-organization')}
@@ -156,7 +158,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div className="flex gap-1 min-w-max">
               {[
                 ...navItems,
-                ...(mode === 'learner' && !org
+                ...(!org
                   ? [{ label: 'Create organization', href: '/dashboard/create-organization', icon: Building2 }]
                   : []),
                 { label: 'Settings', href: '/dashboard/settings', icon: Settings },

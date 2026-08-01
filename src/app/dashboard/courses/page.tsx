@@ -16,10 +16,10 @@ import CourseCard from '@/components/CourseCard';
 const teachingCategories = ['Project Management', 'Marketing', 'Technology', 'Design'];
 
 export default function CoursesPage() {
-  const { user } = useAuth();
+  const { user, wantsToTeach } = useAuth();
   if (!user) return null; // DashboardLayout redirects/loads before this can render
 
-  const mode = dashboardModeFor(user);
+  const mode = dashboardModeFor(user, wantsToTeach);
   if (mode === 'organization') return <OrganizationCoursesPage />;
 
   const org = user.organizations[0]?.organization;

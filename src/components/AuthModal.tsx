@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { X } from 'lucide-react';
 import IndividualAuthForm from './auth/IndividualAuthForm';
-import { defaultDashboardPath, type AuthUser } from '@/lib/auth-context';
+import { useAuth, defaultDashboardPath, type AuthUser } from '@/lib/auth-context';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -17,10 +17,13 @@ interface AuthModalProps {
    * out for someone with no organization.
    */
   next?: string;
+  /** See AuthButton's doc for the same prop — this is where it actually takes effect. */
+  asInstructor?: boolean;
 }
 
-export default function AuthModal({ isOpen, onClose, initialMode = 'signin', next }: AuthModalProps) {
+export default function AuthModal({ isOpen, onClose, initialMode = 'signin', next, asInstructor }: AuthModalProps) {
   const router = useRouter();
+  const { setWantsToTeach } = useAuth();
   const [mode, setMode] = useState<'signin' | 'signup'>(initialMode);
 
   // The modal itself never unmounts between opens (parents just flip `isOpen`), so mode
@@ -36,8 +39,9 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin', nex
   if (!isOpen) return null;
 
   function handleIndividualSuccess(user: AuthUser | null) {
+    if (asInstructor && user && user.organizations.length === 0) setWantsToTeach(true);
     onClose();
-    router.push(next ?? defaultDashboardPath(user));
+    router.push(next ?? defaultDashboardPath(user, asInstructor));
   }
 
   return (

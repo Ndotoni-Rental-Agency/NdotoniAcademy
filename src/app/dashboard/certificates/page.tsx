@@ -96,11 +96,11 @@ function openCertificate(cert: Certificate, userName: string, course?: Course) {
 
 export default function CertificatesPage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, wantsToTeach } = useAuth();
   // Only OWNER/ADMIN don't take courses themselves — a plain MEMBER or an
   // INSTRUCTOR is still a learner too and keeps this page.
-  const isOrgManager = user ? dashboardModeFor(user) === 'organization' : false;
-  const accent = user ? accentByMode[dashboardModeFor(user)] : accentByMode.learner;
+  const isOrgManager = user ? dashboardModeFor(user, wantsToTeach) === 'organization' : false;
+  const accent = user ? accentByMode[dashboardModeFor(user, wantsToTeach)] : accentByMode.learner;
 
   useEffect(() => {
     if (isOrgManager) router.replace('/dashboard');

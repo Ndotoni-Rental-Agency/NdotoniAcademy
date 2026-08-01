@@ -64,11 +64,22 @@ export type User = {
   email: string,
   firstName?: string | null,
   id: string,
+  instructorStatus?: InstructorStatus | null,
   lastName?: string | null,
   organizations:  Array<OrganizationMembership >,
   status: UserStatus,
   updatedAt: string,
 };
+
+// Null on User means never applied. Only gates publishing an independent
+// (no-organization) course — an org-scoped course needs no platform
+// approval, since the organization's own INSTRUCTOR membership vouches for it.
+export enum InstructorStatus {
+  APPROVED = "APPROVED",
+  PENDING = "PENDING",
+  REJECTED = "REJECTED",
+}
+
 
 export enum UserStatus {
   ACTIVE = "ACTIVE",
@@ -201,6 +212,17 @@ export type AcceptInvitationMutation = {
       updatedAt: string,
     } | null,
     userId: string,
+  } | null,
+};
+
+export type ApplyToBeInstructorMutationVariables = {
+};
+
+export type ApplyToBeInstructorMutation = {
+  applyToBeInstructor?:  {
+    __typename: "User",
+    id: string,
+    instructorStatus?: InstructorStatus | null,
   } | null,
 };
 
@@ -580,6 +602,7 @@ export type MeQuery = {
     email: string,
     firstName?: string | null,
     id: string,
+    instructorStatus?: InstructorStatus | null,
     lastName?: string | null,
     organizations:  Array< {
       __typename: "OrganizationMembership",

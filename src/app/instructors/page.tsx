@@ -32,6 +32,7 @@ export default function InstructorsPage() {
               <AuthButton
                 mode="signup"
                 next="/dashboard/courses"
+                asInstructor
                 className="inline-flex items-center gap-2 rounded-full bg-indigo-600 px-7 py-3.5 text-sm font-bold text-white hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-600/20 mb-8"
               >
                 Start teaching <ArrowRight className="w-4 h-4" />

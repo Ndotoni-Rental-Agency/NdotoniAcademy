@@ -16,10 +16,10 @@ import Sparkline from '@/components/Sparkline';
 import Avatar from '@/components/Avatar';
 
 export default function DashboardPage() {
-  const { user } = useAuth();
+  const { user, wantsToTeach } = useAuth();
   if (!user) return null; // DashboardLayout already redirects/loads before this can render
 
-  switch (dashboardModeFor(user)) {
+  switch (dashboardModeFor(user, wantsToTeach)) {
     case 'organization':
       return <OrganizationOverview user={user} />;
     case 'instructor':

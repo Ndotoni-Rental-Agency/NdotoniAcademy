@@ -26,6 +26,20 @@ export const acceptInvitation = /* GraphQL */ `mutation AcceptInvitation($token:
   APITypes.AcceptInvitationMutationVariables,
   APITypes.AcceptInvitationMutation
 >;
+// Trimmed by hand — same reasoning as acceptInvitation above: the caller
+// (Settings page) calls AuthContext's own refetch() right after for the
+// full up-to-date `me`, so this only needs to confirm the status stuck.
+export const applyToBeInstructor = /* GraphQL */ `mutation ApplyToBeInstructor {
+  applyToBeInstructor {
+    id
+    instructorStatus
+    __typename
+  }
+}
+` as GeneratedMutation<
+  APITypes.ApplyToBeInstructorMutationVariables,
+  APITypes.ApplyToBeInstructorMutation
+>;
 // Trimmed by hand — see the comment on createOrganization below for why.
 // The caller already has the member's name from the roster it fetched
 // separately; this just needs enough to update that local list in place.

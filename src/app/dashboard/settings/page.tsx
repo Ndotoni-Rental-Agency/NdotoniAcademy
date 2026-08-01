@@ -3,18 +3,18 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Building2, CheckCircle2, Loader2, XCircle } from 'lucide-react';
-import { useAuth, displayName, dashboardModeFor } from '@/lib/auth-context';
+import { Building2, CheckCircle2, Loader2, Sparkles, XCircle } from 'lucide-react';
+import { useAuth, displayName, dashboardModeFor, defaultDashboardPath } from '@/lib/auth-context';
 import { accentByMode } from '@/lib/dashboard-accent';
 import { GraphQLClient } from '@/lib/graphql-client';
-import { updateProfile } from '@/graphql/mutations';
-import type { UpdateProfileMutation, UpdateProfileMutationVariables } from '@/API';
+import { applyToBeInstructor, updateProfile } from '@/graphql/mutations';
+import type { ApplyToBeInstructorMutation, UpdateProfileMutation, UpdateProfileMutationVariables } from '@/API';
 import Avatar from '@/components/Avatar';
 
 export default function SettingsPage() {
-  const { user, refetch, signOut } = useAuth();
+  const { user, refetch, signOut, wantsToTeach, setWantsToTeach } = useAuth();
   const router = useRouter();
-  const accent = accentByMode[user ? dashboardModeFor(user) : 'learner'];
+  const accent = accentByMode[user ? dashboardModeFor(user, wantsToTeach) : 'learner'];
   // DashboardLayout only renders this page once `user` is loaded, so these
   // initial values are never actually stale — but hooks must run
   // unconditionally, so the null case is handled after, not before, them.
@@ -23,6 +23,8 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
+  const [applying, setApplying] = useState(false);
+  const [applyError, setApplyError] = useState('');
 
   if (!user) return null;
 
@@ -41,6 +43,30 @@ export default function SettingsPage() {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setSaving(false);
+    }
+  }
+
+  function handleToggleTeaching() {
+    // Purely a dashboard-shell preference — never fires the real
+    // instructor-application flow on its own (see handleApply), so
+    // toggling back and forth doesn't spam admins with duplicate emails.
+    const next = !wantsToTeach;
+    setWantsToTeach(next);
+    // The mode switch is invisible on this page itself (accent aside) —
+    // land somewhere that actually shows it took effect.
+    router.push(defaultDashboardPath(user, next));
+  }
+
+  async function handleApply() {
+    setApplying(true);
+    setApplyError('');
+    try {
+      await GraphQLClient.execute<ApplyToBeInstructorMutation>(applyToBeInstructor);
+      await refetch();
+    } catch (err) {
+      setApplyError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setApplying(false);
     }
   }
 
@@ -140,6 +166,89 @@ export default function SettingsPage() {
               Create
             </Link>
           </div>
+        </div>
+      )}
+
+      {/* Teaching — instructor is otherwise a per-organization role assigned
+          by an OWNER/ADMIN; someone with no organization at all has no such
+          role to be assigned, so this is the one case where "become an
+          instructor" is a self-service local switch instead. */}
+      {user.organizations.length === 0 && (
+        <div className="mt-12 pt-8 border-t border-ink-100">
+          <h2 className="text-xs font-bold text-ink-400 uppercase tracking-wide mb-2.5">Teaching</h2>
+          {wantsToTeach ? (
+            <div className="flex items-center gap-4 rounded-2xl border border-ink-200 bg-white p-4">
+              <div className="w-10 h-10 rounded-xl bg-coral-50 flex items-center justify-center flex-shrink-0">
+                <Sparkles className="w-5 h-5 text-coral-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-ink-900">You&apos;re in instructor mode</p>
+                <p className="text-xs text-ink-500 mt-0.5">
+                  Your dashboard is set up for building and publishing courses. Switch back anytime — your learning history stays exactly as it is.
+                </p>
+              </div>
+              <button
+                onClick={handleToggleTeaching}
+                className="rounded-xl border border-ink-200 px-4 py-2 text-xs font-bold text-ink-700 hover:bg-ink-50 transition-colors flex-shrink-0"
+              >
+                Switch back
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-4 rounded-2xl border border-ink-200 bg-white p-4">
+              <div className="w-10 h-10 rounded-xl bg-coral-50 flex items-center justify-center flex-shrink-0">
+                <Sparkles className="w-5 h-5 text-coral-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-ink-900">Want to teach?</p>
+                <p className="text-xs text-ink-500 mt-0.5">
+                  Switch to your instructor dashboard to build and publish courses. Your learning history stays exactly as it is.
+                </p>
+              </div>
+              <button
+                onClick={handleToggleTeaching}
+                className="rounded-xl bg-coral-600 px-4 py-2 text-xs font-bold text-white hover:bg-coral-700 transition-colors flex-shrink-0"
+              >
+                Switch
+              </button>
+            </div>
+          )}
+
+          {/* Publishing an independent (no-organization) course needs a
+              one-time Ndotoni approval — a course for an org you actually
+              instruct at doesn't need this, since the org's own membership
+              already vouches for you. */}
+          {wantsToTeach && (
+            <div className="mt-3 rounded-xl border border-ink-200 bg-ink-50 px-4 py-3 flex items-center gap-3">
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-bold text-ink-700">
+                  {user.instructorStatus === 'APPROVED' && 'Approved to publish independent public courses'}
+                  {user.instructorStatus === 'PENDING' && 'Application pending — Ndotoni reviews these manually'}
+                  {user.instructorStatus === 'REJECTED' && 'Application declined'}
+                  {!user.instructorStatus && 'Publishing your own public course needs a quick approval first'}
+                </p>
+                <p className="text-[11px] text-ink-400 mt-0.5">
+                  Only applies to courses you publish independently — courses for an organization you instruct at don&apos;t need this.
+                </p>
+              </div>
+              {(!user.instructorStatus || user.instructorStatus === 'REJECTED') && (
+                <button
+                  onClick={handleApply}
+                  disabled={applying}
+                  className="rounded-lg bg-ink-900 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-ink-800 transition-colors flex-shrink-0 disabled:opacity-60"
+                >
+                  {applying ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : user.instructorStatus === 'REJECTED' ? (
+                    'Apply again'
+                  ) : (
+                    'Apply for approval'
+                  )}
+                </button>
+              )}
+            </div>
+          )}
+          {applyError && <p className="text-xs text-coral-600 mt-2">{applyError}</p>}
         </div>
       )}
 
