@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { LayoutDashboard, BookOpen, Award, Settings, LogOut, Users, Building2, Loader2 } from 'lucide-react';
 import { useAuth, displayName, dashboardModeFor, type DashboardMode } from '@/lib/auth-context';
+import { accentByMode, type DashboardAccent } from '@/lib/dashboard-accent';
 
 type NavItem = { label: string; href: string; icon: typeof LayoutDashboard };
 
@@ -17,6 +18,9 @@ const navItemsByMode: Record<DashboardMode, NavItem[]> = {
   instructor: [
     { label: 'Overview', href: '/dashboard', icon: LayoutDashboard },
     { label: 'My Courses', href: '/dashboard/courses', icon: BookOpen },
+    // An instructor is still a learner too — often was one first, and may
+    // already hold certificates from before they started teaching.
+    { label: 'Certificates', href: '/dashboard/certificates', icon: Award },
   ],
   organization: [
     { label: 'Overview', href: '/dashboard', icon: LayoutDashboard },
@@ -29,7 +33,17 @@ function isNavItemActive(pathname: string, href: string) {
   return pathname === href || (href !== '/dashboard' && pathname.startsWith(href + '/'));
 }
 
-function NavLink({ item, isActive, compact = false }: { item: NavItem; isActive: boolean; compact?: boolean }) {
+function NavLink({
+  item,
+  isActive,
+  accent,
+  compact = false,
+}: {
+  item: NavItem;
+  isActive: boolean;
+  accent: DashboardAccent;
+  compact?: boolean;
+}) {
   return (
     <Link
       href={item.href}
@@ -37,11 +51,11 @@ function NavLink({ item, isActive, compact = false }: { item: NavItem; isActive:
         compact ? 'px-3 py-2 text-xs whitespace-nowrap' : 'px-3 py-2 text-sm'
       } ${
         isActive
-          ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/30'
+          ? `${accent.bg50} ${accent.text700}`
           : `text-ink-600 ${compact ? '' : 'font-medium'} hover:bg-ink-50 hover:text-ink-900`
       }`}
     >
-      <item.icon className={`${compact ? 'w-3.5 h-3.5' : 'w-4 h-4'} ${isActive ? 'text-white' : 'text-ink-400'}`} />
+      <item.icon className={`${compact ? 'w-3.5 h-3.5' : 'w-4 h-4'} ${isActive ? accent.text700 : 'text-ink-400'}`} />
       {item.label}
     </Link>
   );
@@ -78,6 +92,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const org = membership?.organization;
   const mode = dashboardModeFor(user);
   const navItems = navItemsByMode[mode];
+  const accent = accentByMode[mode];
   // A plain MEMBER still sees the learner shell (mode === 'learner'), but
   // this is what tells the sidebar identity block to show their org instead
   // of "Individual account" — mode alone can't distinguish the two.
@@ -110,19 +125,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {/* Nav */}
           <nav className="flex-1 px-2 py-2 space-y-0.5">
             {navItems.map((item) => (
-              <NavLink key={item.href} item={item} isActive={isNavItemActive(pathname, item.href)} />
+              <NavLink key={item.href} item={item} isActive={isNavItemActive(pathname, item.href)} accent={accent} />
             ))}
             {mode === 'learner' && !org && (
               <NavLink
                 item={{ label: 'Create organization', href: '/dashboard/create-organization', icon: Building2 }}
                 isActive={isNavItemActive(pathname, '/dashboard/create-organization')}
+                accent={accent}
               />
             )}
           </nav>
 
           {/* Settings + Sign out */}
           <div className="px-2 py-3 border-t border-ink-100 space-y-0.5">
-            <NavLink item={{ label: 'Settings', href: '/dashboard/settings', icon: Settings }} isActive={pathname === '/dashboard/settings'} />
+            <NavLink item={{ label: 'Settings', href: '/dashboard/settings', icon: Settings }} isActive={pathname === '/dashboard/settings'} accent={accent} />
             <button
               onClick={handleSignOut}
               className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-ink-500 hover:bg-ink-50 hover:text-ink-700 transition-colors"
@@ -145,7 +161,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   : []),
                 { label: 'Settings', href: '/dashboard/settings', icon: Settings },
               ].map((item) => (
-                <NavLink key={item.href} item={item} isActive={isNavItemActive(pathname, item.href)} compact />
+                <NavLink key={item.href} item={item} isActive={isNavItemActive(pathname, item.href)} accent={accent} compact />
               ))}
             </div>
           </div>

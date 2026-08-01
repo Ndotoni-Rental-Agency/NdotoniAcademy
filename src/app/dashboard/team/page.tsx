@@ -1,30 +1,67 @@
 'use client';
 
-import { useState, useRef } from 'react';
-import { Mail, X, RotateCw, UserPlus, BookOpen, Check, Upload, FileText } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Mail, X, RotateCw, UserPlus, BookOpen, Check, Upload, FileText, Loader2 } from 'lucide-react';
 import { useAuth, dashboardModeFor } from '@/lib/auth-context';
+import { accentByMode } from '@/lib/dashboard-accent';
+import { GraphQLClient } from '@/lib/graphql-client';
+import { organization as organizationQuery, invitationsForOrganization } from '@/graphql/queries';
+import { inviteMember, revokeInvitation, changeMemberRole } from '@/graphql/mutations';
 import {
-  mockTeamMembers,
-  mockPendingInvitations,
-  getAssignableCourses,
-  roleBadgeClass,
-  type TeamMember,
-  type PendingInvitation,
-  type MembershipRole,
-} from '@/lib/organization-mock-data';
+  MembershipRole,
+  type OrganizationQuery,
+  type OrganizationQueryVariables,
+  type InvitationsForOrganizationQuery,
+  type InvitationsForOrganizationQueryVariables,
+  type InviteMemberMutation,
+  type InviteMemberMutationVariables,
+  type RevokeInvitationMutation,
+  type RevokeInvitationMutationVariables,
+  type ChangeMemberRoleMutation,
+  type ChangeMemberRoleMutationVariables,
+} from '@/API';
+import { getAssignableCourses } from '@/lib/organization-mock-data';
 import Avatar from '@/components/Avatar';
 
 const assignableCourses = getAssignableCourses();
 const EMAIL_PATTERN = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
 const ROLE_KEYWORDS: Record<string, MembershipRole> = {
-  admin: 'ADMIN',
-  instructor: 'INSTRUCTOR',
-  member: 'MEMBER',
+  admin: MembershipRole.ADMIN,
+  instructor: MembershipRole.INSTRUCTOR,
+  member: MembershipRole.MEMBER,
+};
+// Excludes OWNER deliberately, same as the invite form always has —
+// changeMemberRole has no ownership-transfer safeguards, so promoting
+// someone to owner isn't offered as a plain role change here.
+const assignableRoles: MembershipRole[] = [MembershipRole.MEMBER, MembershipRole.ADMIN, MembershipRole.INSTRUCTOR];
+const roleBadgeClass: Record<string, string> = {
+  OWNER: 'bg-indigo-100 text-indigo-700',
+  ADMIN: 'bg-sky-100 text-sky-700',
+  MEMBER: 'bg-ink-100 text-ink-600',
+  INSTRUCTOR: 'bg-coral-100 text-coral-700',
 };
 
 interface ParsedInvite {
   email: string;
   role: MembershipRole | null;
+}
+
+interface RosterMember {
+  userId: string;
+  name: string;
+  email: string;
+  role: MembershipRole;
+  // Local-only — there's no real backend concept of course assignment yet,
+  // so this never persists past a reload. Real people, illustrative training data.
+  assignedCourseIds: string[];
+  trainingProgress: number;
+}
+
+interface PendingInvite {
+  id: string;
+  email: string;
+  role: MembershipRole;
+  createdAt: string;
 }
 
 function detectRole(line: string): MembershipRole | null {
@@ -37,50 +74,118 @@ function detectRole(line: string): MembershipRole | null {
 
 export default function TeamPage() {
   const { user } = useAuth();
-  const [members, setMembers] = useState<TeamMember[]>(mockTeamMembers);
-  const [invitations, setInvitations] = useState<PendingInvitation[]>(mockPendingInvitations);
+  // Team management is an OWNER/ADMIN surface — an INSTRUCTOR or plain
+  // MEMBER also belongs to an organization, but has no permission to
+  // invite/remove people or change roles, so they don't get this page even
+  // by navigating here directly.
+  const isOrgManager = Boolean(user) && dashboardModeFor(user) === 'organization';
+  const organizationId = user?.organizations[0]?.organizationId;
+  const accent = accentByMode.organization;
+
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const [members, setMembers] = useState<RosterMember[]>([]);
+  const [invitations, setInvitations] = useState<PendingInvite[]>([]);
+
   const [inviteMode, setInviteMode] = useState<'single' | 'bulk'>('single');
   const [inviteEmail, setInviteEmail] = useState('');
-  const [inviteRole, setInviteRole] = useState<MembershipRole>('MEMBER');
+  const [inviteRole, setInviteRole] = useState<MembershipRole>(MembershipRole.MEMBER);
+  const [inviting, setInviting] = useState(false);
+  const [inviteError, setInviteError] = useState('');
   const [resentId, setResentId] = useState<string | null>(null);
+  const [revokingEmail, setRevokingEmail] = useState<string | null>(null);
+  const [changingRoleUserId, setChangingRoleUserId] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [bulkFileName, setBulkFileName] = useState<string | null>(null);
   const [bulkInvites, setBulkInvites] = useState<ParsedInvite[]>([]);
   const [bulkSkipped, setBulkSkipped] = useState(0);
-  const [bulkDefaultRole, setBulkDefaultRole] = useState<MembershipRole>('MEMBER');
+  const [bulkDefaultRole, setBulkDefaultRole] = useState<MembershipRole>(MembershipRole.MEMBER);
+  const [bulkSending, setBulkSending] = useState(false);
   const [bulkSentCount, setBulkSentCount] = useState<number | null>(null);
 
   const [assignCourseId, setAssignCourseId] = useState(assignableCourses[0]?.id ?? '');
   const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([]);
   const [assignConfirmed, setAssignConfirmed] = useState(false);
 
-  // Team management is an OWNER/ADMIN surface — an INSTRUCTOR or plain
-  // MEMBER also belongs to an organization, but has no permission to
-  // invite/remove people or change roles, so they don't get this page even
-  // by navigating here directly.
-  if (!user || dashboardModeFor(user) !== 'organization') return null;
+  useEffect(() => {
+    if (!organizationId) return;
+    let cancelled = false;
+
+    (async () => {
+      setLoading(true);
+      setLoadError('');
+      try {
+        const [orgData, invitesData] = await Promise.all([
+          GraphQLClient.execute<OrganizationQuery>(organizationQuery, {
+            id: organizationId,
+          } satisfies OrganizationQueryVariables),
+          GraphQLClient.execute<InvitationsForOrganizationQuery>(invitationsForOrganization, {
+            organizationId,
+          } satisfies InvitationsForOrganizationQueryVariables),
+        ]);
+        if (cancelled) return;
+
+        const roster: RosterMember[] = (orgData.organization?.members ?? [])
+          .filter((m) => m.status === 'ACTIVE')
+          .map((m) => ({
+            userId: m.userId,
+            name: [m.user?.firstName, m.user?.lastName].filter(Boolean).join(' ') || m.user?.email || 'Unknown',
+            email: m.user?.email ?? '',
+            role: m.role,
+            assignedCourseIds: [],
+            trainingProgress: 0,
+          }));
+        setMembers(roster);
+        setInvitations(
+          (invitesData.invitationsForOrganization ?? [])
+            .filter((inv) => inv.status === 'PENDING')
+            .map((inv) => ({ id: inv.id, email: inv.email, role: inv.role, createdAt: inv.createdAt }))
+        );
+      } catch (err) {
+        if (!cancelled) setLoadError(err instanceof Error ? err.message : String(err));
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [organizationId]);
+
+  if (!user || !isOrgManager) return null;
 
   const existingEmails = new Set([
     ...members.map((m) => m.email.toLowerCase()),
     ...invitations.map((i) => i.email.toLowerCase()),
   ]);
 
-  function handleInvite(e: React.FormEvent) {
+  async function handleInvite(e: React.FormEvent) {
     e.preventDefault();
-    if (!inviteEmail.trim()) return;
-    setInvitations((prev) => [
-      ...prev,
-      {
-        id: `inv-${Date.now()}`,
+    if (!inviteEmail.trim() || !organizationId) return;
+    setInviting(true);
+    setInviteError('');
+    try {
+      const data = await GraphQLClient.execute<InviteMemberMutation>(inviteMember, {
         email: inviteEmail.trim(),
+        organizationId,
         role: inviteRole,
-        invitedAt: new Date().toISOString().slice(0, 10),
-        status: 'PENDING',
-      },
-    ]);
-    setInviteEmail('');
-    setInviteRole('MEMBER');
+      } satisfies InviteMemberMutationVariables);
+      const inv = data.inviteMember;
+      if (inv) {
+        setInvitations((prev) => [
+          ...prev.filter((p) => p.email !== inv.email),
+          { id: inv.id, email: inv.email, role: inv.role, createdAt: inv.createdAt },
+        ]);
+      }
+      setInviteEmail('');
+      setInviteRole(MembershipRole.MEMBER);
+    } catch (err) {
+      setInviteError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setInviting(false);
+    }
   }
 
   function handleFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
@@ -123,31 +228,88 @@ export default function TeamPage() {
     setBulkSentCount(null);
   }
 
-  function handleBulkInvite() {
-    if (bulkInvites.length === 0) return;
-    const now = Date.now();
-    setInvitations((prev) => [
-      ...prev,
-      ...bulkInvites.map((invite, i) => ({
-        id: `inv-${now}-${i}`,
-        email: invite.email,
-        role: invite.role ?? bulkDefaultRole,
-        invitedAt: new Date().toISOString().slice(0, 10),
-        status: 'PENDING' as const,
-      })),
-    ]);
-    setBulkSentCount(bulkInvites.length);
+  async function handleBulkInvite() {
+    if (bulkInvites.length === 0 || !organizationId) return;
+    setBulkSending(true);
+    const sent: PendingInvite[] = [];
+    for (const invite of bulkInvites) {
+      try {
+        const data = await GraphQLClient.execute<InviteMemberMutation>(inviteMember, {
+          email: invite.email,
+          organizationId,
+          role: invite.role ?? bulkDefaultRole,
+        } satisfies InviteMemberMutationVariables);
+        if (data.inviteMember) {
+          const inv = data.inviteMember;
+          sent.push({ id: inv.id, email: inv.email, role: inv.role, createdAt: inv.createdAt });
+        }
+      } catch (err) {
+        // One bad email in a batch shouldn't stop the rest.
+        console.error('[team] bulk invite failed for', invite.email, err);
+      }
+    }
+    setInvitations((prev) => [...prev.filter((p) => !sent.some((s) => s.email === p.email)), ...sent]);
+    setBulkSentCount(sent.length);
     setBulkInvites([]);
     setBulkFileName(null);
+    setBulkSending(false);
   }
 
-  function revokeInvitation(id: string) {
-    setInvitations((prev) => prev.filter((inv) => inv.id !== id));
+  async function handleRevoke(email: string) {
+    if (!organizationId) return;
+    setRevokingEmail(email);
+    try {
+      await GraphQLClient.execute<RevokeInvitationMutation>(revokeInvitation, {
+        email,
+        organizationId,
+      } satisfies RevokeInvitationMutationVariables);
+      setInvitations((prev) => prev.filter((inv) => inv.email !== email));
+    } catch (err) {
+      console.error('[team] revokeInvitation failed ->', err);
+    } finally {
+      setRevokingEmail(null);
+    }
   }
 
-  function resendInvitation(id: string) {
-    setResentId(id);
-    setTimeout(() => setResentId(null), 2000);
+  async function handleResend(invite: PendingInvite) {
+    if (!organizationId) return;
+    setResentId(invite.id);
+    try {
+      // Backend replaces any existing pending invite for the same email,
+      // invalidating the old token — a real resend, not just a UI reset.
+      const data = await GraphQLClient.execute<InviteMemberMutation>(inviteMember, {
+        email: invite.email,
+        organizationId,
+        role: invite.role,
+      } satisfies InviteMemberMutationVariables);
+      if (data.inviteMember) {
+        const inv = data.inviteMember;
+        setInvitations((prev) =>
+          prev.map((p) => (p.email === inv.email ? { id: inv.id, email: inv.email, role: inv.role, createdAt: inv.createdAt } : p))
+        );
+      }
+    } catch (err) {
+      console.error('[team] resend failed ->', err);
+    } finally {
+      setTimeout(() => setResentId(null), 2000);
+    }
+  }
+
+  async function handleChangeRole(member: RosterMember, role: MembershipRole) {
+    if (!organizationId || role === member.role) return;
+    setChangingRoleUserId(member.userId);
+    try {
+      await GraphQLClient.execute<ChangeMemberRoleMutation>(changeMemberRole, {
+        organizationId,
+        userId: member.userId,
+        role,
+      } satisfies ChangeMemberRoleMutationVariables);
+      setMembers((prev) => prev.map((m) => (m.userId === member.userId ? { ...m, role } : m)));
+    } catch (err) {
+      console.error('[team] changeMemberRole failed ->', err);
+    } finally {
+      setChangingRoleUserId(null);
+    }
   }
 
   function toggleMemberSelection(id: string) {
@@ -158,7 +320,7 @@ export default function TeamPage() {
     if (!assignCourseId || selectedMemberIds.length === 0) return;
     setMembers((prev) =>
       prev.map((m) =>
-        selectedMemberIds.includes(m.id) && !m.assignedCourseIds.includes(assignCourseId)
+        selectedMemberIds.includes(m.userId) && !m.assignedCourseIds.includes(assignCourseId)
           ? { ...m, assignedCourseIds: [...m.assignedCourseIds, assignCourseId] }
           : m
       )
@@ -175,10 +337,16 @@ export default function TeamPage() {
         Invite employees, manage roles, and assign training.
       </p>
 
+      {loadError && (
+        <div className="mb-6 rounded-xl border border-coral-200 bg-coral-50 px-4 py-3 text-sm text-coral-700">
+          Couldn&apos;t load your team: {loadError}
+        </div>
+      )}
+
       {/* Invite */}
       <section className="mb-10">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-bold text-ink-400 uppercase tracking-wide">Invite members</h2>
+        <div className="flex items-center justify-between mb-2.5">
+          <h2 className="text-xs font-bold text-ink-400 uppercase tracking-wide">Invite members</h2>
           <div className="flex gap-1 p-1 bg-ink-100 rounded-lg">
             <button
               onClick={() => setInviteMode('single')}
@@ -209,23 +377,26 @@ export default function TeamPage() {
                 placeholder="colleague@company.com"
                 value={inviteEmail}
                 onChange={(e) => setInviteEmail(e.target.value)}
+                disabled={inviting}
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-ink-200 text-sm text-ink-900 placeholder:text-ink-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-all"
               />
             </div>
             <select
               value={inviteRole}
               onChange={(e) => setInviteRole(e.target.value as MembershipRole)}
+              disabled={inviting}
               className="rounded-xl border border-ink-200 px-3 py-2.5 text-sm text-ink-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
             >
-              <option value="MEMBER">Member</option>
-              <option value="ADMIN">Admin</option>
-              <option value="INSTRUCTOR">Instructor</option>
+              <option value={MembershipRole.MEMBER}>Member</option>
+              <option value={MembershipRole.ADMIN}>Admin</option>
+              <option value={MembershipRole.INSTRUCTOR}>Instructor</option>
             </select>
             <button
               type="submit"
-              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-indigo-700 transition-colors"
+              disabled={inviting}
+              className={`inline-flex items-center justify-center gap-1.5 rounded-xl ${accent.bg600} px-5 py-2.5 text-sm font-bold text-white ${accent.bg600Hover} transition-colors disabled:opacity-60`}
             >
-              <UserPlus className="w-4 h-4" /> Invite
+              {inviting ? <Loader2 className="w-4 h-4 animate-spin" /> : <><UserPlus className="w-4 h-4" /> Invite</>}
             </button>
           </form>
         ) : (
@@ -254,7 +425,7 @@ export default function TeamPage() {
                 )}
               </>
             ) : (
-              <div className="rounded-xl border-2 border-ink-100 p-4">
+              <div className="rounded-xl border border-ink-200 bg-white p-4">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2 min-w-0">
                     <FileText className="w-4 h-4 text-ink-400 flex-shrink-0" />
@@ -289,17 +460,19 @@ export default function TeamPage() {
                       <select
                         value={bulkDefaultRole}
                         onChange={(e) => setBulkDefaultRole(e.target.value as MembershipRole)}
+                        disabled={bulkSending}
                         className="rounded-xl border border-ink-200 px-3 py-2.5 text-sm text-ink-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
                       >
-                        <option value="MEMBER">Default: Member</option>
-                        <option value="ADMIN">Default: Admin</option>
-                        <option value="INSTRUCTOR">Default: Instructor</option>
+                        <option value={MembershipRole.MEMBER}>Default: Member</option>
+                        <option value={MembershipRole.ADMIN}>Default: Admin</option>
+                        <option value={MembershipRole.INSTRUCTOR}>Default: Instructor</option>
                       </select>
                       <button
                         onClick={handleBulkInvite}
-                        className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-indigo-700 transition-colors"
+                        disabled={bulkSending}
+                        className={`flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl ${accent.bg600} px-5 py-2.5 text-sm font-bold text-white ${accent.bg600Hover} transition-colors disabled:opacity-60`}
                       >
-                        <UserPlus className="w-4 h-4" /> Send {bulkInvites.length} invite{bulkInvites.length === 1 ? '' : 's'}
+                        {bulkSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <><UserPlus className="w-4 h-4" /> Send {bulkInvites.length} invite{bulkInvites.length === 1 ? '' : 's'}</>}
                       </button>
                     </div>
                   </>
@@ -308,100 +481,133 @@ export default function TeamPage() {
             )}
           </div>
         )}
+        {inviteError && <p className="text-sm text-coral-600 mt-2">{inviteError}</p>}
       </section>
 
-      {/* Pending invitations */}
-      {invitations.length > 0 && (
-        <section className="mb-10">
-          <h2 className="text-sm font-bold text-ink-400 uppercase tracking-wide mb-4">Pending invitations</h2>
-          <div className="divide-y divide-ink-100">
-            {invitations.map((inv) => (
-              <div key={inv.id} className="flex items-center gap-3 py-3">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-ink-900 truncate">{inv.email}</p>
-                  <p className="text-xs text-ink-400">Invited {new Date(inv.invitedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
-                </div>
-                <span className={`text-[11px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full ${roleBadgeClass[inv.role]}`}>
-                  {inv.role}
-                </span>
-                <button
-                  onClick={() => resendInvitation(inv.id)}
-                  className="flex items-center gap-1 text-xs font-bold text-indigo-600 hover:text-indigo-700 px-2 py-1"
-                >
-                  <RotateCw className="w-3.5 h-3.5" /> {resentId === inv.id ? 'Sent!' : 'Resend'}
-                </button>
-                <button
-                  onClick={() => revokeInvitation(inv.id)}
-                  className="flex items-center gap-1 text-xs font-bold text-ink-400 hover:text-red-600 px-2 py-1"
-                >
-                  <X className="w-3.5 h-3.5" /> Revoke
-                </button>
+      {loading ? (
+        <div className="flex items-center justify-center py-16">
+          <Loader2 className={`w-6 h-6 ${accent.text600} animate-spin`} />
+        </div>
+      ) : (
+        <>
+          {/* Pending invitations */}
+          {invitations.length > 0 && (
+            <section className="mb-10">
+              <h2 className="text-xs font-bold text-ink-400 uppercase tracking-wide mb-2.5">Pending invitations</h2>
+              <div className="rounded-xl border border-ink-200 bg-white divide-y divide-ink-100">
+                {invitations.map((inv) => (
+                  <div key={inv.id} className="flex items-center gap-3 py-2.5 px-3.5">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-ink-900 truncate">{inv.email}</p>
+                      <p className="text-xs text-ink-400">Invited {new Date(inv.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
+                    </div>
+                    <span className={`text-[11px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full ${roleBadgeClass[inv.role]}`}>
+                      {inv.role}
+                    </span>
+                    <button
+                      onClick={() => handleResend(inv)}
+                      disabled={resentId === inv.id}
+                      className={`flex items-center gap-1 text-xs font-bold ${accent.text600} hover:opacity-80 px-2 py-1 disabled:opacity-60`}
+                    >
+                      <RotateCw className="w-3.5 h-3.5" /> {resentId === inv.id ? 'Sent!' : 'Resend'}
+                    </button>
+                    <button
+                      onClick={() => handleRevoke(inv.email)}
+                      disabled={revokingEmail === inv.email}
+                      className="flex items-center gap-1 text-xs font-bold text-ink-400 hover:text-red-600 px-2 py-1 disabled:opacity-60"
+                    >
+                      <X className="w-3.5 h-3.5" /> Revoke
+                    </button>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </section>
-      )}
+            </section>
+          )}
 
-      {/* Members */}
-      <section className="mb-10">
-        <h2 className="text-sm font-bold text-ink-400 uppercase tracking-wide mb-4">Members</h2>
-        <div className="divide-y divide-ink-100">
-          {members.map((member) => (
-            <div key={member.id} className="flex items-center gap-3 py-3">
-              <input
-                type="checkbox"
-                checked={selectedMemberIds.includes(member.id)}
-                onChange={() => toggleMemberSelection(member.id)}
-                className="w-4 h-4 rounded border-ink-300 text-indigo-600 focus:ring-indigo-500"
-              />
-              <Avatar name={member.name} size="sm" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-ink-900 truncate">{member.name}</p>
-                <p className="text-xs text-ink-400 truncate">{member.email}</p>
-              </div>
-              <span className="hidden sm:block text-xs text-ink-400">
-                {member.assignedCourseIds.length} course{member.assignedCourseIds.length === 1 ? '' : 's'}
-                {member.assignedCourseIds.length > 0 && <> &middot; {member.trainingProgress}% complete</>}
-              </span>
-              <span className={`text-[11px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full ${roleBadgeClass[member.role]}`}>
-                {member.role}
-              </span>
+          {/* Members */}
+          <section className="mb-10">
+            <h2 className="text-xs font-bold text-ink-400 uppercase tracking-wide mb-2.5">Members</h2>
+            <div className="rounded-xl border border-ink-200 bg-white divide-y divide-ink-100">
+              {members.map((member) => {
+                const isSelf = member.userId === user.id;
+                return (
+                  <div key={member.userId} className="flex items-center gap-3 py-2.5 px-3.5">
+                    <input
+                      type="checkbox"
+                      checked={selectedMemberIds.includes(member.userId)}
+                      onChange={() => toggleMemberSelection(member.userId)}
+                      className="w-4 h-4 rounded border-ink-300 text-indigo-600 focus:ring-indigo-500"
+                    />
+                    <Avatar name={member.name} size="sm" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-ink-900 truncate">
+                        {member.name}{isSelf && <span className="text-ink-400 font-normal"> (you)</span>}
+                      </p>
+                      <p className="text-xs text-ink-400 truncate">{member.email}</p>
+                    </div>
+                    <span className="hidden sm:block text-xs text-ink-400">
+                      {member.assignedCourseIds.length} course{member.assignedCourseIds.length === 1 ? '' : 's'}
+                      {member.assignedCourseIds.length > 0 && <> &middot; {member.trainingProgress}% complete</>}
+                    </span>
+                    {member.role === 'OWNER' || isSelf ? (
+                      <span className={`text-[11px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full ${roleBadgeClass[member.role]}`}>
+                        {member.role}
+                      </span>
+                    ) : (
+                      <select
+                        value={member.role}
+                        onChange={(e) => handleChangeRole(member, e.target.value as MembershipRole)}
+                        disabled={changingRoleUserId === member.userId}
+                        className={`text-[11px] font-bold uppercase tracking-wide pl-2.5 pr-1 py-1 rounded-full border-0 focus:ring-2 focus:ring-indigo-500/30 disabled:opacity-60 ${roleBadgeClass[member.role]}`}
+                      >
+                        {assignableRoles.map((r) => (
+                          <option key={r} value={r}>{r}</option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+                );
+              })}
+              {members.length === 0 && (
+                <p className="text-sm text-ink-400 py-6 text-center">No other members yet — invite someone above.</p>
+              )}
             </div>
-          ))}
-        </div>
-      </section>
+          </section>
 
-      {/* Assign training */}
-      <section>
-        <h2 className="text-sm font-bold text-ink-400 uppercase tracking-wide mb-4">Assign training</h2>
-        <p className="text-sm text-ink-500 mb-4">Select members above, choose a course, and assign it to their learning path.</p>
-        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-          <div className="relative flex-1 w-full sm:w-auto">
-            <BookOpen className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-400" />
-            <select
-              value={assignCourseId}
-              onChange={(e) => setAssignCourseId(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-ink-200 text-sm text-ink-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
-            >
-              {assignableCourses.map((c) => (
-                <option key={c.id} value={c.id}>{c.title}</option>
-              ))}
-            </select>
-          </div>
-          <button
-            onClick={handleAssign}
-            disabled={selectedMemberIds.length === 0}
-            className="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-indigo-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
-          >
-            Assign to {selectedMemberIds.length || ''} selected
-          </button>
-        </div>
-        {assignConfirmed && (
-          <p className="flex items-center gap-1.5 text-sm font-semibold text-green-600 mt-3">
-            <Check className="w-4 h-4" /> Training assigned
-          </p>
-        )}
-      </section>
+          {/* Assign training — illustrative only; there's no real course-assignment
+              backend yet, so this never persists past a reload. */}
+          <section>
+            <h2 className="text-xs font-bold text-ink-400 uppercase tracking-wide mb-2.5">Assign training</h2>
+            <p className="text-sm text-ink-500 mb-4">Select members above, choose a course, and assign it to their learning path.</p>
+            <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+              <div className="relative flex-1 w-full sm:w-auto">
+                <BookOpen className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-400" />
+                <select
+                  value={assignCourseId}
+                  onChange={(e) => setAssignCourseId(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-ink-200 text-sm text-ink-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
+                >
+                  {assignableCourses.map((c) => (
+                    <option key={c.id} value={c.id}>{c.title}</option>
+                  ))}
+                </select>
+              </div>
+              <button
+                onClick={handleAssign}
+                disabled={selectedMemberIds.length === 0}
+                className={`rounded-xl ${accent.bg600} px-5 py-2.5 text-sm font-bold text-white ${accent.bg600Hover} transition-colors disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap`}
+              >
+                Assign to {selectedMemberIds.length || ''} selected
+              </button>
+            </div>
+            {assignConfirmed && (
+              <p className="flex items-center gap-1.5 text-sm font-semibold text-green-600 mt-3">
+                <Check className="w-4 h-4" /> Training assigned
+              </p>
+            )}
+          </section>
+        </>
+      )}
     </div>
   );
 }

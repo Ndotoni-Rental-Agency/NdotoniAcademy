@@ -8,94 +8,16 @@ type GeneratedMutation<InputType, OutputType> = string & {
   __generatedMutationOutput: OutputType;
 };
 
+// Trimmed by hand — see the comment on createOrganization below for why.
+// The caller (InviteClient.tsx) only checks success/failure, then calls
+// AuthContext's own refetch() to get the real up-to-date `me` separately.
 export const acceptInvitation = /* GraphQL */ `mutation AcceptInvitation($token: String!) {
   acceptInvitation(token: $token) {
     id
-    joinedAt
-    organization {
-      createdAt
-      id
-      members {
-        id
-        joinedAt
-        organization {
-          createdAt
-          id
-          name
-          slug
-          status
-          type
-          __typename
-        }
-        organizationId
-        permissions
-        role
-        status
-        user {
-          avatarUrl
-          createdAt
-          email
-          firstName
-          id
-          lastName
-          status
-          updatedAt
-          __typename
-        }
-        userId
-        __typename
-      }
-      name
-      slug
-      status
-      type
-      __typename
-    }
     organizationId
     permissions
     role
     status
-    user {
-      avatarUrl
-      createdAt
-      email
-      firstName
-      id
-      lastName
-      organizations {
-        id
-        joinedAt
-        organization {
-          createdAt
-          id
-          name
-          slug
-          status
-          type
-          __typename
-        }
-        organizationId
-        permissions
-        role
-        status
-        user {
-          avatarUrl
-          createdAt
-          email
-          firstName
-          id
-          lastName
-          status
-          updatedAt
-          __typename
-        }
-        userId
-        __typename
-      }
-      status
-      updatedAt
-      __typename
-    }
     userId
     __typename
   }
@@ -104,6 +26,9 @@ export const acceptInvitation = /* GraphQL */ `mutation AcceptInvitation($token:
   APITypes.AcceptInvitationMutationVariables,
   APITypes.AcceptInvitationMutation
 >;
+// Trimmed by hand — see the comment on createOrganization below for why.
+// The caller already has the member's name from the roster it fetched
+// separately; this just needs enough to update that local list in place.
 export const changeMemberRole = /* GraphQL */ `mutation ChangeMemberRole(
   $organizationId: ID!
   $role: MembershipRole!
@@ -115,91 +40,10 @@ export const changeMemberRole = /* GraphQL */ `mutation ChangeMemberRole(
     userId: $userId
   ) {
     id
-    joinedAt
-    organization {
-      createdAt
-      id
-      members {
-        id
-        joinedAt
-        organization {
-          createdAt
-          id
-          name
-          slug
-          status
-          type
-          __typename
-        }
-        organizationId
-        permissions
-        role
-        status
-        user {
-          avatarUrl
-          createdAt
-          email
-          firstName
-          id
-          lastName
-          status
-          updatedAt
-          __typename
-        }
-        userId
-        __typename
-      }
-      name
-      slug
-      status
-      type
-      __typename
-    }
     organizationId
     permissions
     role
     status
-    user {
-      avatarUrl
-      createdAt
-      email
-      firstName
-      id
-      lastName
-      organizations {
-        id
-        joinedAt
-        organization {
-          createdAt
-          id
-          name
-          slug
-          status
-          type
-          __typename
-        }
-        organizationId
-        permissions
-        role
-        status
-        user {
-          avatarUrl
-          createdAt
-          email
-          firstName
-          id
-          lastName
-          status
-          updatedAt
-          __typename
-        }
-        userId
-        __typename
-      }
-      status
-      updatedAt
-      __typename
-    }
     userId
     __typename
   }
@@ -241,6 +85,7 @@ export const createOrganization = /* GraphQL */ `mutation CreateOrganization($in
   APITypes.CreateOrganizationMutationVariables,
   APITypes.CreateOrganizationMutation
 >;
+// Trimmed by hand — see the comment on createOrganization below for why.
 export const inviteMember = /* GraphQL */ `mutation InviteMember(
   $email: AWSEmail!
   $organizationId: ID!
@@ -251,45 +96,6 @@ export const inviteMember = /* GraphQL */ `mutation InviteMember(
     email
     expiresAt
     id
-    organization {
-      createdAt
-      id
-      members {
-        id
-        joinedAt
-        organization {
-          createdAt
-          id
-          name
-          slug
-          status
-          type
-          __typename
-        }
-        organizationId
-        permissions
-        role
-        status
-        user {
-          avatarUrl
-          createdAt
-          email
-          firstName
-          id
-          lastName
-          status
-          updatedAt
-          __typename
-        }
-        userId
-        __typename
-      }
-      name
-      slug
-      status
-      type
-      __typename
-    }
     organizationId
     role
     status

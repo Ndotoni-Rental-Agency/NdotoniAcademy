@@ -13,28 +13,31 @@ export default function EnrolledCourseCard({
   assignedBy?: string;
 }) {
   const theme = getCategoryTheme(course?.category ?? '');
-  const Icon = theme.icon;
 
   return (
     <Link
       href={`/courses/${enrolled.courseId}`}
-      className={`relative overflow-hidden rounded-2xl ${theme.solidBg} text-white p-5 flex flex-col justify-between h-36 hover:-translate-y-0.5 hover:shadow-lg transition-all`}
+      className="block rounded-xl border border-ink-200 bg-white p-3.5 hover:border-indigo-200 hover:shadow-sm transition-all"
     >
-      <div className="absolute -right-5 -bottom-5 w-24 h-24 bg-white/10 rotate-45" />
-      <div className="relative flex items-start justify-between gap-2">
-        <Icon className="w-6 h-6 text-white/70" strokeWidth={1.75} />
+      <div className="flex items-center gap-1.5 mb-2">
+        <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${theme.solidBg}`} />
+        <span className="text-[10px] font-bold uppercase tracking-wide text-ink-400 truncate">{course?.category ?? 'Course'}</span>
         {assignedBy && (
-          <span className="text-[9px] font-bold uppercase tracking-wide bg-white/20 px-2 py-0.5 rounded-full flex-shrink-0">
+          <span className="ml-auto text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 flex-shrink-0">
             Assigned
           </span>
         )}
       </div>
-      <div className="relative">
-        <p className="text-3xl font-extrabold leading-none">{enrolled.progress}%</p>
-        <p className="text-xs text-white/85 mt-2 truncate font-medium">{enrolled.courseTitle}</p>
-        <p className="text-[11px] text-white/60 mt-0.5">
-          {assignedBy ? `Assigned by ${assignedBy}` : `Module ${enrolled.currentModule} of ${enrolled.totalModules}`}
-        </p>
+      <h4 className="text-[13px] font-bold text-ink-900 mb-1.5 leading-snug truncate">{enrolled.courseTitle}</h4>
+      <p className="text-[11.5px] text-ink-400 -mt-0.5 mb-2 truncate">
+        {assignedBy ? `Assigned by ${assignedBy}` : 'Your own pick, from the catalog'}
+      </p>
+      <div className="h-1.5 rounded-full bg-ink-100 overflow-hidden mb-2">
+        <div className={`h-full rounded-full ${theme.solidBg}`} style={{ width: `${Math.max(enrolled.progress, 3)}%` }} />
+      </div>
+      <div className="flex items-center justify-between text-[11.5px] text-ink-500 pt-2 border-t border-ink-100">
+        <span>Module {enrolled.currentModule}/{enrolled.totalModules}</span>
+        <span>{enrolled.progress}%</span>
       </div>
     </Link>
   );

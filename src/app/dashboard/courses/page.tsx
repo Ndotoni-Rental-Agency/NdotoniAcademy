@@ -8,7 +8,8 @@ import { getCategoryTheme } from '@/lib/category-theme';
 import { getTeamCourseUsage, type TeamCourse } from '@/lib/organization-mock-data';
 import { INSTRUCTOR_SHARE } from '@/lib/instructor-pricing';
 import { initialTeachingCourses, type TeachingCourse } from '@/lib/teaching-mock-data';
-import { useAuth, dashboardModeFor } from '@/lib/auth-context';
+import { useAuth, dashboardModeFor, type DashboardMode } from '@/lib/auth-context';
+import { accentByMode } from '@/lib/dashboard-accent';
 import EnrolledCourseCard from '@/components/EnrolledCourseCard';
 import CourseCard from '@/components/CourseCard';
 
@@ -26,7 +27,7 @@ export default function CoursesPage() {
   // instructor permission and shouldn't see course-creation UI — an
   // independent learner (no org at all) or a real INSTRUCTOR does.
   const canTeach = mode === 'instructor' || !org;
-  return <LearnerCoursesPage canTeach={canTeach} orgName={org?.name} />;
+  return <LearnerCoursesPage canTeach={canTeach} orgName={org?.name} mode={mode} />;
 }
 
 // ============================================================
@@ -34,6 +35,7 @@ export default function CoursesPage() {
 // ability to create a course specific to the org.
 // ============================================================
 function OrganizationCoursesPage() {
+  const accent = accentByMode.organization;
   const [teamCourses, setTeamCourses] = useState<TeamCourse[]>(getTeamCourseUsage());
   const [showAddCourse, setShowAddCourse] = useState(false);
   const [newCourseTitle, setNewCourseTitle] = useState('');
@@ -67,7 +69,7 @@ function OrganizationCoursesPage() {
         </div>
         <button
           onClick={() => setShowAddCourse((v) => !v)}
-          className="flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-indigo-700 transition-colors flex-shrink-0"
+          className={`flex items-center gap-1.5 rounded-xl ${accent.bg600} px-4 py-2.5 text-sm font-bold text-white ${accent.bg600Hover} transition-colors flex-shrink-0`}
         >
           <Plus className="w-4 h-4" /> Add a course
         </button>
@@ -75,9 +77,9 @@ function OrganizationCoursesPage() {
 
       {/* Team courses bar */}
       <section className="mb-10">
-        <h2 className="text-sm font-bold text-ink-400 uppercase tracking-wide mb-4">In use by your team</h2>
+        <h2 className="text-xs font-bold text-ink-400 uppercase tracking-wide mb-2.5">In use by your team</h2>
         {teamCourses.length === 0 && (
-          <p className="text-sm text-ink-400 bg-white rounded-2xl border-2 border-ink-100 px-4 py-5 text-center mb-3">
+          <p className="text-sm text-ink-400 bg-white rounded-xl border border-ink-200 px-4 py-5 text-center mb-3">
             Nothing assigned yet. Add a course above, or assign one from the catalog below in Team.
           </p>
         )}
@@ -87,7 +89,7 @@ function OrganizationCoursesPage() {
             return (
               <div
                 key={course.id}
-                className="flex items-center gap-2.5 flex-shrink-0 rounded-xl border-2 border-ink-100 bg-white px-3.5 py-2.5 min-w-[180px]"
+                className="flex items-center gap-2.5 flex-shrink-0 rounded-xl border border-ink-200 bg-white px-3.5 py-2.5 min-w-[180px]"
               >
                 <span className={`w-2 h-2 rounded-full flex-shrink-0 ${theme ? theme.solidBg : 'bg-ink-400'}`} />
                 <div className="min-w-0">
@@ -103,7 +105,7 @@ function OrganizationCoursesPage() {
         </div>
 
         {showAddCourse && (
-          <form onSubmit={handleAddCourse} className="mt-4 flex flex-col sm:flex-row gap-3 rounded-xl border-2 border-ink-100 p-4">
+          <form onSubmit={handleAddCourse} className="mt-4 flex flex-col sm:flex-row gap-3 rounded-xl border border-ink-200 bg-white p-4">
             <input
               type="text"
               required
@@ -123,7 +125,7 @@ function OrganizationCoursesPage() {
             </select>
             <button
               type="submit"
-              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-indigo-700 transition-colors whitespace-nowrap"
+              className={`inline-flex items-center justify-center gap-1.5 rounded-xl ${accent.bg600} px-5 py-2.5 text-sm font-bold text-white ${accent.bg600Hover} transition-colors whitespace-nowrap`}
             >
               <Plus className="w-4 h-4" /> Create
             </button>
@@ -133,7 +135,7 @@ function OrganizationCoursesPage() {
 
       {/* Full catalog */}
       <section>
-        <h2 className="text-sm font-bold text-ink-400 uppercase tracking-wide mb-4">Full catalog</h2>
+        <h2 className="text-xs font-bold text-ink-400 uppercase tracking-wide mb-2.5">Full catalog</h2>
         <p className="text-sm text-ink-500 mb-4">Browse everything available. Head to Team to assign a course to your people.</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {courses.map((course) => (
@@ -149,7 +151,19 @@ function OrganizationCoursesPage() {
 // Learners: courses they're enrolled in (self-picked, or assigned by an
 // org they belong to), courses they teach if they can, and more to browse.
 // ============================================================
-function LearnerCoursesPage({ canTeach, orgName }: { canTeach: boolean; orgName?: string }) {
+function LearnerCoursesPage({
+  canTeach,
+  orgName,
+  mode,
+}: {
+  canTeach: boolean;
+  orgName?: string;
+  mode: DashboardMode;
+}) {
+  // Same convention as the Overview: teaching uses the instructor accent only
+  // when the viewer actually is one; an org-less learner who can still teach
+  // stays in their own (learner) accent rather than borrowing coral.
+  const teachAccent = mode === 'instructor' ? accentByMode.instructor : accentByMode.learner;
   const enrolledIds = new Set(demoEnrolledCourses.map((e) => e.courseId));
   const moreCourses = courses.filter((c) => !enrolledIds.has(c.id));
 
@@ -191,7 +205,7 @@ function LearnerCoursesPage({ canTeach, orgName }: { canTeach: boolean; orgName?
 
       {/* Learning */}
       <section className="mb-12">
-        <h2 className="text-sm font-bold text-ink-400 uppercase tracking-wide mb-4">Learning</h2>
+        <h2 className="text-xs font-bold text-ink-400 uppercase tracking-wide mb-2.5">Learning</h2>
         {demoEnrolledCourses.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
             {demoEnrolledCourses.map((enrolled, i) => {
@@ -216,18 +230,18 @@ function LearnerCoursesPage({ canTeach, orgName }: { canTeach: boolean; orgName?
           instructor permission and shouldn't see course-creation UI. */}
       {canTeach && (
         <section className="mb-12">
-          <div className="flex items-center justify-between gap-4 mb-4">
-            <h2 className="text-sm font-bold text-ink-400 uppercase tracking-wide">Teaching</h2>
+          <div className="flex items-center justify-between gap-4 mb-2.5">
+            <h2 className="text-xs font-bold text-ink-400 uppercase tracking-wide">Teaching</h2>
             <button
               onClick={() => setShowNewCourse((v) => !v)}
-              className="flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-indigo-700 transition-colors flex-shrink-0"
+              className={`flex items-center gap-1.5 rounded-xl ${teachAccent.bg600} px-3.5 py-2 text-xs font-bold text-white ${teachAccent.bg600Hover} transition-colors flex-shrink-0`}
             >
               <Plus className="w-3.5 h-3.5" /> New course
             </button>
           </div>
 
           {showNewCourse && (
-            <form onSubmit={handleCreateCourse} className="mb-4 flex flex-col sm:flex-row gap-3 rounded-xl border-2 border-ink-100 p-4">
+            <form onSubmit={handleCreateCourse} className="mb-4 flex flex-col sm:flex-row gap-3 rounded-xl border border-ink-200 bg-white p-4">
               <input
                 type="text"
                 required
@@ -255,7 +269,7 @@ function LearnerCoursesPage({ canTeach, orgName }: { canTeach: boolean; orgName?
               />
               <button
                 type="submit"
-                className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-indigo-700 transition-colors whitespace-nowrap"
+                className={`inline-flex items-center justify-center gap-1.5 rounded-xl ${teachAccent.bg600} px-5 py-2.5 text-sm font-bold text-white ${teachAccent.bg600Hover} transition-colors whitespace-nowrap`}
               >
                 <Plus className="w-4 h-4" /> Create
               </button>
@@ -265,7 +279,7 @@ function LearnerCoursesPage({ canTeach, orgName }: { canTeach: boolean; orgName?
           {teachingCourses.length === 0 ? (
             <p className="text-ink-400 text-sm">You have not built a course yet. Add one above.</p>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="rounded-xl border border-ink-200 bg-white divide-y divide-ink-100">
               {teachingCourses.map((course) => {
                 const theme = getCategoryTheme(course.category);
                 const estimatedEarnings = Math.round(course.enrolledCount * course.priceTzs * INSTRUCTOR_SHARE);
@@ -273,26 +287,24 @@ function LearnerCoursesPage({ canTeach, orgName }: { canTeach: boolean; orgName?
                   <Link
                     key={course.id}
                     href={`/dashboard/courses/teaching/${course.id}`}
-                    className="rounded-2xl border-2 border-ink-100 bg-white p-4 hover:border-indigo-200 hover:shadow-sm transition-all"
+                    className="flex items-center gap-3 py-2.5 px-3.5 hover:bg-ink-50 transition-colors"
                   >
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className={`w-2 h-2 rounded-full flex-shrink-0 ${theme.solidBg}`} />
-                      <span className="text-[11px] font-bold uppercase tracking-wide text-ink-400 truncate">{course.category}</span>
-                      <span className={`ml-auto text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full flex-shrink-0 ${
-                        course.status === 'published' ? 'bg-brand-100 text-brand-700' : 'bg-ink-100 text-ink-500'
-                      }`}>
-                        {course.status}
-                      </span>
+                    <span className={`w-2 h-2 rounded-full flex-shrink-0 ${theme.solidBg}`} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13.5px] font-semibold text-ink-900 truncate">{course.title}</p>
+                      <p className="text-[11.5px] text-ink-400 truncate">{course.category}</p>
                     </div>
-                    <h3 className="font-bold text-ink-900 text-sm mb-3 truncate">{course.title}</h3>
-                    <div className="flex items-center justify-between pt-3 border-t border-ink-100">
-                      <span className="flex items-center gap-1.5 text-xs text-ink-500">
-                        <Users className="w-3.5 h-3.5" /> {course.enrolledCount}
-                      </span>
-                      <span className="flex items-center gap-1.5 text-xs font-bold text-brand-700">
-                        <Wallet className="w-3.5 h-3.5" /> TZS {estimatedEarnings.toLocaleString()}
-                      </span>
-                    </div>
+                    <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full flex-shrink-0 ${
+                      course.status === 'published' ? 'bg-brand-100 text-brand-700' : 'bg-ink-100 text-ink-500'
+                    }`}>
+                      {course.status}
+                    </span>
+                    <span className="flex items-center gap-1.5 text-xs text-ink-500 flex-shrink-0">
+                      <Users className="w-3.5 h-3.5" /> {course.enrolledCount}
+                    </span>
+                    <span className="flex items-center gap-1.5 text-xs font-bold text-brand-700 flex-shrink-0">
+                      <Wallet className="w-3.5 h-3.5" /> TZS {estimatedEarnings.toLocaleString()}
+                    </span>
                   </Link>
                 );
               })}
@@ -304,7 +316,7 @@ function LearnerCoursesPage({ canTeach, orgName }: { canTeach: boolean; orgName?
       {/* Browse more */}
       {moreCourses.length > 0 && (
         <section>
-          <h2 className="text-sm font-bold text-ink-400 uppercase tracking-wide mb-4">Browse more</h2>
+          <h2 className="text-xs font-bold text-ink-400 uppercase tracking-wide mb-2.5">Browse more</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {moreCourses.map((course) => (
               <CourseCard key={course.id} course={course} />

@@ -9,12 +9,14 @@ import { configureAmplify } from '@/lib/amplify';
 import { GraphQLClient } from '@/lib/graphql-client';
 import { acceptInvitation } from '@/graphql/mutations';
 import type { AcceptInvitationMutation, AcceptInvitationMutationVariables } from '@/API';
+import { useAuth } from '@/lib/auth-context';
 
 type Status = 'checking' | 'missing-token' | 'needs-auth' | 'success' | 'already-member' | 'error';
 
 function Invite() {
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
+  const { refetch } = useAuth();
 
   const [status, setStatus] = useState<Status>(token ? 'checking' : 'missing-token');
   const [error, setError] = useState('');
@@ -37,12 +39,19 @@ function Invite() {
           acceptInvitation,
           { token } satisfies AcceptInvitationMutationVariables
         );
+        // Someone already signed in when they click the invite link (as
+        // opposed to a brand-new signup, whose first `me` fetch already
+        // reflects this) has a stale AuthContext user — without this,
+        // "Go to your dashboard" below would show the pre-acceptance
+        // dashboard mode until their next full reload.
+        await refetch();
         setStatus('success');
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         // A brand-new signup already had this invitation auto-accepted by the
         // post-confirmation trigger before this page ever ran — not an error.
         if (message.includes('already been used or revoked')) {
+          await refetch();
           setStatus('already-member');
           return;
         }
@@ -50,7 +59,7 @@ function Invite() {
         setError(message);
       }
     })();
-  }, [token]);
+  }, [token, refetch]);
 
   const signInHref = token ? `/login?next=${encodeURIComponent(`/invite?token=${token}`)}` : '/login';
 

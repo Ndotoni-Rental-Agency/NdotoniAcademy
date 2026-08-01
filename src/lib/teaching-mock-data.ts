@@ -42,6 +42,45 @@ export const blockTypeMeta: Record<LessonBlockType, { label: string; defaultMeta
 
 export const initialTeachingCourses: TeachingCourse[] = [
   {
+    id: 'ux-design-fundamentals-teaching',
+    title: 'UX Design Fundamentals',
+    shortDescription: 'A practical introduction to user experience design.',
+    category: 'Design',
+    priceTzs: 15000,
+    status: 'published',
+    enrolledCount: 148,
+    modules: [
+      {
+        id: 'ux-m1',
+        title: 'Module 1: Foundations',
+        blocks: [
+          { id: 'ux-m1-b1', type: 'video', title: 'What UX design actually is', meta: '7:40' },
+          { id: 'ux-m1-b2', type: 'flashcards', title: 'Core terminology', meta: '14 cards' },
+          { id: 'ux-m1-b3', type: 'quiz', title: 'Check your understanding', meta: '5 questions' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'intro-to-wireframing-teaching',
+    title: 'Intro to Wireframing',
+    shortDescription: 'Sketch and prototype interfaces before you build them.',
+    category: 'Design',
+    priceTzs: 12000,
+    status: 'published',
+    enrolledCount: 64,
+    modules: [
+      {
+        id: 'wf-m1',
+        title: 'Module 1: Getting Started',
+        blocks: [
+          { id: 'wf-m1-b1', type: 'video', title: 'Low-fidelity vs. high-fidelity', meta: '5:15' },
+          { id: 'wf-m1-b2', type: 'guide', title: 'Tools worth learning first', meta: '3 min read' },
+        ],
+      },
+    ],
+  },
+  {
     id: 'warehouse-safety',
     title: 'Warehouse Safety Fundamentals',
     shortDescription: 'Practical safety training for warehouse and logistics teams.',
@@ -70,4 +109,17 @@ export const initialTeachingCourses: TeachingCourse[] = [
       },
     ],
   },
+];
+
+export interface RecentStudentActivity {
+  studentName: string;
+  action: 'enrolled' | 'completed';
+  courseTitle: string;
+  when: string;
+}
+
+/** Illustrative — there's no real enrollment-event backend yet, so this ties to initialTeachingCourses' titles above but isn't derived from anything real. */
+export const recentStudentActivity: RecentStudentActivity[] = [
+  { studentName: 'Faraja Sumari', action: 'enrolled', courseTitle: 'UX Design Fundamentals', when: '2h ago' },
+  { studentName: 'Halima Ndosi', action: 'completed', courseTitle: 'Intro to Wireframing', when: 'yesterday' },
 ];

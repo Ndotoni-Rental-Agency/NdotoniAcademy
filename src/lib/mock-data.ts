@@ -1189,6 +1189,7 @@ export const demoCertificates: Certificate[] = [
 ];
 
 export const demoPoints = { earned: 8, target: 30 };
+export const demoStreakDays = 4;
 
 // ============================================================
 // Helper Functions

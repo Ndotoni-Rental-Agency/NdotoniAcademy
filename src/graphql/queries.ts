@@ -8,51 +8,15 @@ type GeneratedQuery<InputType, OutputType> = string & {
   __generatedQueryOutput: OutputType;
 };
 
+// Trimmed by hand — see the comment on createOrganization in mutations.ts.
+// OrganizationInvitation.organization is nullable and nothing here reads
+// it — the team page already knows which org it's looking at.
 export const invitationsForOrganization = /* GraphQL */ `query InvitationsForOrganization($organizationId: ID!) {
   invitationsForOrganization(organizationId: $organizationId) {
     createdAt
     email
     expiresAt
     id
-    organization {
-      createdAt
-      id
-      members {
-        id
-        joinedAt
-        organization {
-          createdAt
-          id
-          name
-          slug
-          status
-          type
-          __typename
-        }
-        organizationId
-        permissions
-        role
-        status
-        user {
-          avatarUrl
-          createdAt
-          email
-          firstName
-          id
-          lastName
-          status
-          updatedAt
-          __typename
-        }
-        userId
-        __typename
-      }
-      name
-      slug
-      status
-      type
-      __typename
-    }
     organizationId
     role
     status
@@ -101,9 +65,10 @@ export const me = /* GraphQL */ `query Me {
 }
 ` as GeneratedQuery<APITypes.MeQueryVariables, APITypes.MeQuery>;
 // Trimmed by hand — see the comment on createOrganization in mutations.ts
-// for why: Amplify codegen expands Organization's cyclic reference to
-// members[].organization/.user out to maxDepth, which this backend's
-// hand-constructed resolver responses can't (and don't need to) populate.
+// for why Amplify codegen's default output is dropped (members[].organization
+// nested further, in particular). members[].user stays, flat (no nested
+// .organizations) — the team roster genuinely needs real names, and the
+// backend now populates it (organization-service.ts's listMembersWithPermissions).
 export const organization = /* GraphQL */ `query Organization($id: ID!) {
   organization(id: $id) {
     createdAt
@@ -115,6 +80,14 @@ export const organization = /* GraphQL */ `query Organization($id: ID!) {
       permissions
       role
       status
+      user {
+        avatarUrl
+        email
+        firstName
+        id
+        lastName
+        __typename
+      }
       userId
       __typename
     }
@@ -140,6 +113,14 @@ export const organizationBySlug = /* GraphQL */ `query OrganizationBySlug($slug:
       permissions
       role
       status
+      user {
+        avatarUrl
+        email
+        firstName
+        id
+        lastName
+        __typename
+      }
       userId
       __typename
     }

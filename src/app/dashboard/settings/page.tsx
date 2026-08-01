@@ -4,7 +4,8 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Building2, CheckCircle2, Loader2, XCircle } from 'lucide-react';
-import { useAuth, displayName } from '@/lib/auth-context';
+import { useAuth, displayName, dashboardModeFor } from '@/lib/auth-context';
+import { accentByMode } from '@/lib/dashboard-accent';
 import { GraphQLClient } from '@/lib/graphql-client';
 import { updateProfile } from '@/graphql/mutations';
 import type { UpdateProfileMutation, UpdateProfileMutationVariables } from '@/API';
@@ -13,6 +14,7 @@ import Avatar from '@/components/Avatar';
 export default function SettingsPage() {
   const { user, refetch, signOut } = useAuth();
   const router = useRouter();
+  const accent = accentByMode[user ? dashboardModeFor(user) : 'learner'];
   // DashboardLayout only renders this page once `user` is loaded, so these
   // initial values are never actually stale — but hooks must run
   // unconditionally, so the null case is handled after, not before, them.
@@ -100,7 +102,7 @@ export default function SettingsPage() {
           <button
             type="submit"
             disabled={saving}
-            className="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-indigo-700 transition-colors disabled:opacity-60"
+            className={`rounded-xl ${accent.bg600} px-5 py-2.5 text-sm font-bold text-white ${accent.bg600Hover} transition-colors disabled:opacity-60`}
           >
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save changes'}
           </button>
@@ -120,8 +122,8 @@ export default function SettingsPage() {
       {/* Organization */}
       {user.organizations.length === 0 && (
         <div className="mt-12 pt-8 border-t border-ink-100">
-          <h2 className="text-sm font-bold text-ink-400 uppercase tracking-wide mb-3">Organization</h2>
-          <div className="flex items-center gap-4 rounded-2xl border-2 border-ink-100 p-4">
+          <h2 className="text-xs font-bold text-ink-400 uppercase tracking-wide mb-2.5">Organization</h2>
+          <div className="flex items-center gap-4 rounded-2xl border border-ink-200 bg-white p-4">
             <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center flex-shrink-0">
               <Building2 className="w-5 h-5 text-indigo-600" />
             </div>
@@ -143,7 +145,7 @@ export default function SettingsPage() {
 
       {/* Danger zone */}
       <div className="mt-12 pt-8 border-t border-ink-100">
-        <h2 className="text-sm font-bold text-ink-400 uppercase tracking-wide mb-3">Account</h2>
+        <h2 className="text-xs font-bold text-ink-400 uppercase tracking-wide mb-2.5">Account</h2>
         <button
           onClick={handleSignOut}
           className="text-sm font-semibold text-red-600 hover:text-red-700 transition-colors"

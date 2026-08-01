@@ -4,8 +4,8 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Award, Download } from 'lucide-react';
 import { courses, demoCertificates, Course, Certificate } from '@/lib/mock-data';
-import { getCategoryTheme } from '@/lib/category-theme';
 import { useAuth, displayName, dashboardModeFor } from '@/lib/auth-context';
+import { accentByMode } from '@/lib/dashboard-accent';
 
 const accentHex: Record<string, string> = {
   'Project Management': '#4f46e5',
@@ -100,6 +100,7 @@ export default function CertificatesPage() {
   // Only OWNER/ADMIN don't take courses themselves — a plain MEMBER or an
   // INSTRUCTOR is still a learner too and keeps this page.
   const isOrgManager = user ? dashboardModeFor(user) === 'organization' : false;
+  const accent = user ? accentByMode[dashboardModeFor(user)] : accentByMode.learner;
 
   useEffect(() => {
     if (isOrgManager) router.replace('/dashboard');
@@ -113,32 +114,26 @@ export default function CertificatesPage() {
       <p className="text-sm text-ink-500 mb-8">Certificates you have earned by completing courses.</p>
 
       {demoCertificates.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+        <div className="rounded-xl border border-ink-200 bg-white divide-y divide-ink-100">
           {demoCertificates.map((cert) => {
             const course = courses.find((c) => c.title === cert.courseTitle);
-            const theme = getCategoryTheme(course?.category ?? '');
             return (
-              <div key={cert.id} className="rounded-2xl border-2 border-ink-100 overflow-hidden">
-                <div className={`${theme.solidBg} relative overflow-hidden p-5`}>
-                  <div className="absolute -right-5 -top-5 w-20 h-20 bg-white/10 rotate-45" />
-                  <Award className="w-8 h-8 text-white relative" />
-                  <p className="text-[11px] font-bold uppercase tracking-wide text-white/80 mt-3 relative">Certificate of completion</p>
-                  <p className="font-extrabold text-white text-lg leading-tight mt-0.5 relative">{cert.courseTitle}</p>
+              <div key={cert.id} className="flex items-center gap-3 py-2.5 px-3.5">
+                <div className="w-[30px] h-[30px] rounded-full bg-warm-100 flex items-center justify-center flex-shrink-0">
+                  <Award className="w-3.5 h-3.5 text-warm-600" />
                 </div>
-                <div className="p-5 flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-bold text-ink-900">Score: {cert.score}%</p>
-                    <p className="text-xs text-ink-400 mt-0.5">
-                      {cert.points} points · {new Date(cert.issuedAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => openCertificate(cert, displayName(user), course)}
-                    className={`flex items-center gap-1.5 text-xs font-bold text-white ${theme.solidBg} ${theme.solidBgHover} px-3 py-2 rounded-lg transition-colors flex-shrink-0`}
-                  >
-                    <Download className="w-3.5 h-3.5" /> Download
-                  </button>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13.5px] font-semibold text-ink-900 truncate">{cert.courseTitle}</p>
+                  <p className="text-[11.5px] text-ink-400">
+                    Score {cert.score}% · {cert.points} points · Issued {new Date(cert.issuedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </p>
                 </div>
+                <button
+                  onClick={() => openCertificate(cert, displayName(user), course)}
+                  className={`flex items-center gap-1.5 text-xs font-bold ${accent.text600} hover:underline flex-shrink-0`}
+                >
+                  <Download className="w-3.5 h-3.5" /> Download
+                </button>
               </div>
             );
           })}
