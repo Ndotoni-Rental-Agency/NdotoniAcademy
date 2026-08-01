@@ -228,6 +228,25 @@ function InstructorOverview({ user }: { user: AuthUser }) {
         </Link>
       </div>
 
+      {/* Independent instructor, not yet approved to publish — the approval
+          request itself lives in Settings, but it needs to be visible from
+          here too, since this is the page an independent instructor
+          actually lands on. */}
+      {!org && user.instructorStatus !== 'APPROVED' && (
+        <div className="flex items-center gap-3 rounded-xl border border-ink-200 bg-white px-4 py-3 mb-6">
+          <p className="flex-1 text-xs text-ink-500">
+            {user.instructorStatus === 'PENDING'
+              ? 'Your application to publish independent public courses is pending Ndotoni review.'
+              : user.instructorStatus === 'REJECTED'
+              ? 'Your instructor application was declined.'
+              : 'Publishing a public course under your own name needs a quick Ndotoni approval first.'}
+          </p>
+          <Link href="/dashboard/settings" className={`text-xs font-bold ${accent.text600} hover:underline flex-shrink-0`}>
+            {user.instructorStatus ? 'View status' : 'Apply for approval'}
+          </Link>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         <DashboardStatCard
           value={totalEnrolled}

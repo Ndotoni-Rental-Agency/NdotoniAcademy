@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Building2, CheckCircle2, Loader2, Sparkles, XCircle } from 'lucide-react';
-import { useAuth, displayName, dashboardModeFor, defaultDashboardPath } from '@/lib/auth-context';
+import { useAuth, displayName, dashboardModeFor } from '@/lib/auth-context';
 import { accentByMode } from '@/lib/dashboard-accent';
 import { GraphQLClient } from '@/lib/graphql-client';
 import { applyToBeInstructor, updateProfile } from '@/graphql/mutations';
@@ -50,11 +50,10 @@ export default function SettingsPage() {
     // Purely a dashboard-shell preference — never fires the real
     // instructor-application flow on its own (see handleApply), so
     // toggling back and forth doesn't spam admins with duplicate emails.
-    const next = !wantsToTeach;
-    setWantsToTeach(next);
-    // The mode switch is invisible on this page itself (accent aside) —
-    // land somewhere that actually shows it took effect.
-    router.push(defaultDashboardPath(user, next));
+    // Deliberately does NOT navigate away: switching on reveals the "Apply
+    // for approval" panel right below, on this same page — redirecting
+    // immediately (as this used to) meant nobody ever saw it.
+    setWantsToTeach(!wantsToTeach);
   }
 
   async function handleApply() {
