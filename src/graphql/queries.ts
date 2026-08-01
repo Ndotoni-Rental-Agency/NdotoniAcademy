@@ -56,6 +56,7 @@ export const me = /* GraphQL */ `query Me {
       permissions
       role
       status
+      wantsToBeInstructor
       userId
       __typename
     }
@@ -81,6 +82,7 @@ export const organization = /* GraphQL */ `query Organization($id: ID!) {
       permissions
       role
       status
+      wantsToBeInstructor
       user {
         avatarUrl
         email
@@ -114,6 +116,7 @@ export const organizationBySlug = /* GraphQL */ `query OrganizationBySlug($slug:
       permissions
       role
       status
+      wantsToBeInstructor
       user {
         avatarUrl
         email

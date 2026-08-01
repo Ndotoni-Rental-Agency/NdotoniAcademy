@@ -51,6 +51,8 @@ interface RosterMember {
   name: string;
   email: string;
   role: MembershipRole;
+  // Real — a plain MEMBER asked to be promoted to INSTRUCTOR here.
+  wantsToBeInstructor: boolean;
   // Local-only — there's no real backend concept of course assignment yet,
   // so this never persists past a reload. Real people, illustrative training data.
   assignedCourseIds: string[];
@@ -133,6 +135,7 @@ export default function TeamPage() {
             name: [m.user?.firstName, m.user?.lastName].filter(Boolean).join(' ') || m.user?.email || 'Unknown',
             email: m.user?.email ?? '',
             role: m.role,
+            wantsToBeInstructor: m.wantsToBeInstructor,
             assignedCourseIds: [],
             trainingProgress: 0,
           }));
@@ -304,9 +307,32 @@ export default function TeamPage() {
         userId: member.userId,
         role,
       } satisfies ChangeMemberRoleMutationVariables);
-      setMembers((prev) => prev.map((m) => (m.userId === member.userId ? { ...m, role } : m)));
+      // Backend clears wantsToBeInstructor on any role change — any
+      // promotion/demotion is a decision on a pending request either way.
+      setMembers((prev) => prev.map((m) => (m.userId === member.userId ? { ...m, role, wantsToBeInstructor: false } : m)));
     } catch (err) {
       console.error('[team] changeMemberRole failed ->', err);
+    } finally {
+      setChangingRoleUserId(null);
+    }
+  }
+
+  // No separate "dismiss" mutation on the backend — changeMemberRole with
+  // the member's current (unchanged) role clears wantsToBeInstructor as a
+  // side effect, so this reuses it directly rather than a same-role guard
+  // in handleChangeRole (which the <select>'s onChange wouldn't even fire for).
+  async function handleDismissInstructorRequest(member: RosterMember) {
+    if (!organizationId) return;
+    setChangingRoleUserId(member.userId);
+    try {
+      await GraphQLClient.execute<ChangeMemberRoleMutation>(changeMemberRole, {
+        organizationId,
+        userId: member.userId,
+        role: member.role,
+      } satisfies ChangeMemberRoleMutationVariables);
+      setMembers((prev) => prev.map((m) => (m.userId === member.userId ? { ...m, wantsToBeInstructor: false } : m)));
+    } catch (err) {
+      console.error('[team] dismiss instructor request failed ->', err);
     } finally {
       setChangingRoleUserId(null);
     }
@@ -549,6 +575,19 @@ export default function TeamPage() {
                       {member.assignedCourseIds.length} course{member.assignedCourseIds.length === 1 ? '' : 's'}
                       {member.assignedCourseIds.length > 0 && <> &middot; {member.trainingProgress}% complete</>}
                     </span>
+                    {member.wantsToBeInstructor && (
+                      <span className="hidden sm:flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide text-coral-700 bg-coral-50 px-2.5 py-1 rounded-full flex-shrink-0">
+                        Wants to teach
+                        <button
+                          onClick={() => handleDismissInstructorRequest(member)}
+                          disabled={changingRoleUserId === member.userId}
+                          title="Dismiss request"
+                          className="text-coral-400 hover:text-coral-600 disabled:opacity-60"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    )}
                     {member.role === 'OWNER' || isSelf ? (
                       <span className={`text-[11px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full ${roleBadgeClass[member.role]}`}>
                         {member.role}

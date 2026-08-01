@@ -7,8 +7,14 @@ import { Building2, CheckCircle2, Loader2, Sparkles, XCircle } from 'lucide-reac
 import { useAuth, displayName, dashboardModeFor } from '@/lib/auth-context';
 import { accentByMode } from '@/lib/dashboard-accent';
 import { GraphQLClient } from '@/lib/graphql-client';
-import { applyToBeInstructor, updateProfile } from '@/graphql/mutations';
-import type { ApplyToBeInstructorMutation, UpdateProfileMutation, UpdateProfileMutationVariables } from '@/API';
+import { applyToBeInstructor, requestInstructorRole, updateProfile } from '@/graphql/mutations';
+import type {
+  ApplyToBeInstructorMutation,
+  RequestInstructorRoleMutation,
+  RequestInstructorRoleMutationVariables,
+  UpdateProfileMutation,
+  UpdateProfileMutationVariables,
+} from '@/API';
 import Avatar from '@/components/Avatar';
 
 export default function SettingsPage() {
@@ -25,8 +31,16 @@ export default function SettingsPage() {
   const [error, setError] = useState('');
   const [applying, setApplying] = useState(false);
   const [applyError, setApplyError] = useState('');
+  const [requesting, setRequesting] = useState(false);
+  const [requestError, setRequestError] = useState('');
 
   if (!user) return null;
+
+  const membership = user.organizations[0];
+  const orgName = membership?.organization?.name ?? 'your organization';
+  // OWNER/ADMIN manage this directly via Team; an existing INSTRUCTOR
+  // already has the role — only a plain MEMBER has anything to request.
+  const isPlainMember = membership?.role === 'MEMBER';
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
@@ -66,6 +80,22 @@ export default function SettingsPage() {
       setApplyError(err instanceof Error ? err.message : String(err));
     } finally {
       setApplying(false);
+    }
+  }
+
+  async function handleRequestInstructor() {
+    if (!membership) return;
+    setRequesting(true);
+    setRequestError('');
+    try {
+      await GraphQLClient.execute<RequestInstructorRoleMutation>(requestInstructorRole, {
+        organizationId: membership.organizationId,
+      } satisfies RequestInstructorRoleMutationVariables);
+      await refetch();
+    } catch (err) {
+      setRequestError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setRequesting(false);
     }
   }
 
@@ -168,14 +198,45 @@ export default function SettingsPage() {
         </div>
       )}
 
-      {/* Teaching — instructor is otherwise a per-organization role assigned
-          by an OWNER/ADMIN; someone with no organization at all has no such
-          role to be assigned, so this is the one case where "become an
-          instructor" is a self-service local switch instead. */}
-      {user.organizations.length === 0 && (
+      {/* Teaching — two entirely separate paths that deliberately never
+          touch each other. No organization: instructor mode is a local
+          dashboard preference, and publishing your own public course needs
+          Ndotoni's platform-level approval. Inside an organization: only a
+          plain MEMBER has anything to request here, and it's purely
+          internal to that org — the OWNER decides, and it has nothing to
+          do with independent/public-course approval. */}
+      {(user.organizations.length === 0 || isPlainMember) && (
         <div className="mt-12 pt-8 border-t border-ink-100">
           <h2 className="text-xs font-bold text-ink-400 uppercase tracking-wide mb-2.5">Teaching</h2>
-          {wantsToTeach ? (
+          {isPlainMember ? (
+            <>
+              <div className="flex items-center gap-4 rounded-2xl border border-ink-200 bg-white p-4">
+                <div className="w-10 h-10 rounded-xl bg-coral-50 flex items-center justify-center flex-shrink-0">
+                  <Sparkles className="w-5 h-5 text-coral-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-ink-900">
+                    {membership?.wantsToBeInstructor ? 'Request sent' : `Want to teach at ${orgName}?`}
+                  </p>
+                  <p className="text-xs text-ink-500 mt-0.5">
+                    {membership?.wantsToBeInstructor
+                      ? `Waiting on ${orgName}'s owner to approve.`
+                      : `Ask ${orgName}'s owner to make you an instructor there — separate from publishing your own independent courses.`}
+                  </p>
+                </div>
+                {!membership?.wantsToBeInstructor && (
+                  <button
+                    onClick={handleRequestInstructor}
+                    disabled={requesting}
+                    className="rounded-xl bg-coral-600 px-4 py-2 text-xs font-bold text-white hover:bg-coral-700 transition-colors flex-shrink-0 disabled:opacity-60"
+                  >
+                    {requesting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Request'}
+                  </button>
+                )}
+              </div>
+              {requestError && <p className="text-xs text-coral-600 mt-2">{requestError}</p>}
+            </>
+          ) : wantsToTeach ? (
             <div className="flex items-center gap-4 rounded-2xl border border-ink-200 bg-white p-4">
               <div className="w-10 h-10 rounded-xl bg-coral-50 flex items-center justify-center flex-shrink-0">
                 <Sparkles className="w-5 h-5 text-coral-600" />
@@ -216,8 +277,9 @@ export default function SettingsPage() {
           {/* Publishing an independent (no-organization) course needs a
               one-time Ndotoni approval — a course for an org you actually
               instruct at doesn't need this, since the org's own membership
-              already vouches for you. */}
-          {wantsToTeach && (
+              already vouches for you. Never shown for an org MEMBER, whose
+              path above is entirely about that org, not independent status. */}
+          {!isPlainMember && wantsToTeach && (
             <div className="mt-3 rounded-xl border border-ink-200 bg-ink-50 px-4 py-3 flex items-center gap-3">
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-bold text-ink-700">

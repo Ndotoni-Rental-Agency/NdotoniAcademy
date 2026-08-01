@@ -66,6 +66,23 @@ export const changeMemberRole = /* GraphQL */ `mutation ChangeMemberRole(
   APITypes.ChangeMemberRoleMutationVariables,
   APITypes.ChangeMemberRoleMutation
 >;
+// Trimmed by hand — same reasoning as acceptInvitation above. The caller
+// (Settings page) calls AuthContext's own refetch() right after for the
+// full up-to-date `me`, so this only needs to confirm the flag stuck.
+export const requestInstructorRole = /* GraphQL */ `mutation RequestInstructorRole($organizationId: ID!) {
+  requestInstructorRole(organizationId: $organizationId) {
+    id
+    userId
+    organizationId
+    role
+    wantsToBeInstructor
+    __typename
+  }
+}
+` as GeneratedMutation<
+  APITypes.RequestInstructorRoleMutationVariables,
+  APITypes.RequestInstructorRoleMutation
+>;
 // Trimmed by hand from Amplify codegen's default output, which expands
 // Organization <-> OrganizationMembership's cyclic reference out to
 // maxDepth (4) — members[].organization and members[].user included their

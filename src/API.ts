@@ -325,6 +325,21 @@ export type ChangeMemberRoleMutation = {
   } | null,
 };
 
+export type RequestInstructorRoleMutationVariables = {
+  organizationId: string,
+};
+
+export type RequestInstructorRoleMutation = {
+  requestInstructorRole?:  {
+    __typename: "OrganizationMembership",
+    id: string,
+    userId: string,
+    organizationId: string,
+    role: MembershipRole,
+    wantsToBeInstructor: boolean,
+  } | null,
+};
+
 export type CreateOrganizationMutationVariables = {
   input: CreateOrganizationInput,
 };
@@ -631,6 +646,7 @@ export type MeQuery = {
       permissions: Array< string >,
       role: MembershipRole,
       status: MembershipStatus,
+      wantsToBeInstructor: boolean,
       user?:  {
         __typename: "User",
         avatarUrl?: string | null,
@@ -695,6 +711,7 @@ export type OrganizationQuery = {
       permissions: Array< string >,
       role: MembershipRole,
       status: MembershipStatus,
+      wantsToBeInstructor: boolean,
       user?:  {
         __typename: "User",
         avatarUrl?: string | null,
@@ -761,6 +778,7 @@ export type OrganizationBySlugQuery = {
       permissions: Array< string >,
       role: MembershipRole,
       status: MembershipStatus,
+      wantsToBeInstructor: boolean,
       user?:  {
         __typename: "User",
         avatarUrl?: string | null,

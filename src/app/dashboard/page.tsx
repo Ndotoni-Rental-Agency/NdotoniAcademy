@@ -371,6 +371,7 @@ function InstructorOverview({ user }: { user: AuthUser }) {
 // self-picked from the catalog or assigned by an org — same list either way.
 // ============================================================
 function LearnerOverview({ user }: { user: AuthUser }) {
+  const { setWantsToTeach } = useAuth();
   const accent = accentByMode.learner;
   const membership = user.organizations[0];
   const org = membership?.organization;
@@ -480,6 +481,31 @@ function LearnerOverview({ user }: { user: AuthUser }) {
             >
               Create
             </Link>
+          </div>
+        </section>
+      )}
+
+      {/* Switch to instructor mode — only for someone with no organization
+          at all (org membership already has its own path, via Settings'
+          "request to become an instructor" for a plain MEMBER). Clicking
+          this re-renders this same page as InstructorOverview immediately —
+          no navigation needed. */}
+      {!org && (
+        <section className="mb-6">
+          <div className="flex items-center gap-4 rounded-2xl border border-ink-200 bg-white p-4 sm:p-5">
+            <div className="w-10 h-10 rounded-xl bg-coral-50 flex items-center justify-center flex-shrink-0">
+              <Sparkles className="w-5 h-5 text-coral-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-ink-900">Want to teach?</p>
+              <p className="text-xs text-ink-500 mt-0.5">Switch to your instructor dashboard to build and publish courses.</p>
+            </div>
+            <button
+              onClick={() => setWantsToTeach(true)}
+              className="rounded-xl bg-coral-600 px-4 py-2 text-xs font-bold text-white hover:bg-coral-700 transition-colors flex-shrink-0"
+            >
+              Switch
+            </button>
           </div>
         </section>
       )}
