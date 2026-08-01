@@ -1,10 +1,11 @@
 import { Mail, UserPlus } from 'lucide-react';
-import { mockOrganization, mockTeamMembers, mockPendingInvitations, roleBadgeClass } from '@/lib/organization-mock-data';
+import { mockOrganization, mockTeamMembers, mockPendingInvitations, roleBadgeClass, getOrgRevenueEstimate } from '@/lib/organization-mock-data';
 import Avatar from './Avatar';
 
 export default function OrgPreviewPanel() {
   const members = mockTeamMembers.slice(0, 4);
   const invite = mockPendingInvitations[0];
+  const revenue = getOrgRevenueEstimate();
 
   return (
     <div className="rounded-2xl border-2 border-ink-100 shadow-xl shadow-ink-900/5 overflow-hidden bg-white">
@@ -30,10 +31,20 @@ export default function OrgPreviewPanel() {
           </span>
         </div>
 
-        <div className="flex items-center gap-3 text-xs text-ink-400 mb-4">
-          <span>{mockOrganization.memberCount} members</span>
-          <span className="w-1 h-1 rounded-full bg-ink-200" />
-          <span>{mockPendingInvitations.length} pending invites</span>
+        {/* Stat row: headcount alongside what the org earns, same treatment */}
+        <div className="grid grid-cols-3 gap-2 mb-4">
+          <div className="rounded-lg bg-ink-50 px-3 py-2">
+            <p className="text-base font-extrabold text-ink-900 leading-none">{mockOrganization.memberCount}</p>
+            <p className="text-[10px] text-ink-400 mt-1">Members</p>
+          </div>
+          <div className="rounded-lg bg-ink-50 px-3 py-2">
+            <p className="text-base font-extrabold text-ink-900 leading-none">{mockPendingInvitations.length}</p>
+            <p className="text-[10px] text-ink-400 mt-1">Pending invites</p>
+          </div>
+          <div className="rounded-lg bg-brand-50 px-3 py-2">
+            <p className="text-base font-extrabold text-brand-700 leading-none">TZS {(revenue / 1000).toFixed(0)}K</p>
+            <p className="text-[10px] text-brand-600 mt-1">This month</p>
+          </div>
         </div>
 
         <div className="space-y-2 mb-3">
@@ -42,7 +53,12 @@ export default function OrgPreviewPanel() {
               <Avatar name={m.name} size="sm" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-ink-900 truncate">{m.name}</p>
-                <p className="text-xs text-ink-400 truncate">{m.assignedCourseIds.length} course{m.assignedCourseIds.length === 1 ? '' : 's'} assigned</p>
+                <div className="flex items-center gap-1.5 mt-1">
+                  <div className="w-14 h-1 rounded-full bg-ink-100 overflow-hidden flex-shrink-0">
+                    <div className="h-full rounded-full bg-brand-500" style={{ width: `${m.trainingProgress}%` }} />
+                  </div>
+                  <p className="text-[10px] text-ink-400">{m.trainingProgress}%</p>
+                </div>
               </div>
               <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full flex-shrink-0 ${roleBadgeClass[m.role]}`}>
                 {m.role}

@@ -1,5 +1,5 @@
 import { TrendingUp } from 'lucide-react';
-import { mockOrganization, mockTeamMembers } from '@/lib/organization-mock-data';
+import { mockOrganization, mockTeamMembers, roleBadgeClass } from '@/lib/organization-mock-data';
 import Avatar from './Avatar';
 
 export default function TeamProgressPreview() {
@@ -27,23 +27,31 @@ export default function TeamProgressPreview() {
         </div>
 
         <div className="space-y-3.5">
-          {members.map((m) => (
-            <div key={m.id} className="flex items-center gap-3">
-              <Avatar name={m.name} size="sm" />
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between mb-1">
-                  <p className="text-xs font-semibold text-ink-800 truncate">{m.name}</p>
-                  <span className="text-xs font-bold text-ink-500 flex-shrink-0 ml-2">{m.trainingProgress}%</span>
+          {members.map((m) => {
+            const stalled = m.trainingProgress === 0 && m.assignedCourseIds.length > 0;
+            return (
+              <div key={m.id} className="flex items-center gap-3">
+                <Avatar name={m.name} size="sm" />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-1 gap-2">
+                    <p className="text-xs font-semibold text-ink-800 truncate">{m.name}</p>
+                    <span className={`text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full flex-shrink-0 ${roleBadgeClass[m.role]}`}>
+                      {m.role}
+                    </span>
+                  </div>
+                  <div className="h-1.5 rounded-full bg-ink-100 overflow-hidden">
+                    <div
+                      className={`h-full rounded-full ${stalled ? 'bg-coral-400' : m.trainingProgress > 0 ? 'bg-indigo-500' : 'bg-ink-200'}`}
+                      style={{ width: `${Math.max(m.trainingProgress, 3)}%` }}
+                    />
+                  </div>
                 </div>
-                <div className="h-1.5 rounded-full bg-ink-100 overflow-hidden">
-                  <div
-                    className={`h-full rounded-full ${m.trainingProgress > 0 ? 'bg-indigo-500' : 'bg-ink-200'}`}
-                    style={{ width: `${Math.max(m.trainingProgress, 3)}%` }}
-                  />
-                </div>
+                <span className={`text-xs font-bold flex-shrink-0 ${stalled ? 'text-coral-600' : 'text-ink-500'}`}>
+                  {stalled ? 'Stalled' : `${m.trainingProgress}%`}
+                </span>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

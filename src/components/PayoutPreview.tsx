@@ -23,7 +23,10 @@ export default function PayoutPreview() {
 
       <div className="p-5 sm:p-6">
         <p className="text-[11px] font-bold text-ink-400 uppercase tracking-wide mb-1">This month</p>
-        <p className="text-3xl font-extrabold text-brand-700 mb-5">TZS {net.toLocaleString()}</p>
+        <div className="flex items-baseline gap-2 mb-5">
+          <p className="text-3xl font-extrabold text-brand-700">TZS {net.toLocaleString()}</p>
+          <span className="text-xs font-bold text-brand-600">↑ 18% vs. last month</span>
+        </div>
 
         <div className="space-y-3 border-t border-ink-100 pt-4">
           <div className="flex items-center justify-between text-sm">

@@ -1,8 +1,31 @@
 import { Star, Users, TrendingUp, Plus, Wallet } from 'lucide-react';
-import { getCategoryTheme } from '@/lib/category-theme';
+import { getCategoryTheme, type CategoryTheme } from '@/lib/category-theme';
 import Avatar from './Avatar';
 import type { Course } from '@/lib/mock-data';
 import { HYPOTHETICAL_PRICE_TZS, INSTRUCTOR_SHARE } from '@/lib/instructor-pricing';
+
+/** Illustrative last-7-weeks enrollment shape — an upward trend is the point, not the exact numbers. */
+function EnrollmentSpark({ theme }: { theme: CategoryTheme }) {
+  const points = [58, 64, 63, 71, 78, 88, 100];
+  const w = 100, h = 24;
+  const max = Math.max(...points), min = Math.min(...points);
+  const coords = points.map((p, i) => {
+    const x = (i / (points.length - 1)) * w;
+    const y = h - ((p - min) / (max - min || 1)) * (h - 4) - 2;
+    return [x, y] as const;
+  });
+  const line = coords.map(([x, y], i) => `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
+  const area = `${line} L${w},${h} L0,${h} Z`;
+  const [lastX, lastY] = coords[coords.length - 1];
+  const fillClass = theme.stroke.replace('stroke-', 'fill-');
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="w-full h-6">
+      <path d={area} className={fillClass} opacity={0.12} />
+      <path d={line} fill="none" className={theme.stroke} strokeWidth={1.6} vectorEffect="non-scaling-stroke" />
+      <circle cx={lastX} cy={lastY} r={2.2} className={fillClass} />
+    </svg>
+  );
+}
 
 export default function InstructorPreview({ course }: { course: Course }) {
   const theme = getCategoryTheme(course.category);
@@ -47,6 +70,7 @@ export default function InstructorPreview({ course }: { course: Course }) {
             <div>
               <p className="flex items-center gap-1 text-[11px] text-ink-400 mb-0.5"><Users className="w-3 h-3" /> Enrolled</p>
               <p className="text-lg font-extrabold text-ink-900">{course.enrolledCount}</p>
+              <EnrollmentSpark theme={theme} />
             </div>
             <div>
               <p className="flex items-center gap-1 text-[11px] text-ink-400 mb-0.5"><TrendingUp className="w-3 h-3" /> Completion</p>
@@ -59,6 +83,7 @@ export default function InstructorPreview({ course }: { course: Course }) {
             <div>
               <p className="flex items-center gap-1 text-[11px] text-ink-400 mb-0.5"><Wallet className="w-3 h-3" /> Est. earned</p>
               <p className="text-lg font-extrabold text-brand-700">TZS {estimatedEarnings.toLocaleString()}</p>
+              <p className="text-[10px] font-bold text-brand-600 mt-0.5">↑ 18% this month</p>
             </div>
           </div>
         </div>

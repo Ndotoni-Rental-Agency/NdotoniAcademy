@@ -10,6 +10,7 @@ import SignedOutOnly from '@/components/SignedOutOnly';
 import Reveal from '@/components/Reveal';
 import CourseExperiencePreview from '@/components/CourseExperiencePreview';
 import CertificatePreview from '@/components/CertificatePreview';
+import LearnerDashboardPreview from '@/components/LearnerDashboardPreview';
 
 export default function HomePage() {
   const featuredCourse = courses.find((c) => c.id === 'project-management');
@@ -82,6 +83,27 @@ export default function HomePage() {
               </AuthButton>
             </p>
           </SignedOutOnly>
+        </div>
+      </section>
+
+      {/* ─── Your dashboard ─── */}
+      <section className="border-t border-ink-100 bg-white py-16 sm:py-24">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+            <Reveal y={12}>
+              <p className="text-sm font-bold text-indigo-600 uppercase tracking-wide mb-3">Your dashboard, from day one</p>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-ink-900 mb-4 leading-tight">
+                One place to see everything you&apos;re working on
+              </h2>
+              <p className="text-ink-500 leading-relaxed max-w-md">
+                Courses you picked yourself sit right alongside anything assigned by an organization
+                you&apos;re part of, each one showing real progress, not just a checkmark.
+              </p>
+            </Reveal>
+            <Reveal y={12} delay={0.1}>
+              <LearnerDashboardPreview />
+            </Reveal>
+          </div>
         </div>
       </section>
 

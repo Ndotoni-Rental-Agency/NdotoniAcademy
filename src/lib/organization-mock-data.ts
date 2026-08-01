@@ -7,6 +7,7 @@
 // ============================================================
 
 import { courses } from './mock-data';
+import { HYPOTHETICAL_PRICE_TZS } from './instructor-pricing';
 
 export type OrganizationType = 'COMPANY' | 'NGO' | 'SCHOOL' | 'GOVERNMENT' | 'OTHER';
 export type MembershipRole = 'OWNER' | 'ADMIN' | 'MEMBER' | 'INSTRUCTOR';
@@ -85,7 +86,9 @@ export const mockTeamMembers: TeamMember[] = [
     role: 'MEMBER',
     status: 'ACTIVE',
     joinedAt: '2026-05-14',
-    assignedCourseIds: [],
+    // Assigned but not started yet, deliberately — the one team member who
+    // shows up as "stalled" rather than just quietly at 0%.
+    assignedCourseIds: ['data-analytics'],
     trainingProgress: 0,
   },
   {
@@ -144,11 +147,24 @@ export function getTeamCourseUsage(): TeamCourse[] {
     .filter((c) => c.assignedCount > 0);
 }
 
+/**
+ * Illustrative only — organizations earn from custom courses they build and
+ * from their own INSTRUCTOR members' courses, same idea as an independent
+ * instructor's estimate, just summed across everything the team has assigned.
+ */
+export function getOrgRevenueEstimate(): number {
+  return getTeamCourseUsage().reduce((sum, c) => sum + c.assignedCount * HYPOTHETICAL_PRICE_TZS, 0);
+}
+
 export const roleBadgeClass: Record<MembershipRole, string> = {
   OWNER: 'bg-indigo-100 text-indigo-700',
   ADMIN: 'bg-sky-100 text-sky-700',
   MEMBER: 'bg-ink-100 text-ink-600',
-  INSTRUCTOR: 'bg-violet-100 text-violet-700',
+  // Coral, not the off-palette violet this used to be — matches the
+  // instructor role's own accent color everywhere else (InstructorPreview,
+  // the dashboard redesign), so the same role reads as the same color
+  // whether you're looking at a team roster or an instructor's own view.
+  INSTRUCTOR: 'bg-coral-100 text-coral-700',
 };
 
 export const roleDescriptions: { role: MembershipRole; label: string; desc: string }[] = [
