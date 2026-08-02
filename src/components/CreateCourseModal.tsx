@@ -45,8 +45,18 @@ export function CreateCourseModal({ open, onClose, onSaved, editCourse }: Create
   const [category, setCategory] = useState(CATEGORIES[0]);
   const [priceTzs, setPriceTzs] = useState(15000);
   const [thumbnailUrl, setThumbnailUrl] = useState('');
+  const [scope, setScope] = useState<'organization' | 'independent'>('organization');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+
+  // Someone can be both an org's INSTRUCTOR *and* independently approved —
+  // in that case course creation is genuinely ambiguous, so ask. Anyone with
+  // only one path (or neither) keeps the old behavior: org member with the
+  // INSTRUCTOR role -> org-scoped, everyone else -> independent/public.
+  const membership = user?.organizations[0];
+  const canCreateForOrg = membership?.role === 'INSTRUCTOR';
+  const canCreateIndependently = user?.instructorStatus === 'APPROVED';
+  const showScopeChoice = !editCourse && canCreateForOrg && canCreateIndependently;
 
   useEffect(() => {
     if (!open) return;
@@ -62,6 +72,7 @@ export function CreateCourseModal({ open, onClose, onSaved, editCourse }: Create
       setCategory(CATEGORIES[0]);
       setPriceTzs(15000);
       setThumbnailUrl('');
+      setScope('organization');
     }
     setError('');
   }, [open, editCourse]);
@@ -99,8 +110,10 @@ export function CreateCourseModal({ open, onClose, onSaved, editCourse }: Create
         // An org's INSTRUCTOR creates an org-scoped course; an independent
         // instructor (no org, or an org member in another role who's opted
         // into wantsToTeach) creates a public one — organizationId omitted.
-        const membership = user?.organizations[0];
-        const organizationId = membership?.role === 'INSTRUCTOR' ? membership.organization?.id : undefined;
+        // Someone who's both picks via `scope` (see showScopeChoice above).
+        const organizationId = canCreateForOrg && (!canCreateIndependently || scope === 'organization')
+          ? membership?.organization?.id
+          : undefined;
         const { createCourse: course } = await GraphQLClient.execute<CreateCourseMutation>(createCourse, {
           input: {
             title: title.trim(),
@@ -140,6 +153,36 @@ export function CreateCourseModal({ open, onClose, onSaved, editCourse }: Create
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 px-6 py-5">
+          {showScopeChoice && (
+            <div>
+              <label className="mb-1.5 block text-sm font-bold text-ink-700">Who is this course for?</label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setScope('organization')}
+                  disabled={submitting}
+                  className={`rounded-xl border-2 px-4 py-3 text-left transition-colors disabled:opacity-60 ${
+                    scope === 'organization' ? 'border-coral-500 bg-coral-50' : 'border-ink-200 hover:border-ink-300'
+                  }`}
+                >
+                  <p className="text-sm font-bold text-ink-900 truncate">{membership?.organization?.name}</p>
+                  <p className="text-xs text-ink-500">Only your org can assign it</p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setScope('independent')}
+                  disabled={submitting}
+                  className={`rounded-xl border-2 px-4 py-3 text-left transition-colors disabled:opacity-60 ${
+                    scope === 'independent' ? 'border-coral-500 bg-coral-50' : 'border-ink-200 hover:border-ink-300'
+                  }`}
+                >
+                  <p className="text-sm font-bold text-ink-900">Just for me</p>
+                  <p className="text-xs text-ink-500">Public, under your own name</p>
+                </button>
+              </div>
+            </div>
+          )}
+
           <div>
             <label className="mb-1.5 block text-sm font-bold text-ink-700">Title</label>
             <input
