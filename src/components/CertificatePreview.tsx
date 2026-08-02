@@ -81,8 +81,6 @@ export default function CertificatePreview({
           </div>
         </div>
       </div>
-
-      <p className="text-center text-[11px] text-ink-400 py-2.5">Sample certificate. Yours will have your name.</p>
     </div>
   );
 }
