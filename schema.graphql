@@ -4,15 +4,134 @@ schema {
   subscription: Subscription
 }
 
-type Mutation {
+type Course {
+  category: String
+  createdAt: AWSDateTime!
+  description: String
+  id: ID!
+  instructorUserId: ID!
+  organization: Organization
+  organizationId: ID
+  priceTzs: Int!
+  status: CourseStatus!
+  thumbnailUrl: AWSURL
+  title: String!
+  updatedAt: AWSDateTime!
+}
 
-  acceptInvitation(token: String!): OrganizationMembership 
-  changeMemberRole(organizationId: ID!, role: MembershipRole!, userId: ID!): OrganizationMembership 
-  createOrganization(input: CreateOrganizationInput!): Organization 
-  inviteMember(email: AWSEmail!, organizationId: ID!, role: MembershipRole!): OrganizationInvitation 
-  removeMember(organizationId: ID!, userId: ID!): Boolean 
-  revokeInvitation(email: AWSEmail!, organizationId: ID!): Boolean 
-  updateProfile(input: UpdateUserProfileInput!): User 
+type CourseModule {
+  courseId: ID!
+  createdAt: AWSDateTime!
+  description: String
+  isFree: Boolean!
+  lessonCount: Int!
+  moduleId: ID!
+  order: Int!
+  thumbnailUrl: AWSURL
+  title: String!
+  totalDurationSeconds: Int!
+}
+
+type Flashcard {
+  back: String!
+  front: String!
+  id: ID!
+}
+
+type Lesson {
+  animationRef: String
+  audioUrl: AWSURL
+  body: String
+  cards: [Flashcard!]
+  createdAt: AWSDateTime!
+  durationSeconds: Int
+  embedUrl: AWSURL
+  id: ID!
+  instructorUserId: ID!
+  organizationId: ID
+  questions: [QuizQuestion!]
+  title: String!
+  type: LessonType!
+  updatedAt: AWSDateTime!
+  videoUrl: AWSURL
+}
+
+type Module {
+  createdAt: AWSDateTime!
+  description: String
+  id: ID!
+  instructorUserId: ID!
+  organizationId: ID
+  thumbnailUrl: AWSURL
+  title: String!
+  updatedAt: AWSDateTime!
+}
+
+type ModuleLesson {
+  animationRef: String
+  audioUrl: AWSURL
+  body: String
+  cards: [Flashcard!]
+  createdAt: AWSDateTime!
+  durationSeconds: Int
+  embedUrl: AWSURL
+  isFree: Boolean!
+  lessonId: ID!
+  moduleId: ID!
+  order: Int!
+  prerequisites: [ModuleLessonRef!]!
+  questions: [QuizQuestion!]
+  title: String!
+  type: LessonType!
+  videoUrl: AWSURL
+}
+
+type ModuleLessonRef {
+  lessonId: ID!
+  moduleId: ID!
+}
+
+type ModuleLessonSummary {
+  createdAt: AWSDateTime!
+  durationSeconds: Int
+  isFree: Boolean!
+  lessonId: ID!
+  moduleId: ID!
+  order: Int!
+  prerequisites: [ModuleLessonRef!]!
+  title: String!
+  type: LessonType!
+}
+
+type Mutation {
+  acceptInvitation(token: String!): OrganizationMembership @aws_cognito_user_pools
+  addLessonToModule(isFree: Boolean, lessonId: ID!, moduleId: ID!, prerequisites: [ModuleLessonRefInput!]): ModuleLesson! @aws_cognito_user_pools
+  addModuleToCourse(courseId: ID!, isFree: Boolean, moduleId: ID!): CourseModule! @aws_cognito_user_pools
+  applyToBeInstructor: User @aws_cognito_user_pools
+  changeMemberRole(organizationId: ID!, role: MembershipRole!, userId: ID!): OrganizationMembership @aws_cognito_user_pools
+  createCourse(input: CreateCourseInput!): Course! @aws_cognito_user_pools
+  createLessonForModule(input: CreateLessonInput!, isFree: Boolean, moduleId: ID!, prerequisites: [ModuleLessonRefInput!]): ModuleLesson! @aws_cognito_user_pools
+  createModuleForCourse(courseId: ID!, input: CreateModuleInput!, isFree: Boolean): CourseModule! @aws_cognito_user_pools
+  createOrganization(input: CreateOrganizationInput!): Organization @aws_cognito_user_pools
+  deleteCourse(id: ID!): Boolean @aws_cognito_user_pools
+  deleteLesson(id: ID!): Boolean @aws_cognito_user_pools
+  deleteModule(id: ID!): Boolean @aws_cognito_user_pools
+  inviteMember(email: AWSEmail!, organizationId: ID!, role: MembershipRole!): OrganizationInvitation @aws_cognito_user_pools
+  removeLessonFromModule(lessonId: ID!, moduleId: ID!): Boolean @aws_cognito_user_pools
+  removeMember(organizationId: ID!, userId: ID!): Boolean @aws_cognito_user_pools
+  removeModuleFromCourse(courseId: ID!, moduleId: ID!): Boolean @aws_cognito_user_pools
+  reorderCourseModules(courseId: ID!, moduleIds: [ID!]!): [CourseModule!]! @aws_cognito_user_pools
+  reorderModuleLessons(lessonIds: [ID!]!, moduleId: ID!): [ModuleLessonSummary!]! @aws_cognito_user_pools
+  requestInstructorRole(organizationId: ID!): OrganizationMembership @aws_cognito_user_pools
+  revokeInvitation(email: AWSEmail!, organizationId: ID!): Boolean @aws_cognito_user_pools
+  setCourseModuleFree(courseId: ID!, isFree: Boolean!, moduleId: ID!): CourseModule! @aws_cognito_user_pools
+  setInstructorStatus(status: InstructorStatus!, userId: ID!): User @aws_cognito_user_pools
+  setModuleLessonFree(isFree: Boolean!, lessonId: ID!, moduleId: ID!): ModuleLesson! @aws_cognito_user_pools
+  setModuleLessonPrerequisites(lessonId: ID!, moduleId: ID!, prerequisites: [ModuleLessonRefInput!]!): ModuleLesson! @aws_cognito_user_pools
+  updateCourse(id: ID!, input: UpdateCourseInput!): Course! @aws_cognito_user_pools
+  updateLesson(id: ID!, input: UpdateLessonInput!): Lesson! @aws_cognito_user_pools
+  updateModule(id: ID!, input: UpdateModuleInput!): Module! @aws_cognito_user_pools
+  updateProfile(input: UpdateUserProfileInput!): User @aws_cognito_user_pools
 }
 
 type Organization {
@@ -46,19 +165,35 @@ type OrganizationMembership {
   status: MembershipStatus!
   user: User
   userId: ID!
+  wantsToBeInstructor: Boolean!
 }
 
 type Query {
+  course(id: ID!): Course @aws_cognito_user_pools
+  coursesForOrganization(organizationId: ID!): [Course!]! @aws_cognito_user_pools
+  invitationsForOrganization(organizationId: ID!): [OrganizationInvitation!]! @aws_cognito_user_pools
+  lesson(lessonId: ID!, moduleId: ID!): ModuleLesson @aws_cognito_user_pools
+  lessonsForModule(moduleId: ID!): [ModuleLessonSummary!]! @aws_cognito_user_pools
+  me: User @aws_cognito_user_pools
+  module(id: ID!): Module @aws_cognito_user_pools
+  modulesForCourse(courseId: ID!): [CourseModule!]! @aws_cognito_user_pools
+  myCourses: [Course!]! @aws_cognito_user_pools
+  myLessons: [Lesson!]! @aws_cognito_user_pools
+  myModules: [Module!]! @aws_cognito_user_pools
+  organization(id: ID!): Organization @aws_cognito_user_pools
+  organizationBySlug(slug: String!): Organization @aws_cognito_user_pools
+  publicCourses: [Course!]! @aws_cognito_user_pools
+}
 
-  invitationsForOrganization(organizationId: ID!): [OrganizationInvitation!]! 
-  me: User 
-  organization(id: ID!): Organization 
-  organizationBySlug(slug: String!): Organization 
+type QuizQuestion {
+  correctIndex: Int!
+  id: ID!
+  options: [String!]!
+  question: String!
 }
 
 type Subscription {
-
-  organizationMemberJoined(organizationId: ID!): OrganizationMembership  
+  organizationMemberJoined(organizationId: ID!): OrganizationMembership @aws_cognito_user_pools @aws_subscribe(mutations : ["acceptInvitation"])
 }
 
 type User {
@@ -67,16 +202,38 @@ type User {
   email: AWSEmail!
   firstName: String
   id: ID!
+  instructorStatus: InstructorStatus
   lastName: String
   organizations: [OrganizationMembership!]!
   status: UserStatus!
   updatedAt: AWSDateTime!
 }
 
+enum CourseStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum InstructorStatus {
+  APPROVED
+  PENDING
+  REJECTED
+}
+
 enum InvitationStatus {
   ACCEPTED
   EXPIRED
   PENDING
+}
+
+enum LessonType {
+  ANIMATION
+  AUDIO
+  EMBED
+  FLASHCARDS
+  QUIZ
+  TEXT
+  VIDEO
 }
 
 enum MembershipRole {
@@ -111,10 +268,85 @@ enum UserStatus {
   SUSPENDED
 }
 
+input CreateCourseInput {
+  category: String
+  description: String
+  organizationId: ID
+  priceTzs: Int!
+  thumbnailUrl: AWSURL
+  title: String!
+}
+
+input CreateLessonInput {
+  animationRef: String
+  audioUrl: AWSURL
+  body: String
+  cards: [FlashcardInput!]
+  durationSeconds: Int
+  embedUrl: AWSURL
+  organizationId: ID
+  questions: [QuizQuestionInput!]
+  title: String!
+  type: LessonType!
+  videoUrl: AWSURL
+}
+
+input CreateModuleInput {
+  description: String
+  organizationId: ID
+  thumbnailUrl: AWSURL
+  title: String!
+}
+
 input CreateOrganizationInput {
   name: String!
   slug: String!
   type: OrganizationType!
+}
+
+input FlashcardInput {
+  back: String!
+  front: String!
+  id: ID!
+}
+
+input ModuleLessonRefInput {
+  lessonId: ID!
+  moduleId: ID!
+}
+
+input QuizQuestionInput {
+  correctIndex: Int!
+  id: ID!
+  options: [String!]!
+  question: String!
+}
+
+input UpdateCourseInput {
+  category: String
+  description: String
+  priceTzs: Int
+  status: CourseStatus
+  thumbnailUrl: AWSURL
+  title: String
+}
+
+input UpdateLessonInput {
+  animationRef: String
+  audioUrl: AWSURL
+  body: String
+  cards: [FlashcardInput!]
+  durationSeconds: Int
+  embedUrl: AWSURL
+  questions: [QuizQuestionInput!]
+  title: String
+  videoUrl: AWSURL
+}
+
+input UpdateModuleInput {
+  description: String
+  thumbnailUrl: AWSURL
+  title: String
 }
 
 input UpdateUserProfileInput {

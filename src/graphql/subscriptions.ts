@@ -37,12 +37,14 @@ export const organizationMemberJoined = /* GraphQL */ `subscription Organization
           email
           firstName
           id
+          instructorStatus
           lastName
           status
           updatedAt
           __typename
         }
         userId
+        wantsToBeInstructor
         __typename
       }
       name
@@ -61,6 +63,7 @@ export const organizationMemberJoined = /* GraphQL */ `subscription Organization
       email
       firstName
       id
+      instructorStatus
       lastName
       organizations {
         id
@@ -84,12 +87,14 @@ export const organizationMemberJoined = /* GraphQL */ `subscription Organization
           email
           firstName
           id
+          instructorStatus
           lastName
           status
           updatedAt
           __typename
         }
         userId
+        wantsToBeInstructor
         __typename
       }
       status
@@ -97,6 +102,7 @@ export const organizationMemberJoined = /* GraphQL */ `subscription Organization
       __typename
     }
     userId
+    wantsToBeInstructor
     __typename
   }
 }

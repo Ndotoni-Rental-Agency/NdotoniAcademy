@@ -8,15 +8,172 @@ type GeneratedQuery<InputType, OutputType> = string & {
   __generatedQueryOutput: OutputType;
 };
 
-// Trimmed by hand — see the comment on createOrganization in mutations.ts.
-// OrganizationInvitation.organization is nullable and nothing here reads
-// it — the team page already knows which org it's looking at.
+export const course = /* GraphQL */ `query Course($id: ID!) {
+  course(id: $id) {
+    category
+    createdAt
+    description
+    id
+    instructorUserId
+    organization {
+      createdAt
+      id
+      members {
+        id
+        joinedAt
+        organization {
+          createdAt
+          id
+          name
+          slug
+          status
+          type
+          __typename
+        }
+        organizationId
+        permissions
+        role
+        status
+        user {
+          avatarUrl
+          createdAt
+          email
+          firstName
+          id
+          instructorStatus
+          lastName
+          status
+          updatedAt
+          __typename
+        }
+        userId
+        wantsToBeInstructor
+        __typename
+      }
+      name
+      slug
+      status
+      type
+      __typename
+    }
+    organizationId
+    priceTzs
+    status
+    thumbnailUrl
+    title
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedQuery<APITypes.CourseQueryVariables, APITypes.CourseQuery>;
+export const coursesForOrganization = /* GraphQL */ `query CoursesForOrganization($organizationId: ID!) {
+  coursesForOrganization(organizationId: $organizationId) {
+    category
+    createdAt
+    description
+    id
+    instructorUserId
+    organization {
+      createdAt
+      id
+      members {
+        id
+        joinedAt
+        organization {
+          createdAt
+          id
+          name
+          slug
+          status
+          type
+          __typename
+        }
+        organizationId
+        permissions
+        role
+        status
+        user {
+          avatarUrl
+          createdAt
+          email
+          firstName
+          id
+          instructorStatus
+          lastName
+          status
+          updatedAt
+          __typename
+        }
+        userId
+        wantsToBeInstructor
+        __typename
+      }
+      name
+      slug
+      status
+      type
+      __typename
+    }
+    organizationId
+    priceTzs
+    status
+    thumbnailUrl
+    title
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedQuery<
+  APITypes.CoursesForOrganizationQueryVariables,
+  APITypes.CoursesForOrganizationQuery
+>;
 export const invitationsForOrganization = /* GraphQL */ `query InvitationsForOrganization($organizationId: ID!) {
   invitationsForOrganization(organizationId: $organizationId) {
     createdAt
     email
     expiresAt
     id
+    organization {
+      createdAt
+      id
+      members {
+        id
+        joinedAt
+        organization {
+          createdAt
+          id
+          name
+          slug
+          status
+          type
+          __typename
+        }
+        organizationId
+        permissions
+        role
+        status
+        user {
+          avatarUrl
+          createdAt
+          email
+          firstName
+          id
+          instructorStatus
+          lastName
+          status
+          updatedAt
+          __typename
+        }
+        userId
+        wantsToBeInstructor
+        __typename
+      }
+      name
+      slug
+      status
+      type
+      __typename
+    }
     organizationId
     role
     status
@@ -27,10 +184,65 @@ export const invitationsForOrganization = /* GraphQL */ `query InvitationsForOrg
   APITypes.InvitationsForOrganizationQueryVariables,
   APITypes.InvitationsForOrganizationQuery
 >;
-// Trimmed by hand — see the comment on createOrganization in mutations.ts
-// for why: organizations[].organization stays flat (no nested .members),
-// and organizations[].user is dropped entirely — nothing in the app reads
-// either, and the backend's resolver doesn't populate that deep anyway.
+export const lesson = /* GraphQL */ `query Lesson($lessonId: ID!, $moduleId: ID!) {
+  lesson(lessonId: $lessonId, moduleId: $moduleId) {
+    animationRef
+    audioUrl
+    body
+    cards {
+      back
+      front
+      id
+      __typename
+    }
+    createdAt
+    durationSeconds
+    embedUrl
+    isFree
+    lessonId
+    moduleId
+    order
+    prerequisites {
+      lessonId
+      moduleId
+      __typename
+    }
+    questions {
+      correctIndex
+      id
+      options
+      question
+      __typename
+    }
+    title
+    type
+    videoUrl
+    __typename
+  }
+}
+` as GeneratedQuery<APITypes.LessonQueryVariables, APITypes.LessonQuery>;
+export const lessonsForModule = /* GraphQL */ `query LessonsForModule($moduleId: ID!) {
+  lessonsForModule(moduleId: $moduleId) {
+    createdAt
+    durationSeconds
+    isFree
+    lessonId
+    moduleId
+    order
+    prerequisites {
+      lessonId
+      moduleId
+      __typename
+    }
+    title
+    type
+    __typename
+  }
+}
+` as GeneratedQuery<
+  APITypes.LessonsForModuleQueryVariables,
+  APITypes.LessonsForModuleQuery
+>;
 export const me = /* GraphQL */ `query Me {
   me {
     avatarUrl
@@ -46,6 +258,17 @@ export const me = /* GraphQL */ `query Me {
       organization {
         createdAt
         id
+        members {
+          id
+          joinedAt
+          organizationId
+          permissions
+          role
+          status
+          userId
+          wantsToBeInstructor
+          __typename
+        }
         name
         slug
         status
@@ -56,8 +279,31 @@ export const me = /* GraphQL */ `query Me {
       permissions
       role
       status
-      wantsToBeInstructor
+      user {
+        avatarUrl
+        createdAt
+        email
+        firstName
+        id
+        instructorStatus
+        lastName
+        organizations {
+          id
+          joinedAt
+          organizationId
+          permissions
+          role
+          status
+          userId
+          wantsToBeInstructor
+          __typename
+        }
+        status
+        updatedAt
+        __typename
+      }
       userId
+      wantsToBeInstructor
       __typename
     }
     status
@@ -66,11 +312,143 @@ export const me = /* GraphQL */ `query Me {
   }
 }
 ` as GeneratedQuery<APITypes.MeQueryVariables, APITypes.MeQuery>;
-// Trimmed by hand — see the comment on createOrganization in mutations.ts
-// for why Amplify codegen's default output is dropped (members[].organization
-// nested further, in particular). members[].user stays, flat (no nested
-// .organizations) — the team roster genuinely needs real names, and the
-// backend now populates it (organization-service.ts's listMembersWithPermissions).
+export const module = /* GraphQL */ `query Module($id: ID!) {
+  module(id: $id) {
+    createdAt
+    description
+    id
+    instructorUserId
+    organizationId
+    thumbnailUrl
+    title
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedQuery<APITypes.ModuleQueryVariables, APITypes.ModuleQuery>;
+export const modulesForCourse = /* GraphQL */ `query ModulesForCourse($courseId: ID!) {
+  modulesForCourse(courseId: $courseId) {
+    courseId
+    createdAt
+    description
+    isFree
+    lessonCount
+    moduleId
+    order
+    thumbnailUrl
+    title
+    totalDurationSeconds
+    __typename
+  }
+}
+` as GeneratedQuery<
+  APITypes.ModulesForCourseQueryVariables,
+  APITypes.ModulesForCourseQuery
+>;
+export const myCourses = /* GraphQL */ `query MyCourses {
+  myCourses {
+    category
+    createdAt
+    description
+    id
+    instructorUserId
+    organization {
+      createdAt
+      id
+      members {
+        id
+        joinedAt
+        organization {
+          createdAt
+          id
+          name
+          slug
+          status
+          type
+          __typename
+        }
+        organizationId
+        permissions
+        role
+        status
+        user {
+          avatarUrl
+          createdAt
+          email
+          firstName
+          id
+          instructorStatus
+          lastName
+          status
+          updatedAt
+          __typename
+        }
+        userId
+        wantsToBeInstructor
+        __typename
+      }
+      name
+      slug
+      status
+      type
+      __typename
+    }
+    organizationId
+    priceTzs
+    status
+    thumbnailUrl
+    title
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedQuery<APITypes.MyCoursesQueryVariables, APITypes.MyCoursesQuery>;
+export const myLessons = /* GraphQL */ `query MyLessons {
+  myLessons {
+    animationRef
+    audioUrl
+    body
+    cards {
+      back
+      front
+      id
+      __typename
+    }
+    createdAt
+    durationSeconds
+    embedUrl
+    id
+    instructorUserId
+    organizationId
+    questions {
+      correctIndex
+      id
+      options
+      question
+      __typename
+    }
+    title
+    type
+    updatedAt
+    videoUrl
+    __typename
+  }
+}
+` as GeneratedQuery<APITypes.MyLessonsQueryVariables, APITypes.MyLessonsQuery>;
+export const myModules = /* GraphQL */ `query MyModules {
+  myModules {
+    createdAt
+    description
+    id
+    instructorUserId
+    organizationId
+    thumbnailUrl
+    title
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedQuery<APITypes.MyModulesQueryVariables, APITypes.MyModulesQuery>;
 export const organization = /* GraphQL */ `query Organization($id: ID!) {
   organization(id: $id) {
     createdAt
@@ -78,20 +456,55 @@ export const organization = /* GraphQL */ `query Organization($id: ID!) {
     members {
       id
       joinedAt
+      organization {
+        createdAt
+        id
+        members {
+          id
+          joinedAt
+          organizationId
+          permissions
+          role
+          status
+          userId
+          wantsToBeInstructor
+          __typename
+        }
+        name
+        slug
+        status
+        type
+        __typename
+      }
       organizationId
       permissions
       role
       status
-      wantsToBeInstructor
       user {
         avatarUrl
+        createdAt
         email
         firstName
         id
+        instructorStatus
         lastName
+        organizations {
+          id
+          joinedAt
+          organizationId
+          permissions
+          role
+          status
+          userId
+          wantsToBeInstructor
+          __typename
+        }
+        status
+        updatedAt
         __typename
       }
       userId
+      wantsToBeInstructor
       __typename
     }
     name
@@ -112,20 +525,55 @@ export const organizationBySlug = /* GraphQL */ `query OrganizationBySlug($slug:
     members {
       id
       joinedAt
+      organization {
+        createdAt
+        id
+        members {
+          id
+          joinedAt
+          organizationId
+          permissions
+          role
+          status
+          userId
+          wantsToBeInstructor
+          __typename
+        }
+        name
+        slug
+        status
+        type
+        __typename
+      }
       organizationId
       permissions
       role
       status
-      wantsToBeInstructor
       user {
         avatarUrl
+        createdAt
         email
         firstName
         id
+        instructorStatus
         lastName
+        organizations {
+          id
+          joinedAt
+          organizationId
+          permissions
+          role
+          status
+          userId
+          wantsToBeInstructor
+          __typename
+        }
+        status
+        updatedAt
         __typename
       }
       userId
+      wantsToBeInstructor
       __typename
     }
     name
@@ -138,4 +586,65 @@ export const organizationBySlug = /* GraphQL */ `query OrganizationBySlug($slug:
 ` as GeneratedQuery<
   APITypes.OrganizationBySlugQueryVariables,
   APITypes.OrganizationBySlugQuery
+>;
+export const publicCourses = /* GraphQL */ `query PublicCourses {
+  publicCourses {
+    category
+    createdAt
+    description
+    id
+    instructorUserId
+    organization {
+      createdAt
+      id
+      members {
+        id
+        joinedAt
+        organization {
+          createdAt
+          id
+          name
+          slug
+          status
+          type
+          __typename
+        }
+        organizationId
+        permissions
+        role
+        status
+        user {
+          avatarUrl
+          createdAt
+          email
+          firstName
+          id
+          instructorStatus
+          lastName
+          status
+          updatedAt
+          __typename
+        }
+        userId
+        wantsToBeInstructor
+        __typename
+      }
+      name
+      slug
+      status
+      type
+      __typename
+    }
+    organizationId
+    priceTzs
+    status
+    thumbnailUrl
+    title
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedQuery<
+  APITypes.PublicCoursesQueryVariables,
+  APITypes.PublicCoursesQuery
 >;
