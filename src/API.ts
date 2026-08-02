@@ -20,7 +20,7 @@ export type Organization = {
   __typename: "Organization",
   createdAt: string,
   id: string,
-  members:  Array<OrganizationMembership >,
+  members?: Array<OrganizationMembership> | null,
   name: string,
   slug: string,
   status: OrganizationStatus,

@@ -75,7 +75,14 @@ export class GraphQLClient {
     } catch (err) {
       if (err instanceof Error) throw err;
       console.error('[GraphQLClient] request failed ->', err);
-      throw new Error(extractMessage(err));
+      const message = extractMessage(err);
+      // Preserve the original error name (e.g. UserUnAuthenticatedException)
+      // so callers like auth-context.tsx can identify the error type correctly.
+      const wrapped = new Error(message);
+      if (err && typeof err === 'object' && 'name' in err && typeof (err as { name: unknown }).name === 'string') {
+        wrapped.name = (err as { name: string }).name;
+      }
+      throw wrapped;
     }
   }
 }

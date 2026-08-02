@@ -65,7 +65,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setWantsToTeachState(nextUser ? readWantsToTeach(nextUser.id) : false);
       return nextUser;
     } catch (err) {
-      console.error('[auth] fetchUser failed ->', err);
+      // UserUnAuthenticatedException is the normal "no session" path for a
+      // signed-out visitor — getCurrentUser() throws it before any network
+      // call is made, so it's expected noise rather than a real failure.
+      // Everything else is worth surfacing.
+      const isSignedOut =
+        err instanceof Error &&
+        (err.name === 'UserUnAuthenticatedException' ||
+          err.message.includes('UserUnAuthenticatedException') ||
+          err.message.includes('needs to be authenticated'));
+      if (!isSignedOut) {
+        console.error('[auth] fetchUser failed ->', err);
+      }
       setUser(null);
       setWantsToTeachState(false);
       return null;
