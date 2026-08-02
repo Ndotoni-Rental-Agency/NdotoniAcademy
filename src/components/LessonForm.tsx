@@ -5,6 +5,7 @@ import { Check, Loader2, Plus, XCircle, Video, Music, Link2, Sparkles, FileText,
 import { GraphQLClient } from '@/lib/graphql-client';
 import { useToast } from '@/lib/toast-context';
 import { uploadMedia } from '@/lib/upload-media';
+import { splitPdfIntoChunks } from '@/lib/split-pdf';
 import { createLessonForModule, updateLesson, transcribeDocument } from '@/graphql/mutations';
 import { LessonType, MediaType } from '@/API';
 import type {
@@ -81,6 +82,7 @@ export default function LessonForm({ moduleId, courseId, editLesson, onSaved, on
   const [error, setError] = useState('');
   const [transcribing, setTranscribing] = useState(false);
   const [transcribeError, setTranscribeError] = useState('');
+  const [transcribeProgress, setTranscribeProgress] = useState<{ current: number; total: number } | null>(null);
 
   function pickType(next: LessonType) {
     setType(next);
@@ -104,12 +106,25 @@ export default function LessonForm({ moduleId, courseId, editLesson, onSaved, on
     setTranscribeError('');
     setTranscribing(true);
     try {
-      const fileUrl = await uploadMedia(file);
-      const { transcribeDocument: text } = await GraphQLClient.execute<TranscribeDocumentMutation>(
-        transcribeDocument,
-        { fileUrl } satisfies TranscribeDocumentMutationVariables
-      );
-      setBody((prev) => (prev.trim() ? `${prev.trim()}\n\n${text}` : text));
+      // A long PDF would blow past AppSync's fixed 30s resolver timeout as
+      // one Textract job — split into page-range chunks first so each is
+      // its own small job, transcribed one at a time and stitched back
+      // together. No-op (returns the file unchanged) for anything already
+      // within the limit, and for .docx (mammoth doesn't have this
+      // problem — no OCR job, no per-call time ceiling to work around).
+      const chunks = file.type === 'application/pdf' ? await splitPdfIntoChunks(file) : [file];
+      const texts: string[] = [];
+      for (let i = 0; i < chunks.length; i++) {
+        if (chunks.length > 1) setTranscribeProgress({ current: i + 1, total: chunks.length });
+        const fileUrl = await uploadMedia(chunks[i]);
+        const { transcribeDocument: text } = await GraphQLClient.execute<TranscribeDocumentMutation>(
+          transcribeDocument,
+          { fileUrl } satisfies TranscribeDocumentMutationVariables
+        );
+        texts.push(text);
+      }
+      const combined = texts.join('\n\n');
+      setBody((prev) => (prev.trim() ? `${prev.trim()}\n\n${combined}` : combined));
       toast.success('Document transcribed.');
     } catch (err) {
       console.error('[LessonForm] transcribe failed ->', err);
@@ -118,6 +133,7 @@ export default function LessonForm({ moduleId, courseId, editLesson, onSaved, on
       toast.error(message);
     } finally {
       setTranscribing(false);
+      setTranscribeProgress(null);
     }
   }
 
@@ -327,7 +343,11 @@ export default function LessonForm({ moduleId, courseId, editLesson, onSaved, on
               }`}
             >
               {transcribing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
-              {transcribing ? 'Transcribing...' : 'Upload a document to transcribe'}
+              {transcribing
+                ? transcribeProgress
+                  ? `Transcribing part ${transcribeProgress.current} of ${transcribeProgress.total}...`
+                  : 'Transcribing...'
+                : 'Upload a document to transcribe'}
               <input
                 type="file"
                 accept={TRANSCRIBABLE_TYPES.join(',')}
@@ -339,7 +359,7 @@ export default function LessonForm({ moduleId, courseId, editLesson, onSaved, on
           </div>
           <textarea rows={6} placeholder="Write the lesson content here, or upload a document above to auto-fill it..." value={body} onChange={(e) => setBody(e.target.value)} disabled={submitting} className={inputClass} />
           {transcribeError && <p className="mt-1 text-[11px] text-red-600">{transcribeError}</p>}
-          <p className="mt-1 text-[11px] text-ink-400">PDF or Word (.docx) only — extracted text is appended below anything already here, so you can review and edit it.</p>
+          <p className="mt-1 text-[11px] text-ink-400">PDF or Word (.docx) only — extracted text is appended below anything already here, so you can review and edit it. Long PDFs are split into parts automatically.</p>
         </div>
       )}
 
