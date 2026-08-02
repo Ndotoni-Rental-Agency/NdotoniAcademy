@@ -47,6 +47,7 @@ export function CreateCourseModal({ open, onClose, onSaved, editCourse }: Create
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState(CATEGORIES[0]);
   const [priceTzs, setPriceTzs] = useState(15000);
+  const [priceBeforeFree, setPriceBeforeFree] = useState(15000);
   const [thumbnailUrl, setThumbnailUrl] = useState('');
   const [scope, setScope] = useState<'organization' | 'independent'>('organization');
   const [submitting, setSubmitting] = useState(false);
@@ -68,12 +69,14 @@ export function CreateCourseModal({ open, onClose, onSaved, editCourse }: Create
       setDescription(editCourse.description ?? '');
       setCategory(editCourse.category ?? CATEGORIES[0]);
       setPriceTzs(editCourse.priceTzs);
+      if (editCourse.priceTzs > 0) setPriceBeforeFree(editCourse.priceTzs);
       setThumbnailUrl(editCourse.thumbnailUrl ?? '');
     } else {
       setTitle('');
       setDescription('');
       setCategory(CATEGORIES[0]);
       setPriceTzs(15000);
+      setPriceBeforeFree(15000);
       setThumbnailUrl('');
       setScope('organization');
     }
@@ -218,11 +221,29 @@ export function CreateCourseModal({ open, onClose, onSaved, editCourse }: Create
                 aria-label="Price in TZS"
                 value={priceTzs}
                 onChange={(e) => setPriceTzs(Number(e.target.value))}
-                disabled={submitting}
-                className="w-full rounded-xl border border-ink-200 px-4 py-2.5 text-sm text-ink-900 transition-all focus:border-coral-500 focus:outline-none focus:ring-2 focus:ring-coral-500/20 disabled:opacity-60"
+                disabled={submitting || priceTzs === 0}
+                className="w-full rounded-xl border border-ink-200 px-4 py-2.5 text-sm text-ink-900 transition-all focus:border-coral-500 focus:outline-none focus:ring-2 focus:ring-coral-500/20 disabled:opacity-60 disabled:bg-ink-50"
               />
             </div>
           </div>
+
+          <label className="flex items-center gap-2 text-sm font-semibold text-ink-700 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={priceTzs === 0}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  setPriceBeforeFree(priceTzs || priceBeforeFree);
+                  setPriceTzs(0);
+                } else {
+                  setPriceTzs(priceBeforeFree);
+                }
+              }}
+              disabled={submitting}
+              className="w-4 h-4 rounded border-ink-300 text-coral-600 focus:ring-coral-500 focus:ring-offset-0 disabled:opacity-60"
+            />
+            This course is free
+          </label>
 
           <ThumbnailUploader value={thumbnailUrl} onUploaded={setThumbnailUrl} />
 

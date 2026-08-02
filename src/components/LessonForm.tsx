@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, Loader2, Plus, XCircle, Video, Music, Link2, Sparkles, FileText, Layers, HelpCircle, Paperclip } from 'lucide-react';
+import { Check, Loader2, Plus, XCircle, Video, Music, Link2, Sparkles, FileText, Layers, HelpCircle, Paperclip, Upload } from 'lucide-react';
 import { GraphQLClient } from '@/lib/graphql-client';
 import { useToast } from '@/lib/toast-context';
+import { uploadMedia } from '@/lib/upload-media';
+import { transcribeDocument } from '@/lib/transcribe';
 import { createLessonForModule, updateLesson } from '@/graphql/mutations';
 import { LessonType, MediaType } from '@/API';
 import type {
@@ -14,6 +16,8 @@ import FlashcardEditor, { type CardDraft } from './FlashcardEditor';
 import QuizEditor, { type QuestionDraft } from './QuizEditor';
 import DocumentUploader from './DocumentUploader';
 import type { MediaValue } from './MediaField';
+
+const TRANSCRIBABLE_TYPES = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
 
 export type EditableLesson = NonNullable<LessonQuery['lesson']>;
 
@@ -75,6 +79,8 @@ export default function LessonForm({ moduleId, courseId, editLesson, onSaved, on
   const [documentMedia, setDocumentMedia] = useState<MediaValue | null>(editLesson?.document ?? null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [transcribing, setTranscribing] = useState(false);
+  const [transcribeError, setTranscribeError] = useState('');
 
   function pickType(next: LessonType) {
     setType(next);
@@ -84,6 +90,31 @@ export default function LessonForm({ moduleId, courseId, editLesson, onSaved, on
     }
     if (next === LessonType.FLASHCARDS && cards.length === 0) {
       setCards([{ id: crypto.randomUUID(), front: '', back: '', frontMedia: null, backMedia: null }]);
+    }
+  }
+
+  async function handleTranscribeFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (!TRANSCRIBABLE_TYPES.includes(file.type)) {
+      setTranscribeError('Only PDF or Word (.docx) documents can be transcribed.');
+      return;
+    }
+    setTranscribeError('');
+    setTranscribing(true);
+    try {
+      const fileUrl = await uploadMedia(file);
+      const text = await transcribeDocument(fileUrl);
+      setBody((prev) => (prev.trim() ? `${prev.trim()}\n\n${text}` : text));
+      toast.success('Document transcribed.');
+    } catch (err) {
+      console.error('[LessonForm] transcribe failed ->', err);
+      const message = err instanceof Error ? err.message : 'Could not transcribe that document.';
+      setTranscribeError(message);
+      toast.error(message);
+    } finally {
+      setTranscribing(false);
     }
   }
 
@@ -285,8 +316,27 @@ export default function LessonForm({ moduleId, courseId, editLesson, onSaved, on
 
       {type === LessonType.TEXT && (
         <div>
-          <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-ink-400">Lesson text</label>
-          <textarea rows={6} placeholder="Write the lesson content here..." value={body} onChange={(e) => setBody(e.target.value)} disabled={submitting} className={inputClass} />
+          <div className="mb-1 flex items-center justify-between">
+            <label className="block text-[11px] font-bold uppercase tracking-wide text-ink-400">Lesson text</label>
+            <label
+              className={`inline-flex items-center gap-1.5 text-xs font-bold transition-colors ${
+                transcribing || submitting ? 'text-ink-300 cursor-not-allowed' : 'text-coral-600 hover:text-coral-700 cursor-pointer'
+              }`}
+            >
+              {transcribing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+              {transcribing ? 'Transcribing...' : 'Upload a document to transcribe'}
+              <input
+                type="file"
+                accept={TRANSCRIBABLE_TYPES.join(',')}
+                disabled={transcribing || submitting}
+                onChange={handleTranscribeFile}
+                className="hidden"
+              />
+            </label>
+          </div>
+          <textarea rows={6} placeholder="Write the lesson content here, or upload a document above to auto-fill it..." value={body} onChange={(e) => setBody(e.target.value)} disabled={submitting} className={inputClass} />
+          {transcribeError && <p className="mt-1 text-[11px] text-red-600">{transcribeError}</p>}
+          <p className="mt-1 text-[11px] text-ink-400">PDF or Word (.docx) only — extracted text is appended below anything already here, so you can review and edit it.</p>
         </div>
       )}
 
