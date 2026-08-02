@@ -12,12 +12,13 @@ interface LessonModalProps {
   open: boolean;
   onClose: () => void;
   moduleId: string;
+  courseId: string;
   onSaved: () => void;
   /** When present, fetches and edits this lesson's full content instead of creating a new one. */
   editLessonId?: string;
 }
 
-export default function LessonModal({ open, onClose, moduleId, onSaved, editLessonId }: LessonModalProps) {
+export default function LessonModal({ open, onClose, moduleId, courseId, onSaved, editLessonId }: LessonModalProps) {
   const [editLesson, setEditLesson] = useState<EditableLesson | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState('');
@@ -30,7 +31,7 @@ export default function LessonModal({ open, onClose, moduleId, onSaved, editLess
     }
     setLoading(true);
     setLoadError('');
-    GraphQLClient.execute<LessonQuery>(lessonQuery, { lessonId: editLessonId, moduleId } satisfies LessonQueryVariables)
+    GraphQLClient.execute<LessonQuery>(lessonQuery, { lessonId: editLessonId, moduleId, courseId } satisfies LessonQueryVariables)
       .then(({ lesson }) => {
         if (!lesson) {
           setLoadError('Could not load this lesson.');
@@ -43,7 +44,7 @@ export default function LessonModal({ open, onClose, moduleId, onSaved, editLess
         setLoadError('Could not load this lesson.');
       })
       .finally(() => setLoading(false));
-  }, [open, editLessonId, moduleId]);
+  }, [open, editLessonId, moduleId, courseId]);
 
   return (
     <Modal open={open} onClose={onClose} title={editLessonId ? 'Edit lesson' : 'Add a lesson'} maxWidth="2xl">
@@ -56,6 +57,7 @@ export default function LessonModal({ open, onClose, moduleId, onSaved, editLess
       ) : (
         <LessonForm
           moduleId={moduleId}
+          courseId={courseId}
           editLesson={editLesson ?? undefined}
           onSaved={onSaved}
           onCancel={onClose}

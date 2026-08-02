@@ -111,13 +111,13 @@ export const acceptInvitation = /* GraphQL */ `mutation AcceptInvitation($token:
   APITypes.AcceptInvitationMutation
 >;
 export const addLessonToModule = /* GraphQL */ `mutation AddLessonToModule(
-  $isFree: Boolean
+  $courseId: ID!
   $lessonId: ID!
   $moduleId: ID!
   $prerequisites: [ModuleLessonRefInput!]
 ) {
   addLessonToModule(
-    isFree: $isFree
+    courseId: $courseId
     lessonId: $lessonId
     moduleId: $moduleId
     prerequisites: $prerequisites
@@ -170,8 +170,8 @@ export const addLessonToModule = /* GraphQL */ `mutation AddLessonToModule(
   APITypes.AddLessonToModuleMutationVariables,
   APITypes.AddLessonToModuleMutation
 >;
-export const addModuleToCourse = /* GraphQL */ `mutation AddModuleToCourse($courseId: ID!, $isFree: Boolean, $moduleId: ID!) {
-  addModuleToCourse(courseId: $courseId, isFree: $isFree, moduleId: $moduleId) {
+export const addModuleToCourse = /* GraphQL */ `mutation AddModuleToCourse($courseId: ID!, $moduleId: ID!) {
+  addModuleToCourse(courseId: $courseId, moduleId: $moduleId) {
     courseId
     createdAt
     description
@@ -477,14 +477,14 @@ export const createCourse = /* GraphQL */ `mutation CreateCourse($input: CreateC
   APITypes.CreateCourseMutation
 >;
 export const createLessonForModule = /* GraphQL */ `mutation CreateLessonForModule(
+  $courseId: ID!
   $input: CreateLessonInput!
-  $isFree: Boolean
   $moduleId: ID!
   $prerequisites: [ModuleLessonRefInput!]
 ) {
   createLessonForModule(
+    courseId: $courseId
     input: $input
-    isFree: $isFree
     moduleId: $moduleId
     prerequisites: $prerequisites
   ) {
@@ -536,12 +536,8 @@ export const createLessonForModule = /* GraphQL */ `mutation CreateLessonForModu
   APITypes.CreateLessonForModuleMutationVariables,
   APITypes.CreateLessonForModuleMutation
 >;
-export const createModuleForCourse = /* GraphQL */ `mutation CreateModuleForCourse(
-  $courseId: ID!
-  $input: CreateModuleInput!
-  $isFree: Boolean
-) {
-  createModuleForCourse(courseId: $courseId, input: $input, isFree: $isFree) {
+export const createModuleForCourse = /* GraphQL */ `mutation CreateModuleForCourse($courseId: ID!, $input: CreateModuleInput!) {
+  createModuleForCourse(courseId: $courseId, input: $input) {
     courseId
     createdAt
     description
@@ -762,8 +758,16 @@ export const reorderCourseModules = /* GraphQL */ `mutation ReorderCourseModules
   APITypes.ReorderCourseModulesMutationVariables,
   APITypes.ReorderCourseModulesMutation
 >;
-export const reorderModuleLessons = /* GraphQL */ `mutation ReorderModuleLessons($lessonIds: [ID!]!, $moduleId: ID!) {
-  reorderModuleLessons(lessonIds: $lessonIds, moduleId: $moduleId) {
+export const reorderModuleLessons = /* GraphQL */ `mutation ReorderModuleLessons(
+  $courseId: ID!
+  $lessonIds: [ID!]!
+  $moduleId: ID!
+) {
+  reorderModuleLessons(
+    courseId: $courseId
+    lessonIds: $lessonIds
+    moduleId: $moduleId
+  ) {
     createdAt
     durationSeconds
     isFree
@@ -893,33 +897,6 @@ export const revokeInvitation = /* GraphQL */ `mutation RevokeInvitation($email:
   APITypes.RevokeInvitationMutationVariables,
   APITypes.RevokeInvitationMutation
 >;
-export const setCourseModuleFree = /* GraphQL */ `mutation SetCourseModuleFree(
-  $courseId: ID!
-  $isFree: Boolean!
-  $moduleId: ID!
-) {
-  setCourseModuleFree(
-    courseId: $courseId
-    isFree: $isFree
-    moduleId: $moduleId
-  ) {
-    courseId
-    createdAt
-    description
-    isFree
-    lessonCount
-    moduleId
-    order
-    thumbnailUrl
-    title
-    totalDurationSeconds
-    __typename
-  }
-}
-` as GeneratedMutation<
-  APITypes.SetCourseModuleFreeMutationVariables,
-  APITypes.SetCourseModuleFreeMutation
->;
 export const setInstructorStatus = /* GraphQL */ `mutation SetInstructorStatus($status: InstructorStatus!, $userId: ID!) {
   setInstructorStatus(status: $status, userId: $userId) {
     avatarUrl
@@ -992,70 +969,14 @@ export const setInstructorStatus = /* GraphQL */ `mutation SetInstructorStatus($
   APITypes.SetInstructorStatusMutationVariables,
   APITypes.SetInstructorStatusMutation
 >;
-export const setModuleLessonFree = /* GraphQL */ `mutation SetModuleLessonFree(
-  $isFree: Boolean!
-  $lessonId: ID!
-  $moduleId: ID!
-) {
-  setModuleLessonFree(
-    isFree: $isFree
-    lessonId: $lessonId
-    moduleId: $moduleId
-  ) {
-    animationRef
-    audioUrl
-    body
-    cards {
-      back
-      backMedia {
-        type
-        url
-        __typename
-      }
-      front
-      frontMedia {
-        type
-        url
-        __typename
-      }
-      id
-      __typename
-    }
-    createdAt
-    durationSeconds
-    embedUrl
-    isFree
-    lessonId
-    moduleId
-    order
-    prerequisites {
-      lessonId
-      moduleId
-      __typename
-    }
-    questions {
-      correctIndex
-      id
-      options
-      question
-      __typename
-    }
-    title
-    type
-    videoUrl
-    __typename
-  }
-}
-` as GeneratedMutation<
-  APITypes.SetModuleLessonFreeMutationVariables,
-  APITypes.SetModuleLessonFreeMutation
->;
 export const setModuleLessonPrerequisites = /* GraphQL */ `mutation SetModuleLessonPrerequisites(
+  $courseId: ID!
   $lessonId: ID!
   $moduleId: ID!
   $prerequisites: [ModuleLessonRefInput!]!
 ) {
   setModuleLessonPrerequisites(
+    courseId: $courseId
     lessonId: $lessonId
     moduleId: $moduleId
     prerequisites: $prerequisites

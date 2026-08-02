@@ -35,7 +35,7 @@ function ModuleRow({ courseId, mod, theme }: { courseId: string; mod: CourseModu
     if (next && !loaded) {
       setLoading(true);
       try {
-        const { lessonsForModule: fetched } = await GraphQLClient.execute<LessonsForModuleQuery>(lessonsForModule, { moduleId: mod.moduleId });
+        const { lessonsForModule: fetched } = await GraphQLClient.execute<LessonsForModuleQuery>(lessonsForModule, { moduleId: mod.moduleId, courseId });
         setLessons([...fetched].sort((a, b) => a.order - b.order));
         setLoaded(true);
       } catch (err) {

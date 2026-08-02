@@ -44,13 +44,15 @@ interface QuestionDraft {
 
 interface LessonFormProps {
   moduleId: string;
+  /** Only needed to create a new lesson (isFree is resolved from the course's price + placement order). Not required when editing. */
+  courseId?: string;
   /** When present, edits this lesson (updateLesson) instead of creating a new one. Lesson type can't change once set, so the type-picker step is skipped. */
   editLesson?: EditableLesson;
   onSaved: () => void;
   onCancel: () => void;
 }
 
-export default function LessonForm({ moduleId, editLesson, onSaved, onCancel }: LessonFormProps) {
+export default function LessonForm({ moduleId, courseId, editLesson, onSaved, onCancel }: LessonFormProps) {
   const [type, setType] = useState<LessonType | null>(editLesson?.type ?? null);
   const [title, setTitle] = useState(editLesson?.title ?? '');
   const [videoUrl, setVideoUrl] = useState(editLesson?.videoUrl ?? '');
@@ -193,11 +195,12 @@ export default function LessonForm({ moduleId, editLesson, onSaved, onCancel }: 
           input,
         } satisfies UpdateLessonMutationVariables);
       } else {
+        if (!courseId) throw new Error('Missing courseId for a new lesson.');
         const input: CreateLessonInput = { title: title.trim(), type, ...contentFields };
         await GraphQLClient.execute<CreateLessonForModuleMutation>(createLessonForModule, {
           moduleId,
+          courseId,
           input,
-          isFree: false,
         } satisfies CreateLessonForModuleMutationVariables);
       }
       onSaved();

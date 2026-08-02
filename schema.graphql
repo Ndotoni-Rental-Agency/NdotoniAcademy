@@ -119,13 +119,13 @@ type ModuleLessonSummary {
 
 type Mutation {
   acceptInvitation(token: String!): OrganizationMembership @aws_cognito_user_pools
-  addLessonToModule(isFree: Boolean, lessonId: ID!, moduleId: ID!, prerequisites: [ModuleLessonRefInput!]): ModuleLesson! @aws_cognito_user_pools
-  addModuleToCourse(courseId: ID!, isFree: Boolean, moduleId: ID!): CourseModule! @aws_cognito_user_pools
+  addLessonToModule(courseId: ID!, lessonId: ID!, moduleId: ID!, prerequisites: [ModuleLessonRefInput!]): ModuleLesson! @aws_cognito_user_pools
+  addModuleToCourse(courseId: ID!, moduleId: ID!): CourseModule! @aws_cognito_user_pools
   applyToBeInstructor: User @aws_cognito_user_pools
   changeMemberRole(organizationId: ID!, role: MembershipRole!, userId: ID!): OrganizationMembership @aws_cognito_user_pools
   createCourse(input: CreateCourseInput!): Course! @aws_cognito_user_pools
-  createLessonForModule(input: CreateLessonInput!, isFree: Boolean, moduleId: ID!, prerequisites: [ModuleLessonRefInput!]): ModuleLesson! @aws_cognito_user_pools
-  createModuleForCourse(courseId: ID!, input: CreateModuleInput!, isFree: Boolean): CourseModule! @aws_cognito_user_pools
+  createLessonForModule(courseId: ID!, input: CreateLessonInput!, moduleId: ID!, prerequisites: [ModuleLessonRefInput!]): ModuleLesson! @aws_cognito_user_pools
+  createModuleForCourse(courseId: ID!, input: CreateModuleInput!): CourseModule! @aws_cognito_user_pools
   createOrganization(input: CreateOrganizationInput!): Organization @aws_cognito_user_pools
   deleteCourse(id: ID!): Boolean @aws_cognito_user_pools
   deleteLesson(id: ID!): Boolean @aws_cognito_user_pools
@@ -136,13 +136,11 @@ type Mutation {
   removeMember(organizationId: ID!, userId: ID!): Boolean @aws_cognito_user_pools
   removeModuleFromCourse(courseId: ID!, moduleId: ID!): Boolean @aws_cognito_user_pools
   reorderCourseModules(courseId: ID!, moduleIds: [ID!]!): [CourseModule!]! @aws_cognito_user_pools
-  reorderModuleLessons(lessonIds: [ID!]!, moduleId: ID!): [ModuleLessonSummary!]! @aws_cognito_user_pools
+  reorderModuleLessons(courseId: ID!, lessonIds: [ID!]!, moduleId: ID!): [ModuleLessonSummary!]! @aws_cognito_user_pools
   requestInstructorRole(organizationId: ID!): OrganizationMembership @aws_cognito_user_pools
   revokeInvitation(email: AWSEmail!, organizationId: ID!): Boolean @aws_cognito_user_pools
-  setCourseModuleFree(courseId: ID!, isFree: Boolean!, moduleId: ID!): CourseModule! @aws_cognito_user_pools
   setInstructorStatus(status: InstructorStatus!, userId: ID!): User @aws_cognito_user_pools
-  setModuleLessonFree(isFree: Boolean!, lessonId: ID!, moduleId: ID!): ModuleLesson! @aws_cognito_user_pools
-  setModuleLessonPrerequisites(lessonId: ID!, moduleId: ID!, prerequisites: [ModuleLessonRefInput!]!): ModuleLesson! @aws_cognito_user_pools
+  setModuleLessonPrerequisites(courseId: ID!, lessonId: ID!, moduleId: ID!, prerequisites: [ModuleLessonRefInput!]!): ModuleLesson! @aws_cognito_user_pools
   updateCourse(id: ID!, input: UpdateCourseInput!): Course! @aws_cognito_user_pools
   updateLesson(id: ID!, input: UpdateLessonInput!): Lesson! @aws_cognito_user_pools
   updateModule(id: ID!, input: UpdateModuleInput!): Module! @aws_cognito_user_pools
@@ -187,8 +185,8 @@ type Query {
   course(id: ID!): Course @aws_cognito_user_pools
   coursesForOrganization(organizationId: ID!): [Course!]! @aws_cognito_user_pools
   invitationsForOrganization(organizationId: ID!): [OrganizationInvitation!]! @aws_cognito_user_pools
-  lesson(lessonId: ID!, moduleId: ID!): ModuleLesson @aws_cognito_user_pools
-  lessonsForModule(moduleId: ID!): [ModuleLessonSummary!]! @aws_cognito_user_pools
+  lesson(courseId: ID!, lessonId: ID!, moduleId: ID!): ModuleLesson @aws_cognito_user_pools
+  lessonsForModule(courseId: ID!, moduleId: ID!): [ModuleLessonSummary!]! @aws_cognito_user_pools
   me: User @aws_cognito_user_pools
   module(id: ID!): Module @aws_cognito_user_pools
   modulesForCourse(courseId: ID!): [CourseModule!]! @aws_cognito_user_pools

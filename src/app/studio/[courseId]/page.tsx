@@ -85,10 +85,6 @@ export default function StudioPage() {
     }
   }
 
-  function updateModuleLocal(moduleId: string, patch: Partial<CourseModuleData>) {
-    setModules((prev) => prev.map((m) => (m.moduleId === moduleId ? { ...m, ...patch } : m)));
-  }
-
   function handleModuleDeleted(moduleId: string) {
     setModules((prev) => {
       const next = prev.filter((m) => m.moduleId !== moduleId);
@@ -193,7 +189,6 @@ export default function StudioPage() {
         {selectedModule ? (
           <StudioLessonPane
             module={selectedModule}
-            onModuleUpdated={(patch) => updateModuleLocal(selectedModule.moduleId, patch)}
             onModuleDeleted={() => handleModuleDeleted(selectedModule.moduleId)}
           />
         ) : (

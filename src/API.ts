@@ -457,7 +457,7 @@ export type AcceptInvitationMutation = {
 };
 
 export type AddLessonToModuleMutationVariables = {
-  isFree?: boolean | null,
+  courseId: string,
   lessonId: string,
   moduleId: string,
   prerequisites?: Array< ModuleLessonRefInput > | null,
@@ -512,7 +512,6 @@ export type AddLessonToModuleMutation = {
 
 export type AddModuleToCourseMutationVariables = {
   courseId: string,
-  isFree?: boolean | null,
   moduleId: string,
 };
 
@@ -816,8 +815,8 @@ export type CreateCourseMutation = {
 };
 
 export type CreateLessonForModuleMutationVariables = {
+  courseId: string,
   input: CreateLessonInput,
-  isFree?: boolean | null,
   moduleId: string,
   prerequisites?: Array< ModuleLessonRefInput > | null,
 };
@@ -872,7 +871,6 @@ export type CreateLessonForModuleMutation = {
 export type CreateModuleForCourseMutationVariables = {
   courseId: string,
   input: CreateModuleInput,
-  isFree?: boolean | null,
 };
 
 export type CreateModuleForCourseMutation = {
@@ -1108,6 +1106,7 @@ export type ReorderCourseModulesMutation = {
 };
 
 export type ReorderModuleLessonsMutationVariables = {
+  courseId: string,
   lessonIds: Array< string >,
   moduleId: string,
 };
@@ -1243,28 +1242,6 @@ export type RevokeInvitationMutation = {
   revokeInvitation?: boolean | null,
 };
 
-export type SetCourseModuleFreeMutationVariables = {
-  courseId: string,
-  isFree: boolean,
-  moduleId: string,
-};
-
-export type SetCourseModuleFreeMutation = {
-  setCourseModuleFree:  {
-    __typename: "CourseModule",
-    courseId: string,
-    createdAt: string,
-    description?: string | null,
-    isFree: boolean,
-    lessonCount: number,
-    moduleId: string,
-    order: number,
-    thumbnailUrl?: string | null,
-    title: string,
-    totalDurationSeconds: number,
-  },
-};
-
 export type SetInstructorStatusMutationVariables = {
   status: InstructorStatus,
   userId: string,
@@ -1339,60 +1316,8 @@ export type SetInstructorStatusMutation = {
   } | null,
 };
 
-export type SetModuleLessonFreeMutationVariables = {
-  isFree: boolean,
-  lessonId: string,
-  moduleId: string,
-};
-
-export type SetModuleLessonFreeMutation = {
-  setModuleLessonFree:  {
-    __typename: "ModuleLesson",
-    animationRef?: string | null,
-    audioUrl?: string | null,
-    body?: string | null,
-    cards?:  Array< {
-      __typename: "Flashcard",
-      back: string,
-      backMedia?:  {
-        __typename: "Media",
-        type: MediaType,
-        url: string,
-      } | null,
-      front: string,
-      frontMedia?:  {
-        __typename: "Media",
-        type: MediaType,
-        url: string,
-      } | null,
-      id: string,
-    } > | null,
-    createdAt: string,
-    durationSeconds?: number | null,
-    embedUrl?: string | null,
-    isFree: boolean,
-    lessonId: string,
-    moduleId: string,
-    order: number,
-    prerequisites:  Array< {
-      __typename: "ModuleLessonRef",
-      lessonId: string,
-      moduleId: string,
-    } >,
-    questions?:  Array< {
-      __typename: "QuizQuestion",
-      correctIndex: number,
-      id: string,
-      options: Array< string >,
-      question: string,
-    } > | null,
-    title: string,
-    type: LessonType,
-    videoUrl?: string | null,
-  },
-};
-
 export type SetModuleLessonPrerequisitesMutationVariables = {
+  courseId: string,
   lessonId: string,
   moduleId: string,
   prerequisites: Array< ModuleLessonRefInput >,
@@ -1962,6 +1887,7 @@ export type InvitationsForOrganizationQuery = {
 };
 
 export type LessonQueryVariables = {
+  courseId: string,
   lessonId: string,
   moduleId: string,
 };
@@ -2014,6 +1940,7 @@ export type LessonQuery = {
 };
 
 export type LessonsForModuleQueryVariables = {
+  courseId: string,
   moduleId: string,
 };
 

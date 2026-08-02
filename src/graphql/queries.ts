@@ -272,8 +272,8 @@ export const invitationsForOrganization = /* GraphQL */ `query InvitationsForOrg
   APITypes.InvitationsForOrganizationQueryVariables,
   APITypes.InvitationsForOrganizationQuery
 >;
-export const lesson = /* GraphQL */ `query Lesson($lessonId: ID!, $moduleId: ID!) {
-  lesson(lessonId: $lessonId, moduleId: $moduleId) {
+export const lesson = /* GraphQL */ `query Lesson($courseId: ID!, $lessonId: ID!, $moduleId: ID!) {
+  lesson(courseId: $courseId, lessonId: $lessonId, moduleId: $moduleId) {
     animationRef
     audioUrl
     body
@@ -319,8 +319,8 @@ export const lesson = /* GraphQL */ `query Lesson($lessonId: ID!, $moduleId: ID!
   }
 }
 ` as GeneratedQuery<APITypes.LessonQueryVariables, APITypes.LessonQuery>;
-export const lessonsForModule = /* GraphQL */ `query LessonsForModule($moduleId: ID!) {
-  lessonsForModule(moduleId: $moduleId) {
+export const lessonsForModule = /* GraphQL */ `query LessonsForModule($courseId: ID!, $moduleId: ID!) {
+  lessonsForModule(courseId: $courseId, moduleId: $moduleId) {
     createdAt
     durationSeconds
     isFree

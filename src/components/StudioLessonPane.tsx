@@ -15,13 +15,12 @@ import { GraphQLClient } from '@/lib/graphql-client';
 import { lessonsForModule } from '@/graphql/queries';
 import {
   removeLessonFromModule, deleteLesson as deleteLessonMutation, reorderModuleLessons,
-  setModuleLessonFree, setCourseModuleFree, removeModuleFromCourse, deleteModule as deleteModuleMutation,
+  removeModuleFromCourse, deleteModule as deleteModuleMutation,
 } from '@/graphql/mutations';
 import type {
   LessonsForModuleQuery, RemoveLessonFromModuleMutation, RemoveLessonFromModuleMutationVariables,
   DeleteLessonMutation, DeleteLessonMutationVariables, ReorderModuleLessonsMutation,
-  ReorderModuleLessonsMutationVariables, SetModuleLessonFreeMutation, SetModuleLessonFreeMutationVariables,
-  SetCourseModuleFreeMutation, SetCourseModuleFreeMutationVariables,
+  ReorderModuleLessonsMutationVariables,
   RemoveModuleFromCourseMutation, RemoveModuleFromCourseMutationVariables,
   DeleteModuleMutation, DeleteModuleMutationVariables,
 } from '@/API';
@@ -51,7 +50,6 @@ interface LessonRowData {
 
 interface StudioLessonPaneProps {
   module: CourseModuleData;
-  onModuleUpdated: (patch: Partial<CourseModuleData>) => void;
   onModuleDeleted: () => void;
 }
 
@@ -61,11 +59,10 @@ function formatDuration(seconds?: number | null): string | null {
 }
 
 function SortableLessonRow({
-  lesson, busy, onToggleFree, onDelete, onEdit,
+  lesson, busy, onDelete, onEdit,
 }: {
   lesson: LessonRowData;
   busy: boolean;
-  onToggleFree: () => void;
   onDelete: () => void;
   onEdit: () => void;
 }) {
@@ -91,16 +88,11 @@ function SortableLessonRow({
         <span className="text-sm font-semibold text-ink-900 truncate block hover:text-coral-700 transition-colors">{lesson.title}</span>
       </button>
       {duration && <span className="text-xs text-ink-400 flex-shrink-0">{duration}</span>}
-      <button
-        type="button"
-        onClick={onToggleFree}
-        disabled={busy}
-        className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full flex-shrink-0 transition-colors disabled:opacity-60 ${
-          lesson.isFree ? 'bg-brand-100 text-brand-700' : 'bg-ink-100 text-ink-500'
-        }`}
-      >
-        {lesson.isFree ? 'Free' : 'Paid'}
-      </button>
+      {lesson.isFree && (
+        <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full flex-shrink-0 bg-brand-100 text-brand-700">
+          Free preview
+        </span>
+      )}
       <button
         type="button"
         onClick={onEdit}
@@ -116,7 +108,7 @@ function SortableLessonRow({
   );
 }
 
-export default function StudioLessonPane({ module: mod, onModuleUpdated, onModuleDeleted }: StudioLessonPaneProps) {
+export default function StudioLessonPane({ module: mod, onModuleDeleted }: StudioLessonPaneProps) {
   const [lessons, setLessons] = useState<LessonRowData[]>([]);
   const [loading, setLoading] = useState(true);
   const [lessonModalOpen, setLessonModalOpen] = useState(false);
@@ -134,7 +126,10 @@ export default function StudioLessonPane({ module: mod, onModuleUpdated, onModul
     setLoading(true);
     setError('');
     try {
-      const { lessonsForModule: fetched } = await GraphQLClient.execute<LessonsForModuleQuery>(lessonsForModule, { moduleId: mod.moduleId });
+      const { lessonsForModule: fetched } = await GraphQLClient.execute<LessonsForModuleQuery>(lessonsForModule, {
+        moduleId: mod.moduleId,
+        courseId: mod.courseId,
+      });
       setLessons([...fetched].sort((a, b) => a.order - b.order));
     } catch (err) {
       console.error('[StudioLessonPane] loadLessons failed ->', err);
@@ -142,7 +137,7 @@ export default function StudioLessonPane({ module: mod, onModuleUpdated, onModul
     } finally {
       setLoading(false);
     }
-  }, [mod.moduleId]);
+  }, [mod.moduleId, mod.courseId]);
 
   useEffect(() => {
     void loadLessons();
@@ -162,31 +157,16 @@ export default function StudioLessonPane({ module: mod, onModuleUpdated, onModul
     try {
       await GraphQLClient.execute<ReorderModuleLessonsMutation>(reorderModuleLessons, {
         moduleId: mod.moduleId,
+        courseId: mod.courseId,
         lessonIds: reordered.map((l) => l.lessonId),
       } satisfies ReorderModuleLessonsMutationVariables);
+      // Reordering can change which lesson is "first" in the module, which
+      // can change which one is the free preview — refetch rather than
+      // patch isFree locally.
+      void loadLessons();
     } catch (err) {
       console.error('[StudioLessonPane] reorder failed ->', err);
       setError('Could not save the new order.');
-    }
-  }
-
-  async function toggleLessonFree(lessonId: string) {
-    const current = lessons.find((l) => l.lessonId === lessonId);
-    if (!current) return;
-    setBusyLessonId(lessonId);
-    setError('');
-    try {
-      await GraphQLClient.execute<SetModuleLessonFreeMutation>(setModuleLessonFree, {
-        moduleId: mod.moduleId,
-        lessonId,
-        isFree: !current.isFree,
-      } satisfies SetModuleLessonFreeMutationVariables);
-      setLessons((prev) => prev.map((l) => (l.lessonId === lessonId ? { ...l, isFree: !l.isFree } : l)));
-    } catch (err) {
-      console.error('[StudioLessonPane] toggleLessonFree failed ->', err);
-      setError('Could not update this lesson.');
-    } finally {
-      setBusyLessonId(null);
     }
   }
 
@@ -207,24 +187,6 @@ export default function StudioLessonPane({ module: mod, onModuleUpdated, onModul
       setError('Could not delete this lesson.');
     } finally {
       setBusyLessonId(null);
-    }
-  }
-
-  async function toggleModuleFree() {
-    setModuleBusy(true);
-    setError('');
-    try {
-      await GraphQLClient.execute<SetCourseModuleFreeMutation>(setCourseModuleFree, {
-        courseId: mod.courseId,
-        moduleId: mod.moduleId,
-        isFree: !mod.isFree,
-      } satisfies SetCourseModuleFreeMutationVariables);
-      onModuleUpdated({ isFree: !mod.isFree });
-    } catch (err) {
-      console.error('[StudioLessonPane] toggleModuleFree failed ->', err);
-      setError('Could not update this module.');
-    } finally {
-      setModuleBusy(false);
     }
   }
 
@@ -252,16 +214,11 @@ export default function StudioLessonPane({ module: mod, onModuleUpdated, onModul
       <div className="flex items-start justify-between gap-4 mb-1">
         <h2 className="text-xl font-extrabold text-ink-900">{mod.title}</h2>
         <div className="flex items-center gap-2 flex-shrink-0">
-          <button
-            type="button"
-            onClick={toggleModuleFree}
-            disabled={moduleBusy}
-            className={`text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full transition-colors disabled:opacity-60 ${
-              mod.isFree ? 'bg-brand-100 text-brand-700' : 'bg-ink-100 text-ink-500'
-            }`}
-          >
-            {mod.isFree ? 'Free' : 'Paid'}
-          </button>
+          {mod.isFree && (
+            <span className="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full bg-brand-100 text-brand-700">
+              Free preview
+            </span>
+          )}
           <button
             type="button"
             onClick={handleDeleteModule}
@@ -299,7 +256,6 @@ export default function StudioLessonPane({ module: mod, onModuleUpdated, onModul
                     key={lesson.lessonId}
                     lesson={lesson}
                     busy={busyLessonId === lesson.lessonId}
-                    onToggleFree={() => toggleLessonFree(lesson.lessonId)}
                     onDelete={() => handleDeleteLesson(lesson.lessonId)}
                     onEdit={() => { setEditingLessonId(lesson.lessonId); setLessonModalOpen(true); }}
                   />
@@ -322,6 +278,7 @@ export default function StudioLessonPane({ module: mod, onModuleUpdated, onModul
         open={lessonModalOpen}
         onClose={() => setLessonModalOpen(false)}
         moduleId={mod.moduleId}
+        courseId={mod.courseId}
         editLessonId={editingLessonId ?? undefined}
         onSaved={() => {
           setLessonModalOpen(false);

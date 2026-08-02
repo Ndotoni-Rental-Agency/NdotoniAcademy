@@ -31,7 +31,7 @@ export default function LessonViewerPage() {
     setLoading(true);
     setError('');
     try {
-      const { lesson: fetched } = await GraphQLClient.execute<LessonQuery>(lessonQuery, { lessonId, moduleId });
+      const { lesson: fetched } = await GraphQLClient.execute<LessonQuery>(lessonQuery, { lessonId, moduleId, courseId });
       if (!fetched) {
         setError('not-found');
       } else {
@@ -43,7 +43,7 @@ export default function LessonViewerPage() {
     } finally {
       setLoading(false);
     }
-  }, [lessonId, moduleId]);
+  }, [lessonId, moduleId, courseId]);
 
   useEffect(() => {
     void load();

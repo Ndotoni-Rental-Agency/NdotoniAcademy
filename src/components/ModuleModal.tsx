@@ -58,7 +58,6 @@ export default function ModuleModal({ open, onClose, courseId, onSaved, editModu
         await GraphQLClient.execute<CreateModuleForCourseMutation>(createModuleForCourse, {
           courseId,
           input: { title: title.trim(), description: description.trim() || undefined },
-          isFree: false,
         } satisfies CreateModuleForCourseMutationVariables);
       }
       onSaved();
