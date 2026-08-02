@@ -3,9 +3,14 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Loader2, User } from 'lucide-react';
-import { fetchPublicCourses, instructorDisplayName, type PublicCourse } from '@/graphql/public-course-queries';
+import { GraphQLClient } from '@/lib/graphql-client';
+import { publicCourses as publicCoursesQuery } from '@/graphql/queries';
+import { instructorDisplayName } from '@/lib/course-display';
 import { getCategoryTheme } from '@/lib/category-theme';
+import type { PublicCoursesQuery } from '@/API';
 import Reveal from './Reveal';
+
+type PublicCourse = PublicCoursesQuery['publicCourses'][number];
 
 export default function HomepageCourseList() {
   const [courses, setCourses] = useState<PublicCourse[]>([]);
@@ -14,7 +19,8 @@ export default function HomepageCourseList() {
   useEffect(() => {
     (async () => {
       try {
-        setCourses((await fetchPublicCourses()).slice(0, 6));
+        const { publicCourses } = await GraphQLClient.execute<PublicCoursesQuery>(publicCoursesQuery);
+        setCourses(publicCourses.slice(0, 6));
       } catch (err) {
         console.error('[HomepageCourseList] fetchPublicCourses failed ->', err);
       } finally {

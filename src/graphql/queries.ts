@@ -14,6 +14,50 @@ export const course = /* GraphQL */ `query Course($id: ID!) {
     createdAt
     description
     id
+    instructor {
+      avatarUrl
+      createdAt
+      email
+      firstName
+      id
+      instructorStatus
+      lastName
+      organizations {
+        id
+        joinedAt
+        organization {
+          createdAt
+          id
+          name
+          slug
+          status
+          type
+          __typename
+        }
+        organizationId
+        permissions
+        role
+        status
+        user {
+          avatarUrl
+          createdAt
+          email
+          firstName
+          id
+          instructorStatus
+          lastName
+          status
+          updatedAt
+          __typename
+        }
+        userId
+        wantsToBeInstructor
+        __typename
+      }
+      status
+      updatedAt
+      __typename
+    }
     instructorUserId
     organization {
       createdAt
@@ -72,6 +116,50 @@ export const coursesForOrganization = /* GraphQL */ `query CoursesForOrganizatio
     createdAt
     description
     id
+    instructor {
+      avatarUrl
+      createdAt
+      email
+      firstName
+      id
+      instructorStatus
+      lastName
+      organizations {
+        id
+        joinedAt
+        organization {
+          createdAt
+          id
+          name
+          slug
+          status
+          type
+          __typename
+        }
+        organizationId
+        permissions
+        role
+        status
+        user {
+          avatarUrl
+          createdAt
+          email
+          firstName
+          id
+          instructorStatus
+          lastName
+          status
+          updatedAt
+          __typename
+        }
+        userId
+        wantsToBeInstructor
+        __typename
+      }
+      status
+      updatedAt
+      __typename
+    }
     instructorUserId
     organization {
       createdAt
@@ -191,7 +279,17 @@ export const lesson = /* GraphQL */ `query Lesson($lessonId: ID!, $moduleId: ID!
     body
     cards {
       back
+      backMedia {
+        type
+        url
+        __typename
+      }
       front
+      frontMedia {
+        type
+        url
+        __typename
+      }
       id
       __typename
     }
@@ -351,6 +449,50 @@ export const myCourses = /* GraphQL */ `query MyCourses {
     createdAt
     description
     id
+    instructor {
+      avatarUrl
+      createdAt
+      email
+      firstName
+      id
+      instructorStatus
+      lastName
+      organizations {
+        id
+        joinedAt
+        organization {
+          createdAt
+          id
+          name
+          slug
+          status
+          type
+          __typename
+        }
+        organizationId
+        permissions
+        role
+        status
+        user {
+          avatarUrl
+          createdAt
+          email
+          firstName
+          id
+          instructorStatus
+          lastName
+          status
+          updatedAt
+          __typename
+        }
+        userId
+        wantsToBeInstructor
+        __typename
+      }
+      status
+      updatedAt
+      __typename
+    }
     instructorUserId
     organization {
       createdAt
@@ -410,7 +552,17 @@ export const myLessons = /* GraphQL */ `query MyLessons {
     body
     cards {
       back
+      backMedia {
+        type
+        url
+        __typename
+      }
       front
+      frontMedia {
+        type
+        url
+        __typename
+      }
       id
       __typename
     }
@@ -593,6 +745,50 @@ export const publicCourses = /* GraphQL */ `query PublicCourses {
     createdAt
     description
     id
+    instructor {
+      avatarUrl
+      createdAt
+      email
+      firstName
+      id
+      instructorStatus
+      lastName
+      organizations {
+        id
+        joinedAt
+        organization {
+          createdAt
+          id
+          name
+          slug
+          status
+          type
+          __typename
+        }
+        organizationId
+        permissions
+        role
+        status
+        user {
+          avatarUrl
+          createdAt
+          email
+          firstName
+          id
+          instructorStatus
+          lastName
+          status
+          updatedAt
+          __typename
+        }
+        userId
+        wantsToBeInstructor
+        __typename
+      }
+      status
+      updatedAt
+      __typename
+    }
     instructorUserId
     organization {
       createdAt

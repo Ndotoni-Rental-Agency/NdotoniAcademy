@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { GripVertical, Plus, X, Loader2, XCircle } from 'lucide-react';
+import { GripVertical, Pencil, Plus, X, Loader2, XCircle } from 'lucide-react';
 import {
   DndContext, closestCenter, PointerSensor, KeyboardSensor,
   useSensor, useSensors, type DragEndEvent,
@@ -26,7 +26,7 @@ import type {
   DeleteModuleMutation, DeleteModuleMutationVariables,
 } from '@/API';
 import { LESSON_TYPE_ICONS } from './LessonForm';
-import LessonForm from './LessonForm';
+import LessonModal from './LessonModal';
 
 export interface CourseModuleData {
   moduleId: string;
@@ -61,12 +61,13 @@ function formatDuration(seconds?: number | null): string | null {
 }
 
 function SortableLessonRow({
-  lesson, busy, onToggleFree, onDelete,
+  lesson, busy, onToggleFree, onDelete, onEdit,
 }: {
   lesson: LessonRowData;
   busy: boolean;
   onToggleFree: () => void;
   onDelete: () => void;
+  onEdit: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: lesson.lessonId });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
@@ -74,7 +75,7 @@ function SortableLessonRow({
   const duration = formatDuration(lesson.durationSeconds);
 
   return (
-    <div ref={setNodeRef} style={style} className="flex items-center gap-3 rounded-lg border border-ink-100 px-3 py-2.5">
+    <div ref={setNodeRef} style={style} className="group flex items-center gap-3 rounded-lg border border-ink-100 px-3 py-2.5">
       <button
         {...attributes}
         {...listeners}
@@ -86,7 +87,9 @@ function SortableLessonRow({
       <div className="w-8 h-8 rounded-lg bg-coral-50 text-coral-700 flex items-center justify-center flex-shrink-0">
         <Icon className="w-4 h-4" />
       </div>
-      <span className="text-sm font-semibold text-ink-900 flex-1 min-w-0 truncate">{lesson.title}</span>
+      <button type="button" onClick={onEdit} className="flex-1 min-w-0 text-left">
+        <span className="text-sm font-semibold text-ink-900 truncate block hover:text-coral-700 transition-colors">{lesson.title}</span>
+      </button>
       {duration && <span className="text-xs text-ink-400 flex-shrink-0">{duration}</span>}
       <button
         type="button"
@@ -98,6 +101,14 @@ function SortableLessonRow({
       >
         {lesson.isFree ? 'Free' : 'Paid'}
       </button>
+      <button
+        type="button"
+        onClick={onEdit}
+        className="text-ink-300 hover:text-coral-600 transition-colors flex-shrink-0 opacity-0 group-hover:opacity-100 p-0.5"
+        aria-label="Edit lesson"
+      >
+        <Pencil className="w-3.5 h-3.5" />
+      </button>
       <button onClick={onDelete} disabled={busy} className="text-ink-300 hover:text-red-500 disabled:opacity-30 transition-colors p-0.5" aria-label="Delete lesson">
         {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <X className="w-3.5 h-3.5" />}
       </button>
@@ -108,7 +119,8 @@ function SortableLessonRow({
 export default function StudioLessonPane({ module: mod, onModuleUpdated, onModuleDeleted }: StudioLessonPaneProps) {
   const [lessons, setLessons] = useState<LessonRowData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showAddLesson, setShowAddLesson] = useState(false);
+  const [lessonModalOpen, setLessonModalOpen] = useState(false);
+  const [editingLessonId, setEditingLessonId] = useState<string | null>(null);
   const [busyLessonId, setBusyLessonId] = useState<string | null>(null);
   const [moduleBusy, setModuleBusy] = useState(false);
   const [error, setError] = useState('');
@@ -289,32 +301,33 @@ export default function StudioLessonPane({ module: mod, onModuleUpdated, onModul
                     busy={busyLessonId === lesson.lessonId}
                     onToggleFree={() => toggleLessonFree(lesson.lessonId)}
                     onDelete={() => handleDeleteLesson(lesson.lessonId)}
+                    onEdit={() => { setEditingLessonId(lesson.lessonId); setLessonModalOpen(true); }}
                   />
                 ))}
               </SortableContext>
             </DndContext>
           )}
 
-          {showAddLesson ? (
-            <LessonForm
-              moduleId={mod.moduleId}
-              onCreated={() => {
-                setShowAddLesson(false);
-                void loadLessons();
-              }}
-              onCancel={() => setShowAddLesson(false)}
-            />
-          ) : (
-            <button
-              type="button"
-              onClick={() => setShowAddLesson(true)}
-              className="w-full rounded-xl border border-dashed border-ink-200 py-2.5 flex items-center justify-center gap-1.5 text-xs font-semibold text-ink-400 hover:border-coral-300 hover:text-coral-600 transition-colors"
-            >
-              <Plus className="w-3.5 h-3.5" /> Add a lesson
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => { setEditingLessonId(null); setLessonModalOpen(true); }}
+            className="w-full rounded-xl border border-dashed border-ink-200 py-2.5 flex items-center justify-center gap-1.5 text-xs font-semibold text-ink-400 hover:border-coral-300 hover:text-coral-600 transition-colors"
+          >
+            <Plus className="w-3.5 h-3.5" /> Add a lesson
+          </button>
         </div>
       )}
+
+      <LessonModal
+        open={lessonModalOpen}
+        onClose={() => setLessonModalOpen(false)}
+        moduleId={mod.moduleId}
+        editLessonId={editingLessonId ?? undefined}
+        onSaved={() => {
+          setLessonModalOpen(false);
+          void loadLessons();
+        }}
+      />
     </div>
   );
 }

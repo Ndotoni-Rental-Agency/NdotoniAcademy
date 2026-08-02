@@ -8,12 +8,13 @@ import {
   Video, FileText, HelpCircle, Loader2, ChevronRight, Lock,
 } from 'lucide-react';
 import { getCategoryTheme } from '@/lib/category-theme';
-import { fetchPublicCourseDetail, instructorDisplayName, type PublicCourse } from '@/graphql/public-course-queries';
+import { instructorDisplayName } from '@/lib/course-display';
 import { GraphQLClient } from '@/lib/graphql-client';
-import { modulesForCourse, lessonsForModule } from '@/graphql/queries';
-import type { ModulesForCourseQuery, LessonsForModuleQuery } from '@/API';
+import { course as courseQuery, modulesForCourse, lessonsForModule } from '@/graphql/queries';
+import type { CourseQuery, ModulesForCourseQuery, LessonsForModuleQuery } from '@/API';
 import { LESSON_TYPE_ICONS } from '@/components/LessonForm';
 
+type PublicCourse = NonNullable<CourseQuery['course']>;
 type CourseModule = ModulesForCourseQuery['modulesForCourse'][number];
 type ModuleLesson = LessonsForModuleQuery['lessonsForModule'][number];
 
@@ -124,8 +125,8 @@ export default function CourseDetailPage() {
     setLoading(true);
     setError('');
     try {
-      const [fetchedCourse, { modulesForCourse: fetchedModules }] = await Promise.all([
-        fetchPublicCourseDetail(courseId),
+      const [{ course: fetchedCourse }, { modulesForCourse: fetchedModules }] = await Promise.all([
+        GraphQLClient.execute<CourseQuery>(courseQuery, { id: courseId }),
         GraphQLClient.execute<ModulesForCourseQuery>(modulesForCourse, { courseId }),
       ]);
       if (!fetchedCourse) {
@@ -210,7 +211,12 @@ export default function CourseDetailPage() {
             </div>
 
             {/* CTA card */}
-            <div className="lg:w-80 flex-shrink-0 bg-white rounded-2xl p-6 text-ink-900 shadow-2xl shadow-black/20">
+            <div className="lg:w-80 flex-shrink-0 bg-white rounded-2xl overflow-hidden text-ink-900 shadow-2xl shadow-black/20">
+              {course.thumbnailUrl && (
+                // eslint-disable-next-line @next/next/no-img-element -- CloudFront URLs aren't in next.config's image domains
+                <img src={course.thumbnailUrl} alt="" className="w-full h-40 object-cover" />
+              )}
+              <div className="p-6">
               <div className="space-y-4 mb-6">
                 <div className="flex items-center gap-3">
                   <div className={`w-10 h-10 rounded-xl ${theme.softBg} flex items-center justify-center`}>
@@ -238,6 +244,7 @@ export default function CourseDetailPage() {
               >
                 <Play className="w-4 h-4" /> View course content
               </a>
+              </div>
             </div>
           </div>
         </div>

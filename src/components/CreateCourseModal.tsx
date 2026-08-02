@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Loader2, X, XCircle } from 'lucide-react';
+import { Loader2, XCircle } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { GraphQLClient } from '@/lib/graphql-client';
 import { createCourse, updateCourse } from '@/graphql/mutations';
@@ -12,6 +12,7 @@ import type {
   UpdateCourseMutationVariables,
 } from '@/API';
 import { ThumbnailUploader } from './ThumbnailUploader';
+import Modal from './Modal';
 
 const CATEGORIES = ['Project Management', 'Marketing', 'Technology', 'Design'];
 
@@ -77,13 +78,6 @@ export function CreateCourseModal({ open, onClose, onSaved, editCourse }: Create
     setError('');
   }, [open, editCourse]);
 
-  if (!open) return null;
-
-  function handleClose() {
-    if (submitting) return;
-    onClose();
-  }
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim()) {
@@ -136,23 +130,8 @@ export function CreateCourseModal({ open, onClose, onSaved, editCourse }: Create
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={handleClose}>
-      <div
-        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between border-b border-ink-100 px-6 py-4">
-          <h2 className="text-lg font-extrabold text-ink-900">{editCourse ? 'Edit course details' : 'Create a course'}</h2>
-          <button
-            type="button"
-            onClick={handleClose}
-            className="rounded-full p-1.5 text-ink-400 transition-colors hover:bg-ink-50 hover:text-ink-700"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4 px-6 py-5">
+    <Modal open={open} onClose={onClose} closeDisabled={submitting} title={editCourse ? 'Edit course details' : 'Create a course'}>
+      <form onSubmit={handleSubmit} className="space-y-4 px-6 py-5">
           {showScopeChoice && (
             <div>
               <label className="mb-1.5 block text-sm font-bold text-ink-700">Who is this course for?</label>
@@ -256,7 +235,6 @@ export function CreateCourseModal({ open, onClose, onSaved, editCourse }: Create
             {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : editCourse ? 'Save changes' : 'Create course'}
           </button>
         </form>
-      </div>
-    </div>
+    </Modal>
   );
 }

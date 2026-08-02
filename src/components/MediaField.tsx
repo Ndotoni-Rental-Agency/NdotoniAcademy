@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react';
 import { ImagePlus, Loader2, Music, Video, X } from 'lucide-react';
-import { uploadMedia, mediaTypeFromContentType, type MediaType } from '@/lib/upload-media';
+import { uploadMedia, mediaTypeFromContentType, MediaType } from '@/lib/upload-media';
 
 const ACCEPTED_TYPES = [
   'image/jpeg', 'image/png', 'image/webp',
@@ -56,10 +56,10 @@ export default function MediaField({ value, onChange, size = 'md' }: MediaFieldP
     <div className="relative flex-shrink-0">
       {value ? (
         <div className={`relative ${dimension} rounded-lg overflow-hidden border border-ink-200 bg-ink-50 flex items-center justify-center`}>
-          {value.type === 'IMAGE' ? (
+          {value.type === MediaType.IMAGE ? (
             // eslint-disable-next-line @next/next/no-img-element -- CloudFront URLs aren't in next.config's image domains; not worth configuring for a tiny preview
             <img src={value.url} alt="" className="w-full h-full object-cover" />
-          ) : value.type === 'VIDEO' ? (
+          ) : value.type === MediaType.VIDEO ? (
             <Video className="w-5 h-5 text-ink-400" />
           ) : (
             <Music className="w-5 h-5 text-ink-400" />

@@ -4,8 +4,11 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Search, BookOpen, ArrowRight, Award, Loader2, User } from 'lucide-react';
-import { fetchPublicCourses, instructorDisplayName, type PublicCourse } from '@/graphql/public-course-queries';
-import PublicCourseCard from '@/components/PublicCourseCard';
+import { GraphQLClient } from '@/lib/graphql-client';
+import { publicCourses as publicCoursesQuery } from '@/graphql/queries';
+import { instructorDisplayName } from '@/lib/course-display';
+import type { PublicCoursesQuery } from '@/API';
+import PublicCourseCard, { type PublicCourse } from '@/components/PublicCourseCard';
 
 const categories = ['All', 'Project Management', 'Marketing', 'Design', 'Technology'];
 
@@ -18,7 +21,8 @@ export default function CoursesPageClient() {
   useEffect(() => {
     (async () => {
       try {
-        setCourses(await fetchPublicCourses());
+        const { publicCourses } = await GraphQLClient.execute<PublicCoursesQuery>(publicCoursesQuery);
+        setCourses(publicCourses);
       } catch (err) {
         console.error('[CoursesPageClient] fetchPublicCourses failed ->', err);
       } finally {

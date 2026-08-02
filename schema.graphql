@@ -9,6 +9,7 @@ type Course {
   createdAt: AWSDateTime!
   description: String
   id: ID!
+  instructor: User
   instructorUserId: ID!
   organization: Organization
   organizationId: ID
@@ -34,7 +35,9 @@ type CourseModule {
 
 type Flashcard {
   back: String!
+  backMedia: Media
   front: String!
+  frontMedia: Media
   id: ID!
 }
 
@@ -54,6 +57,11 @@ type Lesson {
   type: LessonType!
   updatedAt: AWSDateTime!
   videoUrl: AWSURL
+}
+
+type Media {
+  type: MediaType!
+  url: AWSURL!
 }
 
 type MediaUploadResponse {
@@ -243,6 +251,12 @@ enum LessonType {
   VIDEO
 }
 
+enum MediaType {
+  AUDIO
+  IMAGE
+  VIDEO
+}
+
 enum MembershipRole {
   ADMIN
   INSTRUCTOR
@@ -313,8 +327,15 @@ input CreateOrganizationInput {
 
 input FlashcardInput {
   back: String!
+  backMedia: MediaInput
   front: String!
+  frontMedia: MediaInput
   id: ID!
+}
+
+input MediaInput {
+  type: MediaType!
+  url: AWSURL!
 }
 
 input ModuleLessonRefInput {

@@ -127,7 +127,17 @@ export const addLessonToModule = /* GraphQL */ `mutation AddLessonToModule(
     body
     cards {
       back
+      backMedia {
+        type
+        url
+        __typename
+      }
       front
+      frontMedia {
+        type
+        url
+        __typename
+      }
       id
       __typename
     }
@@ -367,6 +377,50 @@ export const createCourse = /* GraphQL */ `mutation CreateCourse($input: CreateC
     createdAt
     description
     id
+    instructor {
+      avatarUrl
+      createdAt
+      email
+      firstName
+      id
+      instructorStatus
+      lastName
+      organizations {
+        id
+        joinedAt
+        organization {
+          createdAt
+          id
+          name
+          slug
+          status
+          type
+          __typename
+        }
+        organizationId
+        permissions
+        role
+        status
+        user {
+          avatarUrl
+          createdAt
+          email
+          firstName
+          id
+          instructorStatus
+          lastName
+          status
+          updatedAt
+          __typename
+        }
+        userId
+        wantsToBeInstructor
+        __typename
+      }
+      status
+      updatedAt
+      __typename
+    }
     instructorUserId
     organization {
       createdAt
@@ -439,7 +493,17 @@ export const createLessonForModule = /* GraphQL */ `mutation CreateLessonForModu
     body
     cards {
       back
+      backMedia {
+        type
+        url
+        __typename
+      }
       front
+      frontMedia {
+        type
+        url
+        __typename
+      }
       id
       __typename
     }
@@ -943,7 +1007,17 @@ export const setModuleLessonFree = /* GraphQL */ `mutation SetModuleLessonFree(
     body
     cards {
       back
+      backMedia {
+        type
+        url
+        __typename
+      }
       front
+      frontMedia {
+        type
+        url
+        __typename
+      }
       id
       __typename
     }
@@ -991,7 +1065,17 @@ export const setModuleLessonPrerequisites = /* GraphQL */ `mutation SetModuleLes
     body
     cards {
       back
+      backMedia {
+        type
+        url
+        __typename
+      }
       front
+      frontMedia {
+        type
+        url
+        __typename
+      }
       id
       __typename
     }
@@ -1030,6 +1114,50 @@ export const updateCourse = /* GraphQL */ `mutation UpdateCourse($id: ID!, $inpu
     createdAt
     description
     id
+    instructor {
+      avatarUrl
+      createdAt
+      email
+      firstName
+      id
+      instructorStatus
+      lastName
+      organizations {
+        id
+        joinedAt
+        organization {
+          createdAt
+          id
+          name
+          slug
+          status
+          type
+          __typename
+        }
+        organizationId
+        permissions
+        role
+        status
+        user {
+          avatarUrl
+          createdAt
+          email
+          firstName
+          id
+          instructorStatus
+          lastName
+          status
+          updatedAt
+          __typename
+        }
+        userId
+        wantsToBeInstructor
+        __typename
+      }
+      status
+      updatedAt
+      __typename
+    }
     instructorUserId
     organization {
       createdAt
@@ -1092,7 +1220,17 @@ export const updateLesson = /* GraphQL */ `mutation UpdateLesson($id: ID!, $inpu
     body
     cards {
       back
+      backMedia {
+        type
+        url
+        __typename
+      }
       front
+      frontMedia {
+        type
+        url
+        __typename
+      }
       id
       __typename
     }

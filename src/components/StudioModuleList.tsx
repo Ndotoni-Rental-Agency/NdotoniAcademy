@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { GripVertical, Plus } from 'lucide-react';
+import { GripVertical, Pencil, Plus } from 'lucide-react';
 import {
   DndContext, closestCenter, PointerSensor, KeyboardSensor,
   useSensor, useSensors, type DragEndEvent,
@@ -15,7 +15,7 @@ import { GraphQLClient } from '@/lib/graphql-client';
 import { reorderCourseModules } from '@/graphql/mutations';
 import type { ReorderCourseModulesMutation, ReorderCourseModulesMutationVariables } from '@/API';
 import type { CourseModuleData } from './StudioLessonPane';
-import ModuleForm from './ModuleForm';
+import ModuleModal from './ModuleModal';
 
 interface StudioModuleListProps {
   courseId: string;
@@ -23,17 +23,19 @@ interface StudioModuleListProps {
   selectedModuleId: string | null;
   onSelect: (id: string) => void;
   onModulesChange: (modules: CourseModuleData[]) => void;
-  onModuleCreated: () => void;
+  onModuleSaved: () => void;
 }
 
 function SortableModuleRow({
   module: mod,
   selected,
   onSelect,
+  onEdit,
 }: {
   module: CourseModuleData;
   selected: boolean;
   onSelect: () => void;
+  onEdit: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: mod.moduleId });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
@@ -43,7 +45,7 @@ function SortableModuleRow({
       ref={setNodeRef}
       style={style}
       onClick={onSelect}
-      className={`flex items-center gap-2 rounded-xl px-2.5 py-2.5 cursor-pointer transition-colors ${
+      className={`group flex items-center gap-2 rounded-xl px-2.5 py-2.5 cursor-pointer transition-colors ${
         selected ? 'bg-coral-50 border-2 border-coral-200' : 'border-2 border-transparent hover:bg-ink-50'
       }`}
     >
@@ -62,14 +64,23 @@ function SortableModuleRow({
           {mod.lessonCount} lesson{mod.lessonCount === 1 ? '' : 's'} · {mod.isFree ? 'Free' : 'Paid'}
         </p>
       </div>
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); onEdit(); }}
+        className="text-ink-300 hover:text-coral-600 transition-colors flex-shrink-0 opacity-0 group-hover:opacity-100 p-0.5"
+        aria-label="Edit module"
+      >
+        <Pencil className="w-3.5 h-3.5" />
+      </button>
     </div>
   );
 }
 
 export default function StudioModuleList({
-  courseId, modules, selectedModuleId, onSelect, onModulesChange, onModuleCreated,
+  courseId, modules, selectedModuleId, onSelect, onModulesChange, onModuleSaved,
 }: StudioModuleListProps) {
-  const [showAddModule, setShowAddModule] = useState(false);
+  const [moduleModalOpen, setModuleModalOpen] = useState(false);
+  const [editingModule, setEditingModule] = useState<CourseModuleData | null>(null);
   const [error, setError] = useState('');
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
@@ -116,6 +127,7 @@ export default function StudioModuleList({
                   module={mod}
                   selected={mod.moduleId === selectedModuleId}
                   onSelect={() => onSelect(mod.moduleId)}
+                  onEdit={() => { setEditingModule(mod); setModuleModalOpen(true); }}
                 />
               ))}
             </SortableContext>
@@ -125,25 +137,25 @@ export default function StudioModuleList({
       </div>
 
       <div className="p-2.5 border-t border-ink-100">
-        {showAddModule ? (
-          <ModuleForm
-            courseId={courseId}
-            onCreated={() => {
-              setShowAddModule(false);
-              onModuleCreated();
-            }}
-            onCancel={() => setShowAddModule(false)}
-          />
-        ) : (
-          <button
-            type="button"
-            onClick={() => setShowAddModule(true)}
-            className="w-full flex items-center justify-center gap-1.5 rounded-xl border border-dashed border-ink-200 py-2.5 text-xs font-semibold text-ink-400 hover:border-coral-300 hover:text-coral-600 transition-colors"
-          >
-            <Plus className="w-3.5 h-3.5" /> Add module
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={() => { setEditingModule(null); setModuleModalOpen(true); }}
+          className="w-full flex items-center justify-center gap-1.5 rounded-xl border border-dashed border-ink-200 py-2.5 text-xs font-semibold text-ink-400 hover:border-coral-300 hover:text-coral-600 transition-colors"
+        >
+          <Plus className="w-3.5 h-3.5" /> Add module
+        </button>
       </div>
+
+      <ModuleModal
+        open={moduleModalOpen}
+        onClose={() => setModuleModalOpen(false)}
+        courseId={courseId}
+        editModule={editingModule ? { id: editingModule.moduleId, title: editingModule.title, description: editingModule.description } : undefined}
+        onSaved={() => {
+          setModuleModalOpen(false);
+          onModuleSaved();
+        }}
+      />
     </aside>
   );
 }

@@ -9,12 +9,11 @@ import { getCategoryTheme } from '@/lib/category-theme';
 import { useAuth, dashboardModeFor, type DashboardMode } from '@/lib/auth-context';
 import { accentByMode } from '@/lib/dashboard-accent';
 import { GraphQLClient } from '@/lib/graphql-client';
-import { myCourses, coursesForOrganization } from '@/graphql/queries';
-import { fetchPublicCourses, type PublicCourse } from '@/graphql/public-course-queries';
+import { myCourses, coursesForOrganization, publicCourses as publicCoursesQuery } from '@/graphql/queries';
 import { CourseStatus } from '@/API';
-import type { MyCoursesQuery, CoursesForOrganizationQuery } from '@/API';
+import type { MyCoursesQuery, CoursesForOrganizationQuery, PublicCoursesQuery } from '@/API';
 import EnrolledCourseCard from '@/components/EnrolledCourseCard';
-import PublicCourseCard from '@/components/PublicCourseCard';
+import PublicCourseCard, { type PublicCourse } from '@/components/PublicCourseCard';
 import { CreateCourseModal } from '@/components/CreateCourseModal';
 
 export default function CoursesPage() {
@@ -66,7 +65,8 @@ function OrganizationCoursesPage({ organizationId }: { organizationId: string })
   useEffect(() => {
     (async () => {
       try {
-        setCatalog(await fetchPublicCourses());
+        const { publicCourses } = await GraphQLClient.execute<PublicCoursesQuery>(publicCoursesQuery);
+        setCatalog(publicCourses);
       } catch (err) {
         console.error('[OrganizationCoursesPage] fetchPublicCourses failed ->', err);
       } finally {
@@ -182,7 +182,8 @@ function LearnerCoursesPage({
   useEffect(() => {
     (async () => {
       try {
-        setCatalog(await fetchPublicCourses());
+        const { publicCourses } = await GraphQLClient.execute<PublicCoursesQuery>(publicCoursesQuery);
+        setCatalog(publicCourses);
       } catch (err) {
         console.error('[LearnerCoursesPage] fetchPublicCourses failed ->', err);
       } finally {

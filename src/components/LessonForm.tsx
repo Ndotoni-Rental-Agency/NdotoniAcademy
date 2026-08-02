@@ -1,13 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import { Loader2, Plus, X, XCircle, Video, Music, Link2, Sparkles, FileText, Layers, HelpCircle } from 'lucide-react';
+import { Check, Loader2, Plus, X, XCircle, Video, Music, Link2, Sparkles, FileText, Layers, HelpCircle } from 'lucide-react';
 import { GraphQLClient } from '@/lib/graphql-client';
-import { createLessonForModule } from '@/graphql/mutations';
+import { createLessonForModule, updateLesson } from '@/graphql/mutations';
 import { LessonType } from '@/API';
-import type { CreateLessonForModuleMutation, CreateLessonForModuleMutationVariables, CreateLessonInput } from '@/API';
-import type { MediaValue } from './MediaField';
+import type {
+  CreateLessonForModuleMutation, CreateLessonForModuleMutationVariables, CreateLessonInput,
+  UpdateLessonMutation, UpdateLessonMutationVariables, UpdateLessonInput, LessonQuery,
+} from '@/API';
 import FlashcardEditor, { type CardDraft } from './FlashcardEditor';
+
+export type EditableLesson = NonNullable<LessonQuery['lesson']>;
 
 export const LESSON_TYPE_ICONS: Record<LessonType, typeof Video> = {
   [LessonType.VIDEO]: Video,
@@ -40,21 +44,32 @@ interface QuestionDraft {
 
 interface LessonFormProps {
   moduleId: string;
-  onCreated: () => void;
+  /** When present, edits this lesson (updateLesson) instead of creating a new one. Lesson type can't change once set, so the type-picker step is skipped. */
+  editLesson?: EditableLesson;
+  onSaved: () => void;
   onCancel: () => void;
 }
 
-export default function LessonForm({ moduleId, onCreated, onCancel }: LessonFormProps) {
-  const [type, setType] = useState<LessonType | null>(null);
-  const [title, setTitle] = useState('');
-  const [videoUrl, setVideoUrl] = useState('');
-  const [audioUrl, setAudioUrl] = useState('');
-  const [embedUrl, setEmbedUrl] = useState('');
-  const [animationRef, setAnimationRef] = useState('');
-  const [body, setBody] = useState('');
-  const [durationMinutes, setDurationMinutes] = useState(5);
-  const [questions, setQuestions] = useState<QuestionDraft[]>([]);
-  const [cards, setCards] = useState<CardDraft[]>([]);
+export default function LessonForm({ moduleId, editLesson, onSaved, onCancel }: LessonFormProps) {
+  const [type, setType] = useState<LessonType | null>(editLesson?.type ?? null);
+  const [title, setTitle] = useState(editLesson?.title ?? '');
+  const [videoUrl, setVideoUrl] = useState(editLesson?.videoUrl ?? '');
+  const [audioUrl, setAudioUrl] = useState(editLesson?.audioUrl ?? '');
+  const [embedUrl, setEmbedUrl] = useState(editLesson?.embedUrl ?? '');
+  const [animationRef, setAnimationRef] = useState(editLesson?.animationRef ?? '');
+  const [body, setBody] = useState(editLesson?.body ?? '');
+  const [durationMinutes, setDurationMinutes] = useState(
+    editLesson?.durationSeconds ? Math.round(editLesson.durationSeconds / 60) : 5
+  );
+  const [questions, setQuestions] = useState<QuestionDraft[]>(
+    editLesson?.questions?.map((q) => ({ id: q.id, question: q.question, options: q.options, correctIndex: q.correctIndex })) ?? []
+  );
+  const [cards, setCards] = useState<CardDraft[]>(
+    editLesson?.cards?.map((c) => ({
+      id: c.id, front: c.front, back: c.back,
+      frontMedia: c.frontMedia ?? null, backMedia: c.backMedia ?? null,
+    })) ?? []
+  );
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -141,32 +156,28 @@ export default function LessonForm({ moduleId, onCreated, onCancel }: LessonForm
     setError('');
     setSubmitting(true);
     try {
-      // `cards[].frontMedia`/`backMedia` aren't in the generated `CreateLessonInput`
-      // yet (schema shipped, awaiting a deploy + codegen refresh) — widen just the
-      // `cards` field locally rather than editing the generated type.
-      type CardInputDraft = { id: string; front: string; back: string; frontMedia?: MediaValue; backMedia?: MediaValue };
-      const input: Omit<CreateLessonInput, 'cards'> & { cards?: CardInputDraft[] } = { title: title.trim(), type };
+      const contentFields: Partial<CreateLessonInput> = {};
       if (type === LessonType.VIDEO) {
-        input.videoUrl = videoUrl.trim();
-        input.durationSeconds = durationMinutes * 60;
+        contentFields.videoUrl = videoUrl.trim();
+        contentFields.durationSeconds = durationMinutes * 60;
       } else if (type === LessonType.AUDIO) {
-        input.audioUrl = audioUrl.trim();
-        input.durationSeconds = durationMinutes * 60;
+        contentFields.audioUrl = audioUrl.trim();
+        contentFields.durationSeconds = durationMinutes * 60;
       } else if (type === LessonType.EMBED) {
-        input.embedUrl = embedUrl.trim();
+        contentFields.embedUrl = embedUrl.trim();
       } else if (type === LessonType.ANIMATION) {
-        input.animationRef = animationRef.trim();
+        contentFields.animationRef = animationRef.trim();
       } else if (type === LessonType.TEXT) {
-        input.body = body.trim();
+        contentFields.body = body.trim();
       } else if (type === LessonType.QUIZ) {
-        input.questions = questions.map((q) => ({
+        contentFields.questions = questions.map((q) => ({
           id: q.id,
           question: q.question.trim(),
           options: q.options.map((o) => o.trim()).filter(Boolean),
           correctIndex: q.correctIndex,
         }));
       } else if (type === LessonType.FLASHCARDS) {
-        input.cards = cards.map((c) => ({
+        contentFields.cards = cards.map((c) => ({
           id: c.id,
           front: c.front.trim(),
           back: c.back.trim(),
@@ -175,14 +186,23 @@ export default function LessonForm({ moduleId, onCreated, onCancel }: LessonForm
         }));
       }
 
-      await GraphQLClient.execute<CreateLessonForModuleMutation>(createLessonForModule, {
-        moduleId,
-        input,
-        isFree: false,
-      } satisfies CreateLessonForModuleMutationVariables);
-      onCreated();
+      if (editLesson) {
+        const input: UpdateLessonInput = { title: title.trim(), ...contentFields };
+        await GraphQLClient.execute<UpdateLessonMutation>(updateLesson, {
+          id: editLesson.lessonId,
+          input,
+        } satisfies UpdateLessonMutationVariables);
+      } else {
+        const input: CreateLessonInput = { title: title.trim(), type, ...contentFields };
+        await GraphQLClient.execute<CreateLessonForModuleMutation>(createLessonForModule, {
+          moduleId,
+          input,
+          isFree: false,
+        } satisfies CreateLessonForModuleMutationVariables);
+      }
+      onSaved();
     } catch (err) {
-      console.error('[LessonForm] create failed ->', err);
+      console.error('[LessonForm] save failed ->', err);
       setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
     } finally {
       setSubmitting(false);
@@ -193,7 +213,7 @@ export default function LessonForm({ moduleId, onCreated, onCancel }: LessonForm
 
   if (!type) {
     return (
-      <div className="rounded-xl border border-dashed border-ink-200 p-4">
+      <div className="px-6 py-5">
         <p className="text-xs font-bold text-ink-500 mb-3">What kind of lesson?</p>
         <div className="flex flex-wrap gap-2 mb-3">
           {LESSON_TYPES.map((t) => {
@@ -218,7 +238,7 @@ export default function LessonForm({ moduleId, onCreated, onCancel }: LessonForm
   }
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-xl border border-ink-200 bg-white p-4 space-y-3">
+    <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
       <div className="flex items-center gap-1.5 text-xs font-bold text-coral-700">
         {(() => { const Icon = LESSON_TYPE_ICONS[type]; return <Icon className="w-3.5 h-3.5" />; })()}
         {LESSON_TYPE_LABELS[type]}
@@ -327,8 +347,8 @@ export default function LessonForm({ moduleId, onCreated, onCancel }: LessonForm
           disabled={submitting}
           className="inline-flex items-center gap-1.5 rounded-lg bg-coral-600 px-4 py-2 text-xs font-bold text-white hover:bg-coral-700 transition-colors disabled:opacity-60"
         >
-          {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
-          Add lesson
+          {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : editLesson ? <Check className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
+          {editLesson ? 'Save changes' : 'Add lesson'}
         </button>
         <button type="button" onClick={onCancel} disabled={submitting} className="text-xs font-semibold text-ink-400 hover:text-ink-600 transition-colors">
           Cancel

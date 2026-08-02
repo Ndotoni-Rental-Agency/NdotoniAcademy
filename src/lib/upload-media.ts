@@ -1,13 +1,14 @@
 import { GraphQLClient } from '@/lib/graphql-client';
 import { getCourseMediaUploadUrl } from '@/graphql/mutations';
+import { MediaType } from '@/API';
 import type { GetCourseMediaUploadUrlMutation, GetCourseMediaUploadUrlMutationVariables } from '@/API';
 
-export type MediaType = 'IMAGE' | 'VIDEO' | 'AUDIO';
+export { MediaType };
 
 export function mediaTypeFromContentType(contentType: string): MediaType {
-  if (contentType.startsWith('video/')) return 'VIDEO';
-  if (contentType.startsWith('audio/')) return 'AUDIO';
-  return 'IMAGE';
+  if (contentType.startsWith('video/')) return MediaType.VIDEO;
+  if (contentType.startsWith('audio/')) return MediaType.AUDIO;
+  return MediaType.IMAGE;
 }
 
 /**

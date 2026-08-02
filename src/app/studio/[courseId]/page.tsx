@@ -187,7 +187,7 @@ export default function StudioPage() {
           selectedModuleId={selectedModuleId}
           onSelect={setSelectedModuleId}
           onModulesChange={setModules}
-          onModuleCreated={() => void load()}
+          onModuleSaved={() => void load()}
         />
 
         {selectedModule ? (

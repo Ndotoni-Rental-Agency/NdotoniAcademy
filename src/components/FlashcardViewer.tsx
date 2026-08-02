@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight, RotateCw } from 'lucide-react';
+import { MediaType } from '@/API';
 import type { MediaValue } from './MediaField';
 
 interface Flashcard {
@@ -13,10 +14,10 @@ interface Flashcard {
 }
 
 function CardMedia({ media }: { media: MediaValue }) {
-  if (media.type === 'VIDEO') {
+  if (media.type === MediaType.VIDEO) {
     return <video src={media.url} controls className="max-h-40 max-w-full rounded-lg" />;
   }
-  if (media.type === 'AUDIO') {
+  if (media.type === MediaType.AUDIO) {
     return <audio src={media.url} controls className="max-w-full" />;
   }
   // eslint-disable-next-line @next/next/no-img-element -- learner-uploaded media, not a static asset
