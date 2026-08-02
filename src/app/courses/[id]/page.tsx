@@ -23,7 +23,15 @@ function formatMinutes(seconds: number): string {
   return `${Math.round(seconds / 60)} min`;
 }
 
-function ModuleRow({ courseId, mod, theme }: { courseId: string; mod: CourseModule; theme: ReturnType<typeof getCategoryTheme> }) {
+function ModuleRow({
+  courseId, mod, index, theme,
+}: {
+  courseId: string;
+  mod: CourseModule;
+  /** Display position (1-based) — `mod.order` is a sparse backend sort key (1000, 2000, ...), not meant to be shown. */
+  index: number;
+  theme: ReturnType<typeof getCategoryTheme>;
+}) {
   const [expanded, setExpanded] = useState(false);
   const [lessons, setLessons] = useState<ModuleLesson[]>([]);
   const [loaded, setLoaded] = useState(false);
@@ -53,7 +61,7 @@ function ModuleRow({ courseId, mod, theme }: { courseId: string; mod: CourseModu
           <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-extrabold flex-shrink-0 ${
             mod.isFree ? `${theme.solidBg} text-white` : 'bg-ink-100 text-ink-500'
           }`}>
-            {mod.order}
+            {index}
           </div>
           <div className="min-w-0">
             <h3 className="font-bold text-ink-900 truncate">{mod.title}</h3>
@@ -264,8 +272,8 @@ export default function CourseDetailPage() {
             <p className="text-sm text-ink-400">This course doesn&apos;t have any modules yet.</p>
           ) : (
             <div className="space-y-4">
-              {modules.map((mod) => (
-                <ModuleRow key={mod.moduleId} courseId={course.id} mod={mod} theme={theme} />
+              {modules.map((mod, i) => (
+                <ModuleRow key={mod.moduleId} courseId={course.id} mod={mod} index={i + 1} theme={theme} />
               ))}
             </div>
           )}
