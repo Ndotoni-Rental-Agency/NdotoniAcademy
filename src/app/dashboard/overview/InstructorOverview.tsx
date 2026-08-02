@@ -71,7 +71,7 @@ export default function InstructorOverview({ user }: { user: AuthUser }) {
           )}
         </div>
         {drafts.length > 0 ? (
-          <Link href={`/dashboard/courses/${drafts[0].id}`} className={`rounded-xl ${accent.bg600} ${accent.bg600Hover} px-4 py-2.5 text-sm font-bold text-white transition-colors flex-shrink-0`}>
+          <Link href={`/studio/${drafts[0].id}`} className={`rounded-xl ${accent.bg600} ${accent.bg600Hover} px-4 py-2.5 text-sm font-bold text-white transition-colors flex-shrink-0`}>
             Continue
           </Link>
         ) : (
@@ -89,7 +89,7 @@ export default function InstructorOverview({ user }: { user: AuthUser }) {
         onClose={() => setShowCreateModal(false)}
         onSaved={(courseId) => {
           setShowCreateModal(false);
-          router.push(`/dashboard/courses/${courseId}`);
+          router.push(`/studio/${courseId}`);
         }}
       />
 
@@ -135,7 +135,7 @@ export default function InstructorOverview({ user }: { user: AuthUser }) {
               return (
                 <Link
                   key={course.id}
-                  href={`/dashboard/courses/${course.id}`}
+                  href={`/studio/${course.id}`}
                   className="flex items-center gap-3 py-2.5 px-3.5 hover:bg-ink-50 transition-colors"
                 >
                   <span className={`w-2 h-2 rounded-full flex-shrink-0 ${theme.solidBg}`} />

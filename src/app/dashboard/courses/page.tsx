@@ -259,7 +259,7 @@ function LearnerCoursesPage({
                 return (
                   <Link
                     key={course.id}
-                    href={`/dashboard/courses/${course.id}`}
+                    href={`/studio/${course.id}`}
                     className="flex items-center gap-3 py-2.5 px-3.5 hover:bg-ink-50 transition-colors"
                   >
                     <span className={`w-2 h-2 rounded-full flex-shrink-0 ${theme.solidBg}`} />
@@ -286,7 +286,7 @@ function LearnerCoursesPage({
       <CreateCourseModal
         open={showCreateModal}
         onClose={() => setShowCreateModal(false)}
-        onSaved={(courseId) => router.push(`/dashboard/courses/${courseId}`)}
+        onSaved={(courseId) => router.push(`/studio/${courseId}`)}
       />
 
       {/* Browse more */}

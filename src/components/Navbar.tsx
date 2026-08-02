@@ -16,7 +16,13 @@ export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const isDashboard = pathname.startsWith('/dashboard');
+  const isStudio = pathname.startsWith('/studio');
   const { user, signOut } = useAuth();
+
+  // The studio is meant to feel like a focused editor, not a page within the
+  // site — it has its own header, so the main nav is fully hidden rather
+  // than reduced the way it is on /dashboard.
+  if (isStudio) return null;
 
   async function handleSignOut() {
     // Navigate away first, then clear auth state — otherwise, if this fires
