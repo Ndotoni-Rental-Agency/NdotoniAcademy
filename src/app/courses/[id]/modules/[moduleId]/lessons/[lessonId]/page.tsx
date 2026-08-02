@@ -12,6 +12,7 @@ import { LESSON_TYPE_ICONS, LESSON_TYPE_LABELS } from '@/components/LessonForm';
 import VideoPlayer from '@/components/VideoPlayer';
 import Quiz from '@/components/Quiz';
 import FlashcardViewer from '@/components/FlashcardViewer';
+import { toEmbeddableUrl } from '@/lib/embed-url';
 
 type Lesson = NonNullable<LessonQuery['lesson']>;
 
@@ -103,7 +104,7 @@ export default function LessonViewerPage() {
 
             {lesson.type === LessonType.EMBED && lesson.embedUrl && (
               <iframe
-                src={lesson.embedUrl}
+                src={toEmbeddableUrl(lesson.embedUrl)}
                 className="w-full aspect-video rounded-2xl border border-ink-200"
                 sandbox="allow-scripts allow-same-origin allow-popups"
                 title={lesson.title}

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Play } from 'lucide-react';
+import { toEmbeddableUrl } from '@/lib/embed-url';
 
 interface VideoPlayerProps {
   videoUrl: string;
@@ -17,7 +18,7 @@ export default function VideoPlayer({ videoUrl, title }: VideoPlayerProps) {
     return (
       <div className="relative w-full aspect-video rounded-2xl overflow-hidden bg-ink-900 border border-ink-200">
         <iframe
-          src={`${videoUrl}?autoplay=1&rel=0&modestbranding=1`}
+          src={`${toEmbeddableUrl(videoUrl)}?autoplay=1&rel=0&modestbranding=1`}
           className="absolute inset-0 w-full h-full"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen

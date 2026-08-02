@@ -270,7 +270,10 @@ export default function LessonForm({ moduleId, editLesson, onSaved, onCancel }: 
       )}
 
       {type === LessonType.EMBED && (
-        <input type="url" placeholder="Embed URL" value={embedUrl} onChange={(e) => setEmbedUrl(e.target.value)} disabled={submitting} className={inputClass} />
+        <div>
+          <input type="url" placeholder="Embed URL" value={embedUrl} onChange={(e) => setEmbedUrl(e.target.value)} disabled={submitting} className={inputClass} />
+          <p className="mt-1 text-[11px] text-ink-400">A YouTube or Vimeo link works as-is. Other sites need their own &quot;Embed&quot; share link.</p>
+        </div>
       )}
 
       {type === LessonType.ANIMATION && (
