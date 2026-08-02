@@ -50,9 +50,6 @@ export default function OrganizationsPage() {
             </Reveal>
 
             <Reveal y={16} delay={0.1} mode="mount">
-              <p className="text-xs font-bold text-ink-400 uppercase tracking-wide mb-3 text-center lg:text-left">
-                {mockOrganization.name}&apos;s actual team page
-              </p>
               <OrgPreviewPanel />
             </Reveal>
           </div>
