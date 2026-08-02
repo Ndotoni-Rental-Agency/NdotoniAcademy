@@ -127,6 +127,7 @@ export type Media = {
 
 export enum MediaType {
   AUDIO = "AUDIO",
+  DOCUMENT = "DOCUMENT",
   IMAGE = "IMAGE",
   VIDEO = "VIDEO",
 }
@@ -149,6 +150,7 @@ export type QuizQuestion = {
 export enum LessonType {
   ANIMATION = "ANIMATION",
   AUDIO = "AUDIO",
+  DOCUMENT = "DOCUMENT",
   EMBED = "EMBED",
   FLASHCARDS = "FLASHCARDS",
   QUIZ = "QUIZ",
@@ -208,6 +210,7 @@ export type CreateLessonInput = {
   audioUrl?: string | null,
   body?: string | null,
   cards?: Array< FlashcardInput > | null,
+  document?: MediaInput | null,
   durationSeconds?: number | null,
   embedUrl?: string | null,
   organizationId?: string | null,
@@ -303,6 +306,7 @@ export type UpdateLessonInput = {
   audioUrl?: string | null,
   body?: string | null,
   cards?: Array< FlashcardInput > | null,
+  document?: MediaInput | null,
   durationSeconds?: number | null,
   embedUrl?: string | null,
   questions?: Array< QuizQuestionInput > | null,

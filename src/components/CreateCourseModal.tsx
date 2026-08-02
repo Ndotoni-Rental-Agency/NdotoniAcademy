@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Loader2, XCircle } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { GraphQLClient } from '@/lib/graphql-client';
+import { useToast } from '@/lib/toast-context';
 import { createCourse, updateCourse } from '@/graphql/mutations';
 import type {
   CreateCourseMutation,
@@ -41,6 +42,7 @@ interface CreateCourseModalProps {
  */
 export function CreateCourseModal({ open, onClose, onSaved, editCourse }: CreateCourseModalProps) {
   const { user } = useAuth();
+  const toast = useToast();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState(CATEGORIES[0]);
@@ -120,10 +122,13 @@ export function CreateCourseModal({ open, onClose, onSaved, editCourse }: Create
         } satisfies CreateCourseMutationVariables);
         courseId = course.id;
       }
+      toast.success(editCourse ? 'Course updated.' : 'Course created.');
       onSaved(courseId);
     } catch (err) {
       console.error('[CreateCourseModal] save failed ->', err);
-      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
+      const message = err instanceof Error ? err.message : 'Something went wrong. Please try again.';
+      setError(message);
+      toast.error(message);
     } finally {
       setSubmitting(false);
     }

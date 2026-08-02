@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { ArrowLeft, Loader2, XCircle } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { GraphQLClient } from '@/lib/graphql-client';
+import { useToast } from '@/lib/toast-context';
 import { course as courseQuery, modulesForCourse } from '@/graphql/queries';
 import { updateCourse } from '@/graphql/mutations';
 import { CourseStatus } from '@/API';
@@ -22,6 +23,7 @@ export default function StudioPage() {
   const pathname = usePathname();
   const courseId = params.courseId as string;
   const { user, loading: authLoading } = useAuth();
+  const toast = useToast();
 
   const [course, setCourse] = useState<CourseData | null>(null);
   const [modules, setModules] = useState<CourseModuleData[]>([]);
@@ -77,9 +79,12 @@ export default function StudioPage() {
         input: { status: nextStatus },
       } satisfies UpdateCourseMutationVariables);
       setCourse((prev) => (prev ? { ...prev, status: updated.status } : prev));
+      toast.success(nextStatus === CourseStatus.PUBLISHED ? 'Course published.' : 'Course moved to draft.');
     } catch (err) {
       console.error('[StudioPage] togglePublish failed ->', err);
-      setActionError(err instanceof Error ? err.message : 'Could not update publish status.');
+      const message = err instanceof Error ? err.message : 'Could not update publish status.';
+      setActionError(message);
+      toast.error(message);
     } finally {
       setPublishing(false);
     }

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Lock, Loader2, CheckCircle2, XCircle } from 'lucide-react';
+import { ArrowLeft, Lock, Loader2, CheckCircle2, XCircle, Download } from 'lucide-react';
 import { GraphQLClient } from '@/lib/graphql-client';
 import { lesson as lessonQuery } from '@/graphql/queries';
 import { LessonType } from '@/API';
@@ -13,8 +13,12 @@ import VideoPlayer from '@/components/VideoPlayer';
 import Quiz from '@/components/Quiz';
 import FlashcardViewer from '@/components/FlashcardViewer';
 import { toEmbeddableUrl } from '@/lib/embed-url';
+import { DocumentIcon, extensionFromUrl, filenameFromUrl } from '@/lib/document-file';
 
 type Lesson = NonNullable<LessonQuery['lesson']>;
+// Not selected by the `lesson` query yet (schema shipped, awaiting deploy +
+// codegen refresh) — see the same note in LessonForm.tsx.
+type LessonWithDocument = Lesson & { document?: { url: string } | null };
 
 export default function LessonViewerPage() {
   const params = useParams();
@@ -128,6 +132,47 @@ export default function LessonViewerPage() {
             {lesson.type === LessonType.FLASHCARDS && (
               <FlashcardViewer cards={lesson.cards ?? []} />
             )}
+
+            {lesson.type === LessonType.DOCUMENT && (() => {
+              const documentUrl = (lesson as LessonWithDocument).document?.url;
+              if (!documentUrl) {
+                return (
+                  <div className="rounded-2xl border-2 border-dashed border-ink-200 py-16 px-6 text-center">
+                    <p className="text-sm text-ink-400">This document couldn&apos;t be loaded.</p>
+                  </div>
+                );
+              }
+              const extension = extensionFromUrl(documentUrl);
+              return extension === 'pdf' ? (
+                <div className="space-y-3">
+                  <iframe src={documentUrl} title={lesson.title} className="w-full h-[75vh] rounded-2xl border border-ink-200" />
+                  <a
+                    href={documentUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-sm font-bold text-indigo-600 hover:text-indigo-700 transition-colors"
+                  >
+                    <Download className="w-4 h-4" /> Download
+                  </a>
+                </div>
+              ) : (
+                <a
+                  href={documentUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-4 rounded-2xl border-2 border-ink-100 p-6 hover:border-indigo-200 hover:bg-indigo-50/40 transition-colors group"
+                >
+                  <div className="w-14 h-14 rounded-xl bg-ink-50 flex items-center justify-center flex-shrink-0">
+                    <DocumentIcon extension={extension} className="w-7 h-7" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-ink-900 truncate group-hover:text-indigo-700 transition-colors">{filenameFromUrl(documentUrl)}</p>
+                    <p className="text-xs text-ink-400 uppercase tracking-wide mt-0.5">{extension} document</p>
+                  </div>
+                  <Download className="w-5 h-5 text-ink-300 group-hover:text-indigo-600 transition-colors flex-shrink-0" />
+                </a>
+              );
+            })()}
 
             {lesson.type === LessonType.QUIZ && (
               <>

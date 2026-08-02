@@ -12,6 +12,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GraphQLClient } from '@/lib/graphql-client';
+import { useToast } from '@/lib/toast-context';
 import { reorderCourseModules } from '@/graphql/mutations';
 import type { ReorderCourseModulesMutation, ReorderCourseModulesMutationVariables } from '@/API';
 import type { CourseModuleData } from './StudioLessonPane';
@@ -79,6 +80,7 @@ function SortableModuleRow({
 export default function StudioModuleList({
   courseId, modules, selectedModuleId, onSelect, onModulesChange, onModuleSaved,
 }: StudioModuleListProps) {
+  const toast = useToast();
   const [moduleModalOpen, setModuleModalOpen] = useState(false);
   const [editingModule, setEditingModule] = useState<CourseModuleData | null>(null);
   const [error, setError] = useState('');
@@ -106,6 +108,7 @@ export default function StudioModuleList({
     } catch (err) {
       console.error('[StudioModuleList] reorder failed ->', err);
       setError('Could not save the new order.');
+      toast.error('Could not save the new order.');
     }
   }
 

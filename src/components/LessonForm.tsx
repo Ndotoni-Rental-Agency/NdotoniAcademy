@@ -1,15 +1,19 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, Loader2, Plus, X, XCircle, Video, Music, Link2, Sparkles, FileText, Layers, HelpCircle } from 'lucide-react';
+import { Check, Loader2, Plus, XCircle, Video, Music, Link2, Sparkles, FileText, Layers, HelpCircle, Paperclip } from 'lucide-react';
 import { GraphQLClient } from '@/lib/graphql-client';
+import { useToast } from '@/lib/toast-context';
 import { createLessonForModule, updateLesson } from '@/graphql/mutations';
-import { LessonType } from '@/API';
+import { LessonType, MediaType } from '@/API';
 import type {
   CreateLessonForModuleMutation, CreateLessonForModuleMutationVariables, CreateLessonInput,
   UpdateLessonMutation, UpdateLessonMutationVariables, UpdateLessonInput, LessonQuery,
 } from '@/API';
 import FlashcardEditor, { type CardDraft } from './FlashcardEditor';
+import QuizEditor, { type QuestionDraft } from './QuizEditor';
+import DocumentUploader from './DocumentUploader';
+import type { MediaValue } from './MediaField';
 
 export type EditableLesson = NonNullable<LessonQuery['lesson']>;
 
@@ -21,6 +25,7 @@ export const LESSON_TYPE_ICONS: Record<LessonType, typeof Video> = {
   [LessonType.TEXT]: FileText,
   [LessonType.FLASHCARDS]: Layers,
   [LessonType.QUIZ]: HelpCircle,
+  [LessonType.DOCUMENT]: Paperclip,
 };
 
 export const LESSON_TYPE_LABELS: Record<LessonType, string> = {
@@ -31,16 +36,10 @@ export const LESSON_TYPE_LABELS: Record<LessonType, string> = {
   [LessonType.TEXT]: 'Text',
   [LessonType.FLASHCARDS]: 'Flashcards',
   [LessonType.QUIZ]: 'Quiz',
+  [LessonType.DOCUMENT]: 'Document',
 };
 
 const LESSON_TYPES = Object.values(LessonType);
-
-interface QuestionDraft {
-  id: string;
-  question: string;
-  options: string[];
-  correctIndex: number;
-}
 
 interface LessonFormProps {
   moduleId: string;
@@ -53,6 +52,7 @@ interface LessonFormProps {
 }
 
 export default function LessonForm({ moduleId, courseId, editLesson, onSaved, onCancel }: LessonFormProps) {
+  const toast = useToast();
   const [type, setType] = useState<LessonType | null>(editLesson?.type ?? null);
   const [title, setTitle] = useState(editLesson?.title ?? '');
   const [videoUrl, setVideoUrl] = useState(editLesson?.videoUrl ?? '');
@@ -72,6 +72,12 @@ export default function LessonForm({ moduleId, courseId, editLesson, onSaved, on
       frontMedia: c.frontMedia ?? null, backMedia: c.backMedia ?? null,
     })) ?? []
   );
+  // Not selected by the `lesson` query yet (schema shipped, awaiting deploy +
+  // codegen refresh) — starts empty even when editing an existing document
+  // lesson until that catches up, same as the earlier flashcard-media field.
+  const [documentMedia, setDocumentMedia] = useState<MediaValue | null>(
+    (editLesson as unknown as { document?: MediaValue })?.document ?? null
+  );
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -84,31 +90,6 @@ export default function LessonForm({ moduleId, courseId, editLesson, onSaved, on
     if (next === LessonType.FLASHCARDS && cards.length === 0) {
       setCards([{ id: crypto.randomUUID(), front: '', back: '', frontMedia: null, backMedia: null }]);
     }
-  }
-
-  function addQuestion() {
-    setQuestions((prev) => [...prev, { id: crypto.randomUUID(), question: '', options: ['', ''], correctIndex: 0 }]);
-  }
-
-  function removeQuestion(id: string) {
-    setQuestions((prev) => prev.filter((q) => q.id !== id));
-  }
-
-  function updateQuestion(id: string, patch: Partial<QuestionDraft>) {
-    setQuestions((prev) => prev.map((q) => (q.id === id ? { ...q, ...patch } : q)));
-  }
-
-  function addOption(questionId: string) {
-    setQuestions((prev) => prev.map((q) => (q.id === questionId ? { ...q, options: [...q.options, ''] } : q)));
-  }
-
-  function updateOption(questionId: string, index: number, value: string) {
-    setQuestions((prev) => prev.map((q) => {
-      if (q.id !== questionId) return q;
-      const options = [...q.options];
-      options[index] = value;
-      return { ...q, options };
-    }));
   }
 
   function validate(): string {
@@ -142,6 +123,9 @@ export default function LessonForm({ moduleId, courseId, editLesson, onSaved, on
         for (const c of cards) {
           if (!c.front.trim() || !c.back.trim()) return 'Every card needs both a front and a back.';
         }
+        break;
+      case LessonType.DOCUMENT:
+        if (!documentMedia) return 'Upload a document.';
         break;
     }
     return '';
@@ -186,6 +170,8 @@ export default function LessonForm({ moduleId, courseId, editLesson, onSaved, on
           ...(c.frontMedia ? { frontMedia: c.frontMedia } : {}),
           ...(c.backMedia ? { backMedia: c.backMedia } : {}),
         }));
+      } else if (type === LessonType.DOCUMENT) {
+        contentFields.document = documentMedia ?? undefined;
       }
 
       if (editLesson) {
@@ -203,10 +189,13 @@ export default function LessonForm({ moduleId, courseId, editLesson, onSaved, on
           input,
         } satisfies CreateLessonForModuleMutationVariables);
       }
+      toast.success(editLesson ? 'Lesson updated.' : 'Lesson added.');
       onSaved();
     } catch (err) {
       console.error('[LessonForm] save failed ->', err);
-      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
+      const message = err instanceof Error ? err.message : 'Something went wrong. Please try again.';
+      setError(message);
+      toast.error(message);
     } finally {
       setSubmitting(false);
     }
@@ -260,85 +249,69 @@ export default function LessonForm({ moduleId, courseId, editLesson, onSaved, on
 
       {type === LessonType.VIDEO && (
         <div className="flex gap-3">
-          <input type="url" placeholder="Video URL" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} disabled={submitting} className={`${inputClass} flex-1`} />
-          <input type="number" min={0} aria-label="Duration in minutes" placeholder="Min" value={durationMinutes} onChange={(e) => setDurationMinutes(Number(e.target.value))} disabled={submitting} className={`${inputClass} w-20`} />
+          <div className="flex-1">
+            <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-ink-400">Video URL</label>
+            <input type="url" placeholder="https://youtube.com/watch?v=..." value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} disabled={submitting} className={inputClass} />
+          </div>
+          <div className="w-20">
+            <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-ink-400">Minutes</label>
+            <input type="number" min={0} aria-label="Duration in minutes" value={durationMinutes} onChange={(e) => setDurationMinutes(Number(e.target.value))} disabled={submitting} className={inputClass} />
+          </div>
         </div>
       )}
 
       {type === LessonType.AUDIO && (
         <div className="flex gap-3">
-          <input type="url" placeholder="Audio URL" value={audioUrl} onChange={(e) => setAudioUrl(e.target.value)} disabled={submitting} className={`${inputClass} flex-1`} />
-          <input type="number" min={0} aria-label="Duration in minutes" placeholder="Min" value={durationMinutes} onChange={(e) => setDurationMinutes(Number(e.target.value))} disabled={submitting} className={`${inputClass} w-20`} />
+          <div className="flex-1">
+            <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-ink-400">Audio URL</label>
+            <input type="url" placeholder="https://..." value={audioUrl} onChange={(e) => setAudioUrl(e.target.value)} disabled={submitting} className={inputClass} />
+          </div>
+          <div className="w-20">
+            <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-ink-400">Minutes</label>
+            <input type="number" min={0} aria-label="Duration in minutes" value={durationMinutes} onChange={(e) => setDurationMinutes(Number(e.target.value))} disabled={submitting} className={inputClass} />
+          </div>
         </div>
       )}
 
       {type === LessonType.EMBED && (
         <div>
-          <input type="url" placeholder="Embed URL" value={embedUrl} onChange={(e) => setEmbedUrl(e.target.value)} disabled={submitting} className={inputClass} />
+          <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-ink-400">Embed URL</label>
+          <input type="url" placeholder="https://youtube.com/watch?v=..." value={embedUrl} onChange={(e) => setEmbedUrl(e.target.value)} disabled={submitting} className={inputClass} />
           <p className="mt-1 text-[11px] text-ink-400">A YouTube or Vimeo link works as-is. Other sites need their own &quot;Embed&quot; share link.</p>
         </div>
       )}
 
       {type === LessonType.ANIMATION && (
-        <input type="text" placeholder="Animation reference" value={animationRef} onChange={(e) => setAnimationRef(e.target.value)} disabled={submitting} className={inputClass} />
+        <div>
+          <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-ink-400">Animation reference</label>
+          <input type="text" placeholder="e.g. a Lottie file key" value={animationRef} onChange={(e) => setAnimationRef(e.target.value)} disabled={submitting} className={inputClass} />
+        </div>
       )}
 
       {type === LessonType.TEXT && (
-        <textarea rows={4} placeholder="Lesson text" value={body} onChange={(e) => setBody(e.target.value)} disabled={submitting} className={inputClass} />
+        <div>
+          <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-ink-400">Lesson text</label>
+          <textarea rows={6} placeholder="Write the lesson content here..." value={body} onChange={(e) => setBody(e.target.value)} disabled={submitting} className={inputClass} />
+        </div>
       )}
 
       {type === LessonType.QUIZ && (
-        <div className="space-y-3">
-          {questions.map((q, qi) => (
-            <div key={q.id} className="rounded-lg border border-ink-100 p-3 space-y-2">
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  placeholder={`Question ${qi + 1}`}
-                  value={q.question}
-                  onChange={(e) => updateQuestion(q.id, { question: e.target.value })}
-                  disabled={submitting}
-                  className={`${inputClass} flex-1`}
-                />
-                {questions.length > 1 && (
-                  <button type="button" onClick={() => removeQuestion(q.id)} className="text-ink-300 hover:text-red-500 transition-colors flex-shrink-0" aria-label="Remove question">
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-              {q.options.map((opt, oi) => (
-                <div key={oi} className="flex items-center gap-2 pl-2">
-                  <input
-                    type="radio"
-                    name={`correct-${q.id}`}
-                    checked={q.correctIndex === oi}
-                    onChange={() => updateQuestion(q.id, { correctIndex: oi })}
-                    disabled={submitting}
-                    aria-label={`Option ${oi + 1} is correct`}
-                  />
-                  <input
-                    type="text"
-                    placeholder={`Option ${oi + 1}`}
-                    value={opt}
-                    onChange={(e) => updateOption(q.id, oi, e.target.value)}
-                    disabled={submitting}
-                    className={`${inputClass} flex-1`}
-                  />
-                </div>
-              ))}
-              <button type="button" onClick={() => addOption(q.id)} className="text-xs font-semibold text-coral-600 hover:text-coral-700 transition-colors pl-2">
-                + Add option
-              </button>
-            </div>
-          ))}
-          <button type="button" onClick={addQuestion} className="text-xs font-bold text-coral-600 hover:text-coral-700 transition-colors">
-            + Add question
-          </button>
-        </div>
+        <QuizEditor questions={questions} onChange={setQuestions} disabled={submitting} />
       )}
 
       {type === LessonType.FLASHCARDS && (
         <FlashcardEditor cards={cards} onChange={setCards} disabled={submitting} />
+      )}
+
+      {type === LessonType.DOCUMENT && (
+        <div>
+          <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-ink-400">Document</label>
+          <DocumentUploader
+            value={documentMedia?.url}
+            onUploaded={(fileUrl) => setDocumentMedia(fileUrl ? { url: fileUrl, type: MediaType.DOCUMENT } : null)}
+            disabled={submitting}
+          />
+        </div>
       )}
 
       {error && (

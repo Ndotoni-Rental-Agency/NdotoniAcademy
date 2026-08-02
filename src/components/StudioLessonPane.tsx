@@ -12,6 +12,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GraphQLClient } from '@/lib/graphql-client';
+import { useToast } from '@/lib/toast-context';
 import { lessonsForModule } from '@/graphql/queries';
 import {
   removeLessonFromModule, deleteLesson as deleteLessonMutation, reorderModuleLessons,
@@ -109,6 +110,7 @@ function SortableLessonRow({
 }
 
 export default function StudioLessonPane({ module: mod, onModuleDeleted }: StudioLessonPaneProps) {
+  const toast = useToast();
   const [lessons, setLessons] = useState<LessonRowData[]>([]);
   const [loading, setLoading] = useState(true);
   const [lessonModalOpen, setLessonModalOpen] = useState(false);
@@ -167,6 +169,7 @@ export default function StudioLessonPane({ module: mod, onModuleDeleted }: Studi
     } catch (err) {
       console.error('[StudioLessonPane] reorder failed ->', err);
       setError('Could not save the new order.');
+      toast.error('Could not save the new order.');
     }
   }
 
@@ -182,9 +185,11 @@ export default function StudioLessonPane({ module: mod, onModuleDeleted }: Studi
         id: lessonId,
       } satisfies DeleteLessonMutationVariables);
       setLessons((prev) => prev.filter((l) => l.lessonId !== lessonId));
+      toast.success('Lesson deleted.');
     } catch (err) {
       console.error('[StudioLessonPane] deleteLesson failed ->', err);
       setError('Could not delete this lesson.');
+      toast.error('Could not delete this lesson.');
     } finally {
       setBusyLessonId(null);
     }
@@ -201,10 +206,12 @@ export default function StudioLessonPane({ module: mod, onModuleDeleted }: Studi
       await GraphQLClient.execute<DeleteModuleMutation>(deleteModuleMutation, {
         id: mod.moduleId,
       } satisfies DeleteModuleMutationVariables);
+      toast.success('Module deleted.');
       onModuleDeleted();
     } catch (err) {
       console.error('[StudioLessonPane] deleteModule failed ->', err);
       setError('Could not delete this module.');
+      toast.error('Could not delete this module.');
       setModuleBusy(false);
     }
   }

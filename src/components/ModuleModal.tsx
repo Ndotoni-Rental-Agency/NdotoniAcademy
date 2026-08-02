@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Loader2, XCircle } from 'lucide-react';
 import { GraphQLClient } from '@/lib/graphql-client';
+import { useToast } from '@/lib/toast-context';
 import { createModuleForCourse, updateModule } from '@/graphql/mutations';
 import type {
   CreateModuleForCourseMutation,
@@ -28,6 +29,7 @@ interface ModuleModalProps {
 }
 
 export default function ModuleModal({ open, onClose, courseId, onSaved, editModule }: ModuleModalProps) {
+  const toast = useToast();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -60,10 +62,13 @@ export default function ModuleModal({ open, onClose, courseId, onSaved, editModu
           input: { title: title.trim(), description: description.trim() || undefined },
         } satisfies CreateModuleForCourseMutationVariables);
       }
+      toast.success(editModule ? 'Module updated.' : 'Module added.');
       onSaved();
     } catch (err) {
       console.error('[ModuleModal] save failed ->', err);
-      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
+      const message = err instanceof Error ? err.message : 'Something went wrong. Please try again.';
+      setError(message);
+      toast.error(message);
     } finally {
       setSubmitting(false);
     }
