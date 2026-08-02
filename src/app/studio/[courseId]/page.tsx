@@ -131,7 +131,7 @@ export default function StudioPage() {
   const selectedModule = modules.find((m) => m.moduleId === selectedModuleId) ?? null;
 
   return (
-    <div className="h-screen flex flex-col bg-white">
+    <div className="lg:h-dvh flex flex-col bg-white">
       {/* Header */}
       <header className="flex items-center gap-4 border-b border-ink-200 px-5 py-3 flex-shrink-0">
         <Link href="/dashboard/courses" className="text-ink-400 hover:text-ink-700 transition-colors flex-shrink-0" aria-label="Back to Courses">
@@ -180,8 +180,9 @@ export default function StudioPage() {
         }}
       />
 
-      {/* Two-pane body */}
-      <div className="flex-1 flex min-h-0">
+      {/* Two-pane body — stacked on mobile (module list above lesson pane),
+          side by side from lg up. */}
+      <div className="flex-1 flex flex-col lg:flex-row lg:min-h-0">
         <StudioModuleList
           courseId={course.id}
           modules={modules}

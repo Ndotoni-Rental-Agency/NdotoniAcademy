@@ -219,7 +219,7 @@ export default function StudioLessonPane({ module: mod, onModuleDeleted }: Studi
   return (
     <div className="flex-1 min-w-0 overflow-y-auto p-6 lg:p-8">
       <div className="flex items-start justify-between gap-4 mb-1">
-        <h2 className="text-xl font-extrabold text-ink-900">{mod.title}</h2>
+        <h2 className="text-xl font-extrabold text-ink-900 truncate min-w-0">{mod.title}</h2>
         <div className="flex items-center gap-2 flex-shrink-0">
           {mod.isFree && (
             <span className="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full bg-brand-100 text-brand-700">

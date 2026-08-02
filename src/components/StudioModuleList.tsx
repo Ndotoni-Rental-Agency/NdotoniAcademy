@@ -113,12 +113,12 @@ export default function StudioModuleList({
   }
 
   return (
-    <aside className="w-72 flex-shrink-0 border-r border-ink-200 bg-white flex flex-col h-full">
+    <aside className="w-full lg:w-72 flex-shrink-0 border-b lg:border-b-0 lg:border-r border-ink-200 bg-white flex flex-col lg:h-full">
       <div className="px-4 pt-4 pb-2">
         <p className="text-xs font-bold text-ink-400 uppercase tracking-wide">Course structure</p>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-2.5 space-y-1.5">
+      <div className="flex-1 overflow-y-auto px-2.5 space-y-1.5 max-h-72 lg:max-h-none">
         {modules.length === 0 ? (
           <p className="text-xs text-ink-400 px-2 py-4">No modules yet.</p>
         ) : (

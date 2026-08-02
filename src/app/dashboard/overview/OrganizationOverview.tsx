@@ -121,7 +121,7 @@ export default function OrganizationOverview({ user }: { user: AuthUser }) {
                     {member.assignedCourseIds.length} course{member.assignedCourseIds.length === 1 ? '' : 's'} assigned
                   </p>
                 </div>
-                <div className="w-[72px] h-[5px] rounded-full bg-ink-100 overflow-hidden flex-shrink-0">
+                <div className="hidden sm:block w-[72px] h-[5px] rounded-full bg-ink-100 overflow-hidden flex-shrink-0">
                   <div className="h-full rounded-full bg-brand-600" style={{ width: `${Math.max(member.trainingProgress, 3)}%` }} />
                 </div>
                 {memberStalled && (

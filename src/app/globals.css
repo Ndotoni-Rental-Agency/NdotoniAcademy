@@ -70,6 +70,10 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background: white;
   color: var(--color-ink-900);
+  /* Backstop against any one component's width miscalculation turning into
+     a page-wide horizontal scrollbar on mobile — clips, doesn't fix the
+     underlying overflow, but that's exactly the point of a backstop. */
+  overflow-x: hidden;
 }
 
 /* ─── Animations ─── */

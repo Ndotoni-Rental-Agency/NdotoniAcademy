@@ -85,7 +85,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   if (loading || !user) {
     return (
-      <div className="flex h-[calc(100vh-56px)] items-center justify-center">
+      <div className="flex h-[calc(100dvh-56px)] items-center justify-center">
         <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
       </div>
     );
@@ -103,7 +103,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <>
-      <div className="flex h-[calc(100vh-56px)]">
+      {/* Fixed sidebar + independently-scrolling content only at lg+, where
+          the sidebar needs to stay put — below that, the sidebar is hidden
+          entirely and this just flows as a normal, whole-page-scrolling
+          block. Combining a fixed-vh shell with a nested scroll pane on
+          mobile causes visible jank as the browser chrome shows/hides. */}
+      <div className="lg:flex lg:h-[calc(100dvh-56px)]">
         {/* Sidebar */}
         <aside className="hidden lg:flex lg:flex-col w-56 border-r border-ink-200 bg-white flex-shrink-0">
           {mode === 'organization' && org ? (
@@ -155,7 +160,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </aside>
 
         {/* Main */}
-        <div className="flex-1 overflow-y-auto bg-ink-50">
+        <div className="lg:flex-1 lg:overflow-y-auto bg-ink-50">
           {/* Mobile nav */}
           <div className="lg:hidden sticky top-0 z-30 bg-white border-b border-ink-200 px-4 py-2 overflow-x-auto no-scrollbar">
             <div className="flex gap-1 min-w-max">
