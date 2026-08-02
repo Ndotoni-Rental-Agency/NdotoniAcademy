@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Lock, Loader2, CheckCircle2, XCircle, Download } from 'lucide-react';
+import LessonMarkdown from '@/components/LessonMarkdown';
 import { GraphQLClient } from '@/lib/graphql-client';
 import { lesson as lessonQuery } from '@/graphql/queries';
 import { LessonType } from '@/API';
@@ -119,11 +120,7 @@ export default function LessonViewerPage() {
             )}
 
             {lesson.type === LessonType.TEXT && lesson.body && (
-              <div className="space-y-4">
-                {lesson.body.split(/\n{2,}/).map((paragraph, i) => (
-                  <p key={i} className="text-ink-700 leading-relaxed whitespace-pre-line">{paragraph}</p>
-                ))}
-              </div>
+              <LessonMarkdown content={lesson.body} />
             )}
 
             {lesson.type === LessonType.FLASHCARDS && (

@@ -16,6 +16,7 @@ import type {
 import FlashcardEditor, { type CardDraft } from './FlashcardEditor';
 import QuizEditor, { type QuestionDraft } from './QuizEditor';
 import DocumentUploader from './DocumentUploader';
+import LessonMarkdown from './LessonMarkdown';
 import type { MediaValue } from './MediaField';
 
 const TRANSCRIBABLE_TYPES = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
@@ -83,6 +84,7 @@ export default function LessonForm({ moduleId, courseId, editLesson, onSaved, on
   const [transcribing, setTranscribing] = useState(false);
   const [transcribeError, setTranscribeError] = useState('');
   const [transcribeProgress, setTranscribeProgress] = useState<{ current: number; total: number } | null>(null);
+  const [bodyPreview, setBodyPreview] = useState(false);
 
   function pickType(next: LessonType) {
     setType(next);
@@ -125,6 +127,7 @@ export default function LessonForm({ moduleId, courseId, editLesson, onSaved, on
       }
       const combined = texts.join('\n\n');
       setBody((prev) => (prev.trim() ? `${prev.trim()}\n\n${combined}` : combined));
+      setBodyPreview(true);
       toast.success('Document transcribed.');
     } catch (err) {
       console.error('[LessonForm] transcribe failed ->', err);
@@ -335,10 +338,28 @@ export default function LessonForm({ moduleId, courseId, editLesson, onSaved, on
 
       {type === LessonType.TEXT && (
         <div>
-          <div className="mb-1 flex items-center justify-between">
-            <label className="block text-[11px] font-bold uppercase tracking-wide text-ink-400">Lesson text</label>
+          <div className="mb-1 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <label className="block text-[11px] font-bold uppercase tracking-wide text-ink-400">Lesson text (Markdown)</label>
+              <div className="inline-flex rounded-lg border border-ink-200 p-0.5">
+                <button
+                  type="button"
+                  onClick={() => setBodyPreview(false)}
+                  className={`rounded-md px-2 py-0.5 text-[11px] font-bold transition-colors ${!bodyPreview ? 'bg-ink-900 text-white' : 'text-ink-500 hover:text-ink-700'}`}
+                >
+                  Write
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBodyPreview(true)}
+                  className={`rounded-md px-2 py-0.5 text-[11px] font-bold transition-colors ${bodyPreview ? 'bg-ink-900 text-white' : 'text-ink-500 hover:text-ink-700'}`}
+                >
+                  Preview
+                </button>
+              </div>
+            </div>
             <label
-              className={`inline-flex items-center gap-1.5 text-xs font-bold transition-colors ${
+              className={`inline-flex items-center gap-1.5 text-xs font-bold transition-colors flex-shrink-0 ${
                 transcribing || submitting ? 'text-ink-300 cursor-not-allowed' : 'text-coral-600 hover:text-coral-700 cursor-pointer'
               }`}
             >
@@ -357,8 +378,15 @@ export default function LessonForm({ moduleId, courseId, editLesson, onSaved, on
               />
             </label>
           </div>
-          <textarea rows={6} placeholder="Write the lesson content here, or upload a document above to auto-fill it..." value={body} onChange={(e) => setBody(e.target.value)} disabled={submitting} className={inputClass} />
+          {bodyPreview ? (
+            <div className="min-h-[9.5rem] rounded-lg border border-ink-200 bg-ink-50/50 px-3 py-2.5">
+              {body.trim() ? <LessonMarkdown content={body} /> : <p className="text-sm text-ink-400 italic">Nothing to preview yet.</p>}
+            </div>
+          ) : (
+            <textarea rows={6} placeholder="Write the lesson content here, or upload a document above to auto-fill it. # Heading, **bold**, - list, | table | work." value={body} onChange={(e) => setBody(e.target.value)} disabled={submitting} className={inputClass} />
+          )}
           {transcribeError && <p className="mt-1 text-[11px] text-red-600">{transcribeError}</p>}
+          <p className="mt-1 text-[11px] text-ink-400">Supports Markdown — headings, bold/italic, links, lists, and tables render styled for learners.</p>
           <p className="mt-1 text-[11px] text-ink-400">PDF or Word (.docx) only — extracted text is appended below anything already here, so you can review and edit it. Long PDFs are split into parts automatically.</p>
           <p className="mt-1 text-[11px] text-ink-400">Best for text-heavy notes. If your document has images, tables, or charts you want to keep intact, use a Document lesson instead.</p>
         </div>
