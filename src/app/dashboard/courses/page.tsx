@@ -3,15 +3,15 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Loader2, Plus, Lock, Globe } from 'lucide-react';
+import { Loader2, Plus } from 'lucide-react';
 import { courses, demoEnrolledCourses } from '@/lib/mock-data';
 import { getCategoryTheme } from '@/lib/category-theme';
-import { getTeamCourseUsage, type TeamCourse } from '@/lib/organization-mock-data';
 import { useAuth, dashboardModeFor, type DashboardMode } from '@/lib/auth-context';
 import { accentByMode } from '@/lib/dashboard-accent';
 import { GraphQLClient } from '@/lib/graphql-client';
-import { myCourses } from '@/graphql/queries';
-import type { MyCoursesQuery } from '@/API';
+import { myCourses, coursesForOrganization } from '@/graphql/queries';
+import { CourseStatus } from '@/API';
+import type { MyCoursesQuery, CoursesForOrganizationQuery } from '@/API';
 import EnrolledCourseCard from '@/components/EnrolledCourseCard';
 import CourseCard from '@/components/CourseCard';
 import { CreateCourseModal } from '@/components/CreateCourseModal';
@@ -21,9 +21,9 @@ export default function CoursesPage() {
   if (!user) return null; // DashboardLayout redirects/loads before this can render
 
   const mode = dashboardModeFor(user, wantsToTeach);
-  if (mode === 'organization') return <OrganizationCoursesPage />;
-
   const org = user.organizations[0]?.organization;
+  if (mode === 'organization' && org) return <OrganizationCoursesPage organizationId={org.id} />;
+
   // A plain MEMBER (learner mode, but still belongs to an org) has no
   // instructor permission and shouldn't see course-creation UI — an
   // independent learner (no org at all) or a real INSTRUCTOR does.
@@ -32,105 +32,73 @@ export default function CoursesPage() {
 }
 
 // ============================================================
-// Organizations: courses currently in use by the team, plus the
-// ability to create a course specific to the org.
+// Organizations: courses their instructors have published. Course creation
+// itself only happens via an org member with the INSTRUCTOR role, from their
+// own Teaching section — an OWNER/ADMIN doesn't have that permission, so
+// there's no "add a course" action here, just a read-only list.
 // ============================================================
-function OrganizationCoursesPage() {
-  const accent = accentByMode.organization;
-  const [teamCourses, setTeamCourses] = useState<TeamCourse[]>(getTeamCourseUsage());
-  const [showAddCourse, setShowAddCourse] = useState(false);
-  const [newCourseTitle, setNewCourseTitle] = useState('');
-  const [newCourseVisibility, setNewCourseVisibility] = useState<'PRIVATE' | 'PUBLIC'>('PRIVATE');
+function OrganizationCoursesPage({ organizationId }: { organizationId: string }) {
+  const [orgCourses, setOrgCourses] = useState<CoursesForOrganizationQuery['coursesForOrganization']>([]);
+  const [loadingCourses, setLoadingCourses] = useState(true);
 
-  function handleAddCourse(e: React.FormEvent) {
-    e.preventDefault();
-    if (!newCourseTitle.trim()) return;
-    setTeamCourses((prev) => [
-      ...prev,
-      {
-        id: `custom-${Date.now()}`,
-        title: newCourseTitle.trim(),
-        category: 'Custom',
-        visibility: newCourseVisibility,
-        assignedCount: 0,
-        isCustom: true,
-      },
-    ]);
-    setNewCourseTitle('');
-    setNewCourseVisibility('PRIVATE');
-    setShowAddCourse(false);
-  }
+  const loadCourses = useCallback(async () => {
+    setLoadingCourses(true);
+    try {
+      const { coursesForOrganization: fetched } = await GraphQLClient.execute<CoursesForOrganizationQuery>(
+        coursesForOrganization,
+        { organizationId }
+      );
+      setOrgCourses(fetched);
+    } catch (err) {
+      console.error('[OrganizationCoursesPage] coursesForOrganization failed ->', err);
+    } finally {
+      setLoadingCourses(false);
+    }
+  }, [organizationId]);
+
+  useEffect(() => {
+    void loadCourses();
+  }, [loadCourses]);
 
   return (
     <div className="p-6 lg:p-8 max-w-5xl">
-      <div className="flex items-start justify-between gap-4 mb-8">
-        <div>
-          <h1 className="text-2xl font-extrabold text-ink-900 mb-1">Courses</h1>
-          <p className="text-sm text-ink-500">What your team is training on, and what you can create yourself.</p>
-        </div>
-        <button
-          onClick={() => setShowAddCourse((v) => !v)}
-          className={`flex items-center gap-1.5 rounded-xl ${accent.bg600} px-4 py-2.5 text-sm font-bold text-white ${accent.bg600Hover} transition-colors flex-shrink-0`}
-        >
-          <Plus className="w-4 h-4" /> Add a course
-        </button>
+      <div className="mb-8">
+        <h1 className="text-2xl font-extrabold text-ink-900 mb-1">Courses</h1>
+        <p className="text-sm text-ink-500">Courses your instructors have published.</p>
       </div>
 
-      {/* Team courses bar */}
+      {/* Org's own courses */}
       <section className="mb-10">
-        <h2 className="text-xs font-bold text-ink-400 uppercase tracking-wide mb-2.5">In use by your team</h2>
-        {teamCourses.length === 0 && (
-          <p className="text-sm text-ink-400 bg-white rounded-xl border border-ink-200 px-4 py-5 text-center mb-3">
-            Nothing assigned yet. Add a course above, or assign one from the catalog below in Team.
+        <h2 className="text-xs font-bold text-ink-400 uppercase tracking-wide mb-2.5">Published by your team</h2>
+        {loadingCourses ? (
+          <div className="flex items-center justify-center rounded-xl border border-ink-200 bg-white py-8">
+            <Loader2 className="w-5 h-5 text-ink-400 animate-spin" />
+          </div>
+        ) : orgCourses.length === 0 ? (
+          <p className="text-sm text-ink-400 bg-white rounded-xl border border-ink-200 px-4 py-5 text-center">
+            No courses yet. An org member with the Instructor role can create one from their own Courses page.
           </p>
-        )}
-        <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
-          {teamCourses.map((course) => {
-            const theme = course.isCustom ? null : getCategoryTheme(course.category);
-            return (
-              <div
-                key={course.id}
-                className="flex items-center gap-2.5 flex-shrink-0 rounded-xl border border-ink-200 bg-white px-3.5 py-2.5 min-w-[180px]"
-              >
-                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${theme ? theme.solidBg : 'bg-ink-400'}`} />
-                <div className="min-w-0">
-                  <p className="text-xs font-bold text-ink-900 truncate">{course.title}</p>
-                  <p className="text-[10px] text-ink-400 flex items-center gap-1">
-                    {course.visibility === 'PRIVATE' ? <Lock className="w-2.5 h-2.5" /> : <Globe className="w-2.5 h-2.5" />}
-                    {course.assignedCount} assigned
-                  </p>
+        ) : (
+          <div className="rounded-xl border border-ink-200 bg-white divide-y divide-ink-100">
+            {orgCourses.map((course) => {
+              const theme = getCategoryTheme(course.category ?? '');
+              return (
+                <div key={course.id} className="flex items-center gap-3 py-2.5 px-3.5">
+                  <span className={`w-2 h-2 rounded-full flex-shrink-0 ${theme.solidBg}`} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13.5px] font-semibold text-ink-900 truncate">{course.title}</p>
+                    <p className="text-[11.5px] text-ink-400 truncate">{course.category ?? 'Uncategorized'}</p>
+                  </div>
+                  <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full flex-shrink-0 ${
+                    course.status === CourseStatus.PUBLISHED ? 'bg-brand-100 text-brand-700' : 'bg-ink-100 text-ink-500'
+                  }`}>
+                    {course.status.toLowerCase()}
+                  </span>
+                  <span className="text-xs font-bold text-ink-700 flex-shrink-0">TZS {course.priceTzs.toLocaleString()}</span>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {showAddCourse && (
-          <form onSubmit={handleAddCourse} className="mt-4 flex flex-col sm:flex-row gap-3 rounded-xl border border-ink-200 bg-white p-4">
-            <input
-              type="text"
-              required
-              autoFocus
-              placeholder="Course title, e.g. Warehouse Safety Fundamentals"
-              value={newCourseTitle}
-              onChange={(e) => setNewCourseTitle(e.target.value)}
-              className="flex-1 rounded-xl border border-ink-200 px-4 py-2.5 text-sm text-ink-900 placeholder:text-ink-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-all"
-            />
-            <select
-              value={newCourseVisibility}
-              onChange={(e) => setNewCourseVisibility(e.target.value as 'PRIVATE' | 'PUBLIC')}
-              className="rounded-xl border border-ink-200 px-3 py-2.5 text-sm text-ink-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
-            >
-              <option value="PRIVATE">Private to org</option>
-              <option value="PUBLIC">Public listing</option>
-            </select>
-            <button
-              type="submit"
-              className={`inline-flex items-center justify-center gap-1.5 rounded-xl ${accent.bg600} px-5 py-2.5 text-sm font-bold text-white ${accent.bg600Hover} transition-colors whitespace-nowrap`}
-            >
-              <Plus className="w-4 h-4" /> Create
-            </button>
-          </form>
+              );
+            })}
+          </div>
         )}
       </section>
 

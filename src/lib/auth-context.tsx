@@ -12,10 +12,9 @@ export type AuthUser = NonNullable<MeQuery['me']>;
 
 // Instructor is otherwise strictly a per-organization MembershipRole — the
 // backend has no concept of an independent instructor at all. For someone
-// with no organization, "instructor mode" is purely a local preference (this
-// codebase's established pattern for illustrative, not-backend-real state —
-// see teaching-mock-data.ts), scoped per account so it doesn't leak across
-// different accounts signed into the same browser.
+// with no organization, "instructor mode" is purely a local preference,
+// scoped per account so it doesn't leak across different accounts signed
+// into the same browser.
 function wantsToTeachKey(userId: string): string {
   return `academy-wants-to-teach:${userId}`;
 }
