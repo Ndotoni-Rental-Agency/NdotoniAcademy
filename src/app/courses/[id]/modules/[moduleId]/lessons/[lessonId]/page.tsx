@@ -16,9 +16,6 @@ import { toEmbeddableUrl } from '@/lib/embed-url';
 import { DocumentIcon, extensionFromUrl, filenameFromUrl } from '@/lib/document-file';
 
 type Lesson = NonNullable<LessonQuery['lesson']>;
-// Not selected by the `lesson` query yet (schema shipped, awaiting deploy +
-// codegen refresh) — see the same note in LessonForm.tsx.
-type LessonWithDocument = Lesson & { document?: { url: string } | null };
 
 export default function LessonViewerPage() {
   const params = useParams();
@@ -134,7 +131,7 @@ export default function LessonViewerPage() {
             )}
 
             {lesson.type === LessonType.DOCUMENT && (() => {
-              const documentUrl = (lesson as LessonWithDocument).document?.url;
+              const documentUrl = lesson.document?.url;
               if (!documentUrl) {
                 return (
                   <div className="rounded-2xl border-2 border-dashed border-ink-200 py-16 px-6 text-center">

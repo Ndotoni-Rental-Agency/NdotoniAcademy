@@ -294,6 +294,11 @@ export const lesson = /* GraphQL */ `query Lesson($courseId: ID!, $lessonId: ID!
       __typename
     }
     createdAt
+    document {
+      type
+      url
+      __typename
+    }
     durationSeconds
     embedUrl
     isFree
@@ -567,6 +572,11 @@ export const myLessons = /* GraphQL */ `query MyLessons {
       __typename
     }
     createdAt
+    document {
+      type
+      url
+      __typename
+    }
     durationSeconds
     embedUrl
     id

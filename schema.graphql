@@ -47,6 +47,7 @@ type Lesson {
   body: String
   cards: [Flashcard!]
   createdAt: AWSDateTime!
+  document: Media
   durationSeconds: Int
   embedUrl: AWSURL
   id: ID!
@@ -87,6 +88,7 @@ type ModuleLesson {
   body: String
   cards: [Flashcard!]
   createdAt: AWSDateTime!
+  document: Media
   durationSeconds: Int
   embedUrl: AWSURL
   isFree: Boolean!
@@ -242,6 +244,7 @@ enum InvitationStatus {
 enum LessonType {
   ANIMATION
   AUDIO
+  DOCUMENT
   EMBED
   FLASHCARDS
   QUIZ
@@ -251,6 +254,7 @@ enum LessonType {
 
 enum MediaType {
   AUDIO
+  DOCUMENT
   IMAGE
   VIDEO
 }
@@ -301,6 +305,7 @@ input CreateLessonInput {
   audioUrl: AWSURL
   body: String
   cards: [FlashcardInput!]
+  document: MediaInput
   durationSeconds: Int
   embedUrl: AWSURL
   organizationId: ID
@@ -362,6 +367,7 @@ input UpdateLessonInput {
   audioUrl: AWSURL
   body: String
   cards: [FlashcardInput!]
+  document: MediaInput
   durationSeconds: Int
   embedUrl: AWSURL
   questions: [QuizQuestionInput!]

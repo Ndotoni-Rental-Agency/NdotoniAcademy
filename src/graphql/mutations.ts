@@ -142,6 +142,11 @@ export const addLessonToModule = /* GraphQL */ `mutation AddLessonToModule(
       __typename
     }
     createdAt
+    document {
+      type
+      url
+      __typename
+    }
     durationSeconds
     embedUrl
     isFree
@@ -508,6 +513,11 @@ export const createLessonForModule = /* GraphQL */ `mutation CreateLessonForModu
       __typename
     }
     createdAt
+    document {
+      type
+      url
+      __typename
+    }
     durationSeconds
     embedUrl
     isFree
@@ -1001,6 +1011,11 @@ export const setModuleLessonPrerequisites = /* GraphQL */ `mutation SetModuleLes
       __typename
     }
     createdAt
+    document {
+      type
+      url
+      __typename
+    }
     durationSeconds
     embedUrl
     isFree
@@ -1156,6 +1171,11 @@ export const updateLesson = /* GraphQL */ `mutation UpdateLesson($id: ID!, $inpu
       __typename
     }
     createdAt
+    document {
+      type
+      url
+      __typename
+    }
     durationSeconds
     embedUrl
     id

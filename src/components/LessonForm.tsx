@@ -72,12 +72,7 @@ export default function LessonForm({ moduleId, courseId, editLesson, onSaved, on
       frontMedia: c.frontMedia ?? null, backMedia: c.backMedia ?? null,
     })) ?? []
   );
-  // Not selected by the `lesson` query yet (schema shipped, awaiting deploy +
-  // codegen refresh) — starts empty even when editing an existing document
-  // lesson until that catches up, same as the earlier flashcard-media field.
-  const [documentMedia, setDocumentMedia] = useState<MediaValue | null>(
-    (editLesson as unknown as { document?: MediaValue })?.document ?? null
-  );
+  const [documentMedia, setDocumentMedia] = useState<MediaValue | null>(editLesson?.document ?? null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
