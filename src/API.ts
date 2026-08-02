@@ -1391,6 +1391,14 @@ export type SetModuleLessonPrerequisitesMutation = {
   },
 };
 
+export type TranscribeDocumentMutationVariables = {
+  fileUrl: string,
+};
+
+export type TranscribeDocumentMutation = {
+  transcribeDocument: string,
+};
+
 export type UpdateCourseMutationVariables = {
   id: string,
   input: UpdateCourseInput,

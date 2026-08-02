@@ -1044,6 +1044,13 @@ export const setModuleLessonPrerequisites = /* GraphQL */ `mutation SetModuleLes
   APITypes.SetModuleLessonPrerequisitesMutationVariables,
   APITypes.SetModuleLessonPrerequisitesMutation
 >;
+export const transcribeDocument = /* GraphQL */ `mutation TranscribeDocument($fileUrl: AWSURL!) {
+  transcribeDocument(fileUrl: $fileUrl)
+}
+` as GeneratedMutation<
+  APITypes.TranscribeDocumentMutationVariables,
+  APITypes.TranscribeDocumentMutation
+>;
 export const updateCourse = /* GraphQL */ `mutation UpdateCourse($id: ID!, $input: UpdateCourseInput!) {
   updateCourse(id: $id, input: $input) {
     category

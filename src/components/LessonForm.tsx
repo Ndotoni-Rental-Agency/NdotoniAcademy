@@ -5,12 +5,12 @@ import { Check, Loader2, Plus, XCircle, Video, Music, Link2, Sparkles, FileText,
 import { GraphQLClient } from '@/lib/graphql-client';
 import { useToast } from '@/lib/toast-context';
 import { uploadMedia } from '@/lib/upload-media';
-import { transcribeDocument } from '@/lib/transcribe';
-import { createLessonForModule, updateLesson } from '@/graphql/mutations';
+import { createLessonForModule, updateLesson, transcribeDocument } from '@/graphql/mutations';
 import { LessonType, MediaType } from '@/API';
 import type {
   CreateLessonForModuleMutation, CreateLessonForModuleMutationVariables, CreateLessonInput,
   UpdateLessonMutation, UpdateLessonMutationVariables, UpdateLessonInput, LessonQuery,
+  TranscribeDocumentMutation, TranscribeDocumentMutationVariables,
 } from '@/API';
 import FlashcardEditor, { type CardDraft } from './FlashcardEditor';
 import QuizEditor, { type QuestionDraft } from './QuizEditor';
@@ -105,7 +105,10 @@ export default function LessonForm({ moduleId, courseId, editLesson, onSaved, on
     setTranscribing(true);
     try {
       const fileUrl = await uploadMedia(file);
-      const text = await transcribeDocument(fileUrl);
+      const { transcribeDocument: text } = await GraphQLClient.execute<TranscribeDocumentMutation>(
+        transcribeDocument,
+        { fileUrl } satisfies TranscribeDocumentMutationVariables
+      );
       setBody((prev) => (prev.trim() ? `${prev.trim()}\n\n${text}` : text));
       toast.success('Document transcribed.');
     } catch (err) {

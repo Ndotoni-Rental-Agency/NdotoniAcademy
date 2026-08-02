@@ -143,6 +143,7 @@ type Mutation {
   revokeInvitation(email: AWSEmail!, organizationId: ID!): Boolean @aws_cognito_user_pools
   setInstructorStatus(status: InstructorStatus!, userId: ID!): User @aws_cognito_user_pools
   setModuleLessonPrerequisites(courseId: ID!, lessonId: ID!, moduleId: ID!, prerequisites: [ModuleLessonRefInput!]!): ModuleLesson! @aws_cognito_user_pools
+  transcribeDocument(fileUrl: AWSURL!): String! @aws_cognito_user_pools
   updateCourse(id: ID!, input: UpdateCourseInput!): Course! @aws_cognito_user_pools
   updateLesson(id: ID!, input: UpdateLessonInput!): Lesson! @aws_cognito_user_pools
   updateModule(id: ID!, input: UpdateModuleInput!): Module! @aws_cognito_user_pools
