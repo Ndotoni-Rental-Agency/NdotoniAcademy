@@ -360,6 +360,7 @@ export default function LessonForm({ moduleId, courseId, editLesson, onSaved, on
           <textarea rows={6} placeholder="Write the lesson content here, or upload a document above to auto-fill it..." value={body} onChange={(e) => setBody(e.target.value)} disabled={submitting} className={inputClass} />
           {transcribeError && <p className="mt-1 text-[11px] text-red-600">{transcribeError}</p>}
           <p className="mt-1 text-[11px] text-ink-400">PDF or Word (.docx) only — extracted text is appended below anything already here, so you can review and edit it. Long PDFs are split into parts automatically.</p>
+          <p className="mt-1 text-[11px] text-ink-400">Best for text-heavy notes. If your document has images, tables, or charts you want to keep intact, use a Document lesson instead.</p>
         </div>
       )}
 
