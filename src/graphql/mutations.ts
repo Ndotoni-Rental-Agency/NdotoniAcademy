@@ -585,6 +585,18 @@ export const deleteModule = /* GraphQL */ `mutation DeleteModule($id: ID!) {
   APITypes.DeleteModuleMutationVariables,
   APITypes.DeleteModuleMutation
 >;
+export const getCourseMediaUploadUrl = /* GraphQL */ `mutation GetCourseMediaUploadUrl($contentType: String!, $fileName: String!) {
+  getCourseMediaUploadUrl(contentType: $contentType, fileName: $fileName) {
+    fileUrl
+    key
+    uploadUrl
+    __typename
+  }
+}
+` as GeneratedMutation<
+  APITypes.GetCourseMediaUploadUrlMutationVariables,
+  APITypes.GetCourseMediaUploadUrlMutation
+>;
 export const inviteMember = /* GraphQL */ `mutation InviteMember(
   $email: AWSEmail!
   $organizationId: ID!

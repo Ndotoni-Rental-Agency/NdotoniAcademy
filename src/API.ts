@@ -227,6 +227,13 @@ export type CreateOrganizationInput = {
   type: OrganizationType,
 };
 
+export type MediaUploadResponse = {
+  __typename: "MediaUploadResponse",
+  fileUrl: string,
+  key: string,
+  uploadUrl: string,
+};
+
 export type OrganizationInvitation = {
   __typename: "OrganizationInvitation",
   createdAt: string,
@@ -889,6 +896,20 @@ export type DeleteModuleMutationVariables = {
 
 export type DeleteModuleMutation = {
   deleteModule?: boolean | null,
+};
+
+export type GetCourseMediaUploadUrlMutationVariables = {
+  contentType: string,
+  fileName: string,
+};
+
+export type GetCourseMediaUploadUrlMutation = {
+  getCourseMediaUploadUrl:  {
+    __typename: "MediaUploadResponse",
+    fileUrl: string,
+    key: string,
+    uploadUrl: string,
+  },
 };
 
 export type InviteMemberMutationVariables = {

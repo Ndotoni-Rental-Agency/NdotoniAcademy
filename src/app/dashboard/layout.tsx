@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, BookOpen, Award, Settings, LogOut, Users, Building2, Loader2 } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Award, Settings, LogOut, Users, Building2, Loader2, Plus } from 'lucide-react';
 import { useAuth, displayName, dashboardModeFor, type DashboardMode } from '@/lib/auth-context';
 import { accentByMode, type DashboardAccent } from '@/lib/dashboard-accent';
 
@@ -17,6 +17,9 @@ const navItemsByMode: Record<DashboardMode, NavItem[]> = {
   ],
   instructor: [
     { label: 'Overview', href: '/dashboard', icon: LayoutDashboard },
+    // Own dedicated entry point — creating a course/lesson is the core
+    // selling point of teaching here, so it isn't buried inside My Courses.
+    { label: 'Create Course', href: '/dashboard/courses?new=1', icon: Plus },
     { label: 'My Courses', href: '/dashboard/courses', icon: BookOpen },
     // An instructor is still a learner too — often was one first, and may
     // already hold certificates from before they started teaching.

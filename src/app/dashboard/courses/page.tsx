@@ -1,19 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Plus, Lock, Globe, Users, Wallet } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Loader2, Plus, Lock, Globe } from 'lucide-react';
 import { courses, demoEnrolledCourses } from '@/lib/mock-data';
 import { getCategoryTheme } from '@/lib/category-theme';
 import { getTeamCourseUsage, type TeamCourse } from '@/lib/organization-mock-data';
-import { INSTRUCTOR_SHARE } from '@/lib/instructor-pricing';
-import { initialTeachingCourses, type TeachingCourse } from '@/lib/teaching-mock-data';
 import { useAuth, dashboardModeFor, type DashboardMode } from '@/lib/auth-context';
 import { accentByMode } from '@/lib/dashboard-accent';
+import { GraphQLClient } from '@/lib/graphql-client';
+import { myCourses } from '@/graphql/queries';
+import type { MyCoursesQuery } from '@/API';
 import EnrolledCourseCard from '@/components/EnrolledCourseCard';
 import CourseCard from '@/components/CourseCard';
-
-const teachingCategories = ['Project Management', 'Marketing', 'Technology', 'Design'];
+import { CreateCourseModal } from '@/components/CreateCourseModal';
 
 export default function CoursesPage() {
   const { user, wantsToTeach } = useAuth();
@@ -167,34 +168,38 @@ function LearnerCoursesPage({
   const enrolledIds = new Set(demoEnrolledCourses.map((e) => e.courseId));
   const moreCourses = courses.filter((c) => !enrolledIds.has(c.id));
 
-  const [teachingCourses, setTeachingCourses] = useState<TeachingCourse[]>(initialTeachingCourses);
-  const [showNewCourse, setShowNewCourse] = useState(false);
-  const [newCourseTitle, setNewCourseTitle] = useState('');
-  const [newCourseCategory, setNewCourseCategory] = useState(teachingCategories[0]);
-  const [newCoursePrice, setNewCoursePrice] = useState(15000);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [teachingCourses, setTeachingCourses] = useState<MyCoursesQuery['myCourses']>([]);
+  const [loadingCourses, setLoadingCourses] = useState(true);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
-  function handleCreateCourse(e: React.FormEvent) {
-    e.preventDefault();
-    if (!newCourseTitle.trim()) return;
-    const id = `custom-${Date.now()}`;
-    setTeachingCourses((prev) => [
-      ...prev,
-      {
-        id,
-        title: newCourseTitle.trim(),
-        shortDescription: 'No description yet.',
-        category: newCourseCategory,
-        priceTzs: newCoursePrice,
-        status: 'draft',
-        enrolledCount: 0,
-        modules: [{ id: `${id}-m1`, title: 'Module 1', blocks: [] }],
-      },
-    ]);
-    setNewCourseTitle('');
-    setNewCourseCategory(teachingCategories[0]);
-    setNewCoursePrice(15000);
-    setShowNewCourse(false);
-  }
+  const loadCourses = useCallback(async () => {
+    setLoadingCourses(true);
+    try {
+      const { myCourses: fetched } = await GraphQLClient.execute<MyCoursesQuery>(myCourses);
+      setTeachingCourses(fetched);
+    } catch (err) {
+      console.error('[CoursesPage] myCourses failed ->', err);
+    } finally {
+      setLoadingCourses(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (canTeach) void loadCourses();
+  }, [canTeach, loadCourses]);
+
+  // The sidebar's "Create Course" nav item and the Overview hero CTA both
+  // deep-link here with ?new=1 so the modal opens immediately, wherever the
+  // instructor was — clean the param off the URL so refreshing doesn't
+  // reopen it.
+  useEffect(() => {
+    if (searchParams.get('new') === '1') {
+      setShowCreateModal(true);
+      router.replace('/dashboard/courses');
+    }
+  }, [searchParams, router]);
 
   return (
     <div className="p-6 lg:p-8 max-w-5xl">
@@ -233,77 +238,41 @@ function LearnerCoursesPage({
           <div className="flex items-center justify-between gap-4 mb-2.5">
             <h2 className="text-xs font-bold text-ink-400 uppercase tracking-wide">Teaching</h2>
             <button
-              onClick={() => setShowNewCourse((v) => !v)}
+              onClick={() => setShowCreateModal(true)}
               className={`flex items-center gap-1.5 rounded-xl ${teachAccent.bg600} px-3.5 py-2 text-xs font-bold text-white ${teachAccent.bg600Hover} transition-colors flex-shrink-0`}
             >
               <Plus className="w-3.5 h-3.5" /> New course
             </button>
           </div>
 
-          {showNewCourse && (
-            <form onSubmit={handleCreateCourse} className="mb-4 flex flex-col sm:flex-row gap-3 rounded-xl border border-ink-200 bg-white p-4">
-              <input
-                type="text"
-                required
-                autoFocus
-                placeholder="Course title, e.g. Warehouse Safety Fundamentals"
-                value={newCourseTitle}
-                onChange={(e) => setNewCourseTitle(e.target.value)}
-                className="flex-1 rounded-xl border border-ink-200 px-4 py-2.5 text-sm text-ink-900 placeholder:text-ink-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-all"
-              />
-              <select
-                value={newCourseCategory}
-                onChange={(e) => setNewCourseCategory(e.target.value)}
-                className="rounded-xl border border-ink-200 px-3 py-2.5 text-sm text-ink-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
-              >
-                {teachingCategories.map((c) => <option key={c} value={c}>{c}</option>)}
-              </select>
-              <input
-                type="number"
-                min={0}
-                step={1000}
-                aria-label="Price in TZS"
-                value={newCoursePrice}
-                onChange={(e) => setNewCoursePrice(Number(e.target.value))}
-                className="w-full sm:w-32 rounded-xl border border-ink-200 px-4 py-2.5 text-sm text-ink-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-all"
-              />
-              <button
-                type="submit"
-                className={`inline-flex items-center justify-center gap-1.5 rounded-xl ${teachAccent.bg600} px-5 py-2.5 text-sm font-bold text-white ${teachAccent.bg600Hover} transition-colors whitespace-nowrap`}
-              >
-                <Plus className="w-4 h-4" /> Create
-              </button>
-            </form>
-          )}
-
-          {teachingCourses.length === 0 ? (
+          {loadingCourses ? (
+            <div className="flex items-center justify-center rounded-xl border border-ink-200 bg-white py-8">
+              <Loader2 className="w-5 h-5 text-ink-400 animate-spin" />
+            </div>
+          ) : teachingCourses.length === 0 ? (
             <p className="text-ink-400 text-sm">You have not built a course yet. Add one above.</p>
           ) : (
             <div className="rounded-xl border border-ink-200 bg-white divide-y divide-ink-100">
               {teachingCourses.map((course) => {
-                const theme = getCategoryTheme(course.category);
-                const estimatedEarnings = Math.round(course.enrolledCount * course.priceTzs * INSTRUCTOR_SHARE);
+                const theme = getCategoryTheme(course.category ?? '');
                 return (
                   <Link
                     key={course.id}
-                    href={`/dashboard/courses/teaching/${course.id}`}
+                    href={`/dashboard/courses/${course.id}`}
                     className="flex items-center gap-3 py-2.5 px-3.5 hover:bg-ink-50 transition-colors"
                   >
                     <span className={`w-2 h-2 rounded-full flex-shrink-0 ${theme.solidBg}`} />
                     <div className="flex-1 min-w-0">
                       <p className="text-[13.5px] font-semibold text-ink-900 truncate">{course.title}</p>
-                      <p className="text-[11.5px] text-ink-400 truncate">{course.category}</p>
+                      <p className="text-[11.5px] text-ink-400 truncate">{course.category ?? 'Uncategorized'}</p>
                     </div>
                     <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full flex-shrink-0 ${
-                      course.status === 'published' ? 'bg-brand-100 text-brand-700' : 'bg-ink-100 text-ink-500'
+                      course.status === 'PUBLISHED' ? 'bg-brand-100 text-brand-700' : 'bg-ink-100 text-ink-500'
                     }`}>
-                      {course.status}
+                      {course.status.toLowerCase()}
                     </span>
-                    <span className="flex items-center gap-1.5 text-xs text-ink-500 flex-shrink-0">
-                      <Users className="w-3.5 h-3.5" /> {course.enrolledCount}
-                    </span>
-                    <span className="flex items-center gap-1.5 text-xs font-bold text-brand-700 flex-shrink-0">
-                      <Wallet className="w-3.5 h-3.5" /> TZS {estimatedEarnings.toLocaleString()}
+                    <span className="text-xs font-bold text-ink-700 flex-shrink-0">
+                      TZS {course.priceTzs.toLocaleString()}
                     </span>
                   </Link>
                 );
@@ -312,6 +281,12 @@ function LearnerCoursesPage({
           )}
         </section>
       )}
+
+      <CreateCourseModal
+        open={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSaved={(courseId) => router.push(`/dashboard/courses/${courseId}`)}
+      />
 
       {/* Browse more */}
       {moreCourses.length > 0 && (

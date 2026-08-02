@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Award, Sparkles } from 'lucide-react';
 import { getCourse, demoEnrolledCourses, demoCertificates } from '@/lib/mock-data';
 import { initialTeachingCourses, recentStudentActivity } from '@/lib/teaching-mock-data';
@@ -9,6 +11,7 @@ import EnrolledCourseCard from '@/components/EnrolledCourseCard';
 import DashboardStatCard from '@/components/DashboardStatCard';
 import Sparkline from '@/components/Sparkline';
 import Avatar from '@/components/Avatar';
+import { CreateCourseModal } from '@/components/CreateCourseModal';
 
 // ============================================================
 // Instructors teach — independently, or as an INSTRUCTOR-role member of an
@@ -16,6 +19,8 @@ import Avatar from '@/components/Avatar';
 // has assigned them to complete personally shows up too, but last and small.
 // ============================================================
 export default function InstructorOverview({ user }: { user: AuthUser }) {
+  const router = useRouter();
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const accent = accentByMode.instructor;
   const membership = user.organizations[0];
   const org = membership?.organization;
@@ -49,10 +54,28 @@ export default function InstructorOverview({ user }: { user: AuthUser }) {
             </>
           )}
         </div>
-        <Link href="/dashboard/courses" className={`rounded-xl ${accent.bg600} ${accent.bg600Hover} px-4 py-2.5 text-sm font-bold text-white transition-colors flex-shrink-0`}>
-          {drafts.length > 0 ? 'Continue' : 'New course'}
-        </Link>
+        {drafts.length > 0 ? (
+          <Link href="/dashboard/courses" className={`rounded-xl ${accent.bg600} ${accent.bg600Hover} px-4 py-2.5 text-sm font-bold text-white transition-colors flex-shrink-0`}>
+            Continue
+          </Link>
+        ) : (
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className={`rounded-xl ${accent.bg600} ${accent.bg600Hover} px-4 py-2.5 text-sm font-bold text-white transition-colors flex-shrink-0`}
+          >
+            New course
+          </button>
+        )}
       </div>
+
+      <CreateCourseModal
+        open={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSaved={(courseId) => {
+          setShowCreateModal(false);
+          router.push(`/dashboard/courses/${courseId}`);
+        }}
+      />
 
       {/* Independent instructor, not yet approved to publish — the approval
           request itself lives in Settings, but it needs to be visible from
