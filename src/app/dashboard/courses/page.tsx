@@ -10,10 +10,11 @@ import { useAuth, dashboardModeFor, type DashboardMode } from '@/lib/auth-contex
 import { accentByMode } from '@/lib/dashboard-accent';
 import { GraphQLClient } from '@/lib/graphql-client';
 import { myCourses, coursesForOrganization } from '@/graphql/queries';
+import { fetchPublicCourses, type PublicCourse } from '@/graphql/public-course-queries';
 import { CourseStatus } from '@/API';
 import type { MyCoursesQuery, CoursesForOrganizationQuery } from '@/API';
 import EnrolledCourseCard from '@/components/EnrolledCourseCard';
-import CourseCard from '@/components/CourseCard';
+import PublicCourseCard from '@/components/PublicCourseCard';
 import { CreateCourseModal } from '@/components/CreateCourseModal';
 
 export default function CoursesPage() {
@@ -40,6 +41,8 @@ export default function CoursesPage() {
 function OrganizationCoursesPage({ organizationId }: { organizationId: string }) {
   const [orgCourses, setOrgCourses] = useState<CoursesForOrganizationQuery['coursesForOrganization']>([]);
   const [loadingCourses, setLoadingCourses] = useState(true);
+  const [catalog, setCatalog] = useState<PublicCourse[]>([]);
+  const [loadingCatalog, setLoadingCatalog] = useState(true);
 
   const loadCourses = useCallback(async () => {
     setLoadingCourses(true);
@@ -59,6 +62,18 @@ function OrganizationCoursesPage({ organizationId }: { organizationId: string })
   useEffect(() => {
     void loadCourses();
   }, [loadCourses]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        setCatalog(await fetchPublicCourses());
+      } catch (err) {
+        console.error('[OrganizationCoursesPage] fetchPublicCourses failed ->', err);
+      } finally {
+        setLoadingCatalog(false);
+      }
+    })();
+  }, []);
 
   return (
     <div className="p-6 lg:p-8 max-w-5xl">
@@ -105,12 +120,18 @@ function OrganizationCoursesPage({ organizationId }: { organizationId: string })
       {/* Full catalog */}
       <section>
         <h2 className="text-xs font-bold text-ink-400 uppercase tracking-wide mb-2.5">Full catalog</h2>
-        <p className="text-sm text-ink-500 mb-4">Browse everything available. Head to Team to assign a course to your people.</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {courses.map((course) => (
-            <CourseCard key={course.id} course={course} />
-          ))}
-        </div>
+        <p className="text-sm text-ink-500 mb-4">Browse everything published on Ndotoni Academy.</p>
+        {loadingCatalog ? (
+          <div className="flex items-center justify-center rounded-xl border border-ink-200 bg-white py-8">
+            <Loader2 className="w-5 h-5 text-ink-400 animate-spin" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {catalog.map((course) => (
+              <PublicCourseCard key={course.id} course={course} />
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );
@@ -133,14 +154,14 @@ function LearnerCoursesPage({
   // when the viewer actually is one; an org-less learner who can still teach
   // stays in their own (learner) accent rather than borrowing coral.
   const teachAccent = mode === 'instructor' ? accentByMode.instructor : accentByMode.learner;
-  const enrolledIds = new Set(demoEnrolledCourses.map((e) => e.courseId));
-  const moreCourses = courses.filter((c) => !enrolledIds.has(c.id));
 
   const router = useRouter();
   const searchParams = useSearchParams();
   const [teachingCourses, setTeachingCourses] = useState<MyCoursesQuery['myCourses']>([]);
   const [loadingCourses, setLoadingCourses] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [catalog, setCatalog] = useState<PublicCourse[]>([]);
+  const [loadingCatalog, setLoadingCatalog] = useState(true);
 
   const loadCourses = useCallback(async () => {
     setLoadingCourses(true);
@@ -157,6 +178,18 @@ function LearnerCoursesPage({
   useEffect(() => {
     if (canTeach) void loadCourses();
   }, [canTeach, loadCourses]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        setCatalog(await fetchPublicCourses());
+      } catch (err) {
+        console.error('[LearnerCoursesPage] fetchPublicCourses failed ->', err);
+      } finally {
+        setLoadingCatalog(false);
+      }
+    })();
+  }, []);
 
   // The sidebar's "Create Course" nav item and the Overview hero CTA both
   // deep-link here with ?new=1 so the modal opens immediately, wherever the
@@ -257,16 +290,22 @@ function LearnerCoursesPage({
       />
 
       {/* Browse more */}
-      {moreCourses.length > 0 && (
-        <section>
-          <h2 className="text-xs font-bold text-ink-400 uppercase tracking-wide mb-2.5">Browse more</h2>
+      <section>
+        <h2 className="text-xs font-bold text-ink-400 uppercase tracking-wide mb-2.5">Browse more</h2>
+        {loadingCatalog ? (
+          <div className="flex items-center justify-center rounded-xl border border-ink-200 bg-white py-8">
+            <Loader2 className="w-5 h-5 text-ink-400 animate-spin" />
+          </div>
+        ) : catalog.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {moreCourses.map((course) => (
-              <CourseCard key={course.id} course={course} />
+            {catalog.map((course) => (
+              <PublicCourseCard key={course.id} course={course} />
             ))}
           </div>
-        </section>
-      )}
+        ) : (
+          <p className="text-ink-400 text-sm">No courses published yet.</p>
+        )}
+      </section>
     </div>
   );
 }

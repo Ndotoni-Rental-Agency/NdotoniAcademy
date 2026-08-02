@@ -1,77 +1,180 @@
-import type { Metadata } from 'next';
+'use client';
+
+import { useCallback, useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
 import {
-  Clock, BookOpen, Award, Users, CheckCircle2, Play, ArrowRight,
-  FileText, HelpCircle, Video, Zap, TrendingUp, Star, Shield
+  Award, User, Play, ArrowRight, Zap, TrendingUp, Shield, Star,
+  Video, FileText, HelpCircle, Loader2, ChevronRight, Lock,
 } from 'lucide-react';
-import { getCourse, courses } from '@/lib/mock-data';
 import { getCategoryTheme } from '@/lib/category-theme';
-import Avatar from '@/components/Avatar';
-import { SITE_URL } from '@/lib/site';
+import { fetchPublicCourseDetail, instructorDisplayName, type PublicCourse } from '@/graphql/public-course-queries';
+import { GraphQLClient } from '@/lib/graphql-client';
+import { modulesForCourse, lessonsForModule } from '@/graphql/queries';
+import type { ModulesForCourseQuery, LessonsForModuleQuery } from '@/API';
+import { LESSON_TYPE_ICONS } from '@/components/LessonForm';
 
-export function generateStaticParams() {
-  return courses.map((c) => ({ id: c.id }));
+type CourseModule = ModulesForCourseQuery['modulesForCourse'][number];
+type ModuleLesson = LessonsForModuleQuery['lessonsForModule'][number];
+
+function formatMinutes(seconds: number): string {
+  if (!seconds) return '';
+  return `${Math.round(seconds / 60)} min`;
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
-  const { id } = await params;
-  const course = getCourse(id);
-  if (!course) return {};
+function ModuleRow({ courseId, mod, theme }: { courseId: string; mod: CourseModule; theme: ReturnType<typeof getCategoryTheme> }) {
+  const [expanded, setExpanded] = useState(false);
+  const [lessons, setLessons] = useState<ModuleLesson[]>([]);
+  const [loaded, setLoaded] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  return {
-    title: course.title,
-    description: course.shortDescription,
-    openGraph: {
-      title: course.title,
-      description: course.shortDescription,
-      type: 'website',
-      url: `${SITE_URL}/courses/${course.id}`,
-    },
-  };
+  async function toggle() {
+    const next = !expanded;
+    setExpanded(next);
+    if (next && !loaded) {
+      setLoading(true);
+      try {
+        const { lessonsForModule: fetched } = await GraphQLClient.execute<LessonsForModuleQuery>(lessonsForModule, { moduleId: mod.moduleId });
+        setLessons([...fetched].sort((a, b) => a.order - b.order));
+        setLoaded(true);
+      } catch (err) {
+        console.error('[CourseDetailPage] loadLessons failed ->', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+  }
+
+  return (
+    <div className={`rounded-2xl border-2 overflow-hidden transition-all ${mod.isFree ? `${theme.border}` : 'border-ink-200'}`}>
+      <button type="button" onClick={toggle} className="w-full flex items-center justify-between p-5 text-left">
+        <div className="flex items-center gap-4 min-w-0">
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-extrabold flex-shrink-0 ${
+            mod.isFree ? `${theme.solidBg} text-white` : 'bg-ink-100 text-ink-500'
+          }`}>
+            {mod.order}
+          </div>
+          <div className="min-w-0">
+            <h3 className="font-bold text-ink-900 truncate">{mod.title}</h3>
+            <p className="text-xs text-ink-400 mt-0.5">
+              {mod.lessonCount} lesson{mod.lessonCount === 1 ? '' : 's'}
+              {mod.totalDurationSeconds > 0 && ` · ${formatMinutes(mod.totalDurationSeconds)}`}
+            </p>
+          </div>
+        </div>
+        <ChevronRight className={`w-4 h-4 text-ink-400 flex-shrink-0 transition-transform ${expanded ? 'rotate-90' : ''}`} />
+      </button>
+
+      {expanded && (
+        <div className="px-5 pb-5 space-y-2">
+          {loading ? (
+            <div className="flex items-center justify-center py-4">
+              <Loader2 className="w-4 h-4 text-ink-400 animate-spin" />
+            </div>
+          ) : lessons.length === 0 ? (
+            <p className="text-xs text-ink-400">No lessons in this module yet.</p>
+          ) : (
+            lessons.map((lesson) => {
+              const Icon = LESSON_TYPE_ICONS[lesson.type];
+              const content = (
+                <>
+                  <div className="w-8 h-8 rounded-lg bg-ink-100 text-ink-500 flex items-center justify-center flex-shrink-0">
+                    <Icon className="w-4 h-4" />
+                  </div>
+                  <span className="text-sm font-semibold text-ink-900 flex-1 min-w-0 truncate">{lesson.title}</span>
+                  {lesson.durationSeconds ? <span className="text-xs text-ink-400 flex-shrink-0">{formatMinutes(lesson.durationSeconds)}</span> : null}
+                  {lesson.isFree ? (
+                    <Play className="w-4 h-4 text-ink-400 flex-shrink-0" />
+                  ) : (
+                    <Lock className="w-3.5 h-3.5 text-ink-300 flex-shrink-0" />
+                  )}
+                </>
+              );
+              return lesson.isFree ? (
+                <Link
+                  key={lesson.lessonId}
+                  href={`/courses/${courseId}/modules/${mod.moduleId}/lessons/${lesson.lessonId}`}
+                  className="flex items-center gap-3 rounded-lg border border-ink-100 px-3 py-2.5 hover:border-indigo-200 hover:bg-indigo-50/40 transition-colors"
+                >
+                  {content}
+                </Link>
+              ) : (
+                <div key={lesson.lessonId} className="flex items-center gap-3 rounded-lg border border-ink-100 px-3 py-2.5 opacity-70">
+                  {content}
+                </div>
+              );
+            })
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
-export default async function CourseDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const course = getCourse(id);
-  if (!course) return notFound();
+export default function CourseDetailPage() {
+  const params = useParams();
+  const courseId = params.id as string;
 
-  const theme = getCategoryTheme(course.category);
-  const totalQuizQuestions = course.modules.reduce((sum, m) => sum + m.quiz.length, 0);
-  const videoModules = course.modules.filter(m => m.videoUrl);
+  const [course, setCourse] = useState<PublicCourse | null>(null);
+  const [modules, setModules] = useState<CourseModule[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Course',
-    name: course.title,
-    description: course.shortDescription,
-    provider: {
-      '@type': 'Organization',
-      name: 'Ndotoni Academy',
-      sameAs: SITE_URL,
-    },
-    instructor: {
-      '@type': 'Person',
-      name: course.instructor,
-    },
-    aggregateRating: {
-      '@type': 'AggregateRating',
-      ratingValue: course.rating,
-      ratingCount: course.enrolledCount,
-    },
-    hasCourseInstance: {
-      '@type': 'CourseInstance',
-      courseMode: 'online',
-    },
-  };
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const [fetchedCourse, { modulesForCourse: fetchedModules }] = await Promise.all([
+        fetchPublicCourseDetail(courseId),
+        GraphQLClient.execute<ModulesForCourseQuery>(modulesForCourse, { courseId }),
+      ]);
+      if (!fetchedCourse) {
+        setError('not-found');
+      } else {
+        setCourse(fetchedCourse);
+        setModules([...fetchedModules].sort((a, b) => a.order - b.order));
+      }
+    } catch (err) {
+      console.error('[CourseDetailPage] load failed ->', err);
+      setError(err instanceof Error ? err.message : 'Something went wrong loading this course.');
+    } finally {
+      setLoading(false);
+    }
+  }, [courseId]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-white flex items-center justify-center">
+        <Loader2 className="w-6 h-6 text-ink-400 animate-spin" />
+      </main>
+    );
+  }
+
+  if (error || !course) {
+    return (
+      <main className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-ink-500 mb-3">
+            {error === 'not-found' ? "This course doesn't exist, or isn't published." : error || 'Something went wrong.'}
+          </p>
+          <Link href="/courses" className="text-sm text-indigo-600 font-bold">Browse courses &rarr;</Link>
+        </div>
+      </main>
+    );
+  }
+
+  const theme = getCategoryTheme(course.category ?? '');
+  const by = instructorDisplayName(course);
+  const totalLessons = modules.reduce((sum, m) => sum + m.lessonCount, 0);
 
   return (
     <main className="min-h-screen bg-white">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-
       {/* Hero */}
       <section className={`relative ${theme.solidBg} text-white overflow-hidden`}>
-        {/* Flat geometric accent shapes */}
         <div className="absolute -right-10 -top-10 w-72 h-72 bg-white/10 rotate-45" />
         <div className="absolute -left-16 -bottom-16 w-56 h-56 rounded-full bg-white/10" />
 
@@ -82,42 +185,28 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
 
           <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
             <div className="flex-1">
-              <div className="flex items-center gap-2 mb-4">
-                <span className="text-[11px] font-bold uppercase tracking-wide bg-white/20 text-white px-3 py-1 rounded-md">
-                  {course.levelLabel}
+              {course.category && (
+                <span className="inline-block text-[11px] font-bold uppercase tracking-wide bg-white/20 text-white px-3 py-1 rounded-md mb-4">
+                  {course.category}
                 </span>
-                <span className="text-[11px] font-bold uppercase tracking-wide bg-white/20 text-white px-3 py-1 rounded-md flex items-center gap-1">
-                  <Star className="w-3 h-3 fill-current" /> {course.rating}
-                </span>
-              </div>
+              )}
 
               <h1 className="text-3xl sm:text-4xl lg:text-[3rem] font-extrabold leading-[1.05] tracking-tight mb-4">{course.title}</h1>
-              <p className="text-white/85 leading-relaxed mb-6 text-base sm:text-lg line-clamp-2 sm:line-clamp-none">{course.shortDescription}</p>
+              {course.description && (
+                <p className="text-white/85 leading-relaxed mb-6 text-base sm:text-lg line-clamp-2 sm:line-clamp-none">{course.description}</p>
+              )}
 
-              {/* Highlights bar */}
-              <div className="flex flex-wrap gap-3 text-sm text-white/90 mb-6">
-                <span className="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-md">
-                  <Video className="w-4 h-4" /> {videoModules.length} videos
-                </span>
-                <span className="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-md">
-                  <FileText className="w-4 h-4" /> {course.modules.length} readings
-                </span>
-                <span className="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-md">
-                  <HelpCircle className="w-4 h-4" /> {totalQuizQuestions} quiz Qs
-                </span>
-                <span className="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-md">
-                  <Clock className="w-4 h-4" /> {course.duration}
-                </span>
-              </div>
-
-              {/* Instructor */}
-              <div className="flex items-center gap-3">
-                <Avatar name={course.instructor} size="lg" className="!bg-white/20 !text-white" />
-                <div>
-                  <p className="text-sm font-semibold text-white">{course.instructor}</p>
-                  <p className="text-xs text-white/70">Course instructor</p>
+              {by && (
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                    <User className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-white">{by}</p>
+                    <p className="text-xs text-white/70">Instructor</p>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* CTA card */}
@@ -125,11 +214,11 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
               <div className="space-y-4 mb-6">
                 <div className="flex items-center gap-3">
                   <div className={`w-10 h-10 rounded-xl ${theme.softBg} flex items-center justify-center`}>
-                    <BookOpen className={`w-5 h-5 ${theme.solidText}`} />
+                    <Video className={`w-5 h-5 ${theme.solidText}`} />
                   </div>
                   <div>
-                    <p className="text-sm font-bold">{course.modules.length} Modules</p>
-                    <p className="text-xs text-ink-500">Video + text + quiz each</p>
+                    <p className="text-sm font-bold">{modules.length} Module{modules.length === 1 ? '' : 's'}</p>
+                    <p className="text-xs text-ink-500">{totalLessons} lesson{totalLessons === 1 ? '' : 's'} total</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -137,110 +226,42 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
                     <Award className={`w-5 h-5 ${theme.solidText}`} />
                   </div>
                   <div>
-                    <p className="text-sm font-bold">{course.points} Points</p>
-                    <p className="text-xs text-ink-500">Verified certificate</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-xl ${theme.softBg} flex items-center justify-center`}>
-                    <Users className={`w-5 h-5 ${theme.solidText}`} />
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold">{course.enrolledCount}+ Enrolled</p>
-                    <p className="text-xs text-ink-500">{course.completionRate}% completion</p>
+                    <p className="text-sm font-bold">TZS {course.priceTzs.toLocaleString()}</p>
+                    <p className="text-xs text-ink-500">One-time</p>
                   </div>
                 </div>
               </div>
 
-              <Link
-                href={`/courses/${course.id}/modules/${course.modules[0].id}`}
+              <a
+                href="#course-content"
                 className={`flex items-center justify-center gap-2 w-full rounded-xl ${theme.solidBg} text-white font-bold py-3.5 ${theme.solidBgHover} transition-colors text-sm shadow-lg`}
               >
-                <Play className="w-4 h-4" /> Start free module
-              </Link>
-              <p className="text-center text-xs text-ink-400 mt-2.5">No sign-up needed for Module 1</p>
+                <Play className="w-4 h-4" /> View course content
+              </a>
             </div>
           </div>
         </div>
       </section>
 
-      {/* What you'll learn */}
-      <section className="border-b border-ink-100 py-12 sm:py-16">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-extrabold text-ink-900 mb-6">What you&apos;ll learn</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {course.outcomes.map((outcome, i) => (
-              <div key={i} className="flex items-start gap-3 bg-ink-50 rounded-xl p-4">
-                <CheckCircle2 className={`w-5 h-5 ${theme.solidText} flex-shrink-0 mt-0.5`} />
-                <span className="text-sm text-ink-700 leading-relaxed">{outcome}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Course content */}
-      <section className="py-12 sm:py-16">
+      <section id="course-content" className="py-12 sm:py-16">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-2xl font-extrabold text-ink-900">Course content</h2>
-            <span className="text-sm text-ink-400 bg-ink-100 px-3 py-1 rounded-full">{course.modules.length} modules · {course.duration}</span>
+            <span className="text-sm text-ink-400 bg-ink-100 px-3 py-1 rounded-full">
+              {modules.length} module{modules.length === 1 ? '' : 's'}
+            </span>
           </div>
 
-          <div className="space-y-4">
-            {course.modules.map((mod) => (
-              <div
-                key={mod.id}
-                className={`rounded-2xl border-2 overflow-hidden transition-all ${
-                  mod.isFree
-                    ? `${theme.border} hover:shadow-md`
-                    : 'border-ink-200'
-                }`}
-              >
-                <div className="flex items-center justify-between p-5">
-                  <div className="flex items-center gap-4">
-                    {/* Number badge */}
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-extrabold ${
-                      mod.isFree ? `${theme.solidBg} text-white` : 'bg-ink-100 text-ink-500'
-                    }`}>
-                      {mod.order}
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-ink-900">{mod.title}</h3>
-                      <p className="text-xs text-ink-400 mt-0.5">{mod.duration}</p>
-                    </div>
-                  </div>
-                  {mod.isFree ? (
-                    <Link
-                      href={`/courses/${course.id}/modules/${mod.id}`}
-                      className={`flex items-center gap-1.5 text-sm font-bold text-white ${theme.solidBg} px-4 py-2 rounded-lg ${theme.solidBgHover} transition-colors`}
-                    >
-                      <Play className="w-3.5 h-3.5" /> Start
-                    </Link>
-                  ) : (
-                    <span className="text-xs font-medium text-ink-400 bg-ink-100 px-3 py-1.5 rounded-lg">
-                      Sign in required
-                    </span>
-                  )}
-                </div>
-
-                {/* Content types */}
-                <div className="px-5 pb-4 flex flex-wrap gap-2">
-                  {mod.videoUrl && (
-                    <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${theme.softText} ${theme.softBg} px-2.5 py-1 rounded-full`}>
-                      <Play className="w-3 h-3" /> Video lesson
-                    </span>
-                  )}
-                  <span className="inline-flex items-center gap-1.5 text-xs font-medium text-ink-600 bg-ink-100 px-2.5 py-1 rounded-full">
-                    <FileText className="w-3 h-3" /> Written guide
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 text-xs font-medium text-ink-600 bg-ink-100 px-2.5 py-1 rounded-full">
-                    <HelpCircle className="w-3 h-3" /> {mod.quiz.length} quiz questions
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
+          {modules.length === 0 ? (
+            <p className="text-sm text-ink-400">This course doesn&apos;t have any modules yet.</p>
+          ) : (
+            <div className="space-y-4">
+              {modules.map((mod) => (
+                <ModuleRow key={mod.moduleId} courseId={course.id} mod={mod} theme={theme} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -252,7 +273,7 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
             {[
               { icon: Zap, title: 'Learn fast', desc: 'Bite-sized modules you finish in one sitting' },
               { icon: TrendingUp, title: 'Track progress', desc: 'See exactly how far you have come' },
-              { icon: Shield, title: 'Verified cert', desc: 'Shareable proof of your achievement' },
+              { icon: Shield, title: 'Verified content', desc: 'Built and published by a real instructor' },
               { icon: Star, title: 'Expert-led', desc: 'Created by working professionals' },
             ].map((item) => (
               <div key={item.title} className="text-center">
@@ -267,29 +288,15 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
         </div>
       </section>
 
-      {/* Skills */}
-      <section className="border-t border-ink-100 py-12 sm:py-14">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-extrabold text-ink-900 mb-5">Skills you&apos;ll build</h2>
-          <div className="flex flex-wrap gap-2">
-            {course.skills.map((skill, i) => (
-              <span key={i} className="px-4 py-2 rounded-full bg-ink-100 text-sm font-semibold text-ink-700 hover:bg-ink-200 transition-colors cursor-default">
-                {skill}
-              </span>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* How it works */}
       <section className="border-t border-ink-100 py-12 sm:py-16 bg-white">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-extrabold text-ink-900 mb-8">How each module works</h2>
+          <h2 className="text-2xl font-extrabold text-ink-900 mb-8">How each lesson works</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {[
-              { icon: Video, num: '1', title: 'Watch', desc: 'Short video lesson from the instructor covering key concepts.' },
-              { icon: FileText, num: '2', title: 'Read & explore', desc: 'Detailed guide with examples and real-world case studies.' },
-              { icon: HelpCircle, num: '3', title: 'Quiz & advance', desc: 'Test yourself. Score 70% or higher to unlock the next module.' },
+              { icon: Video, title: 'Watch or read', desc: 'Video, text, flashcards, or audio, whatever fits the topic.' },
+              { icon: FileText, title: 'Go at your pace', desc: 'No deadlines. Come back to a lesson anytime.' },
+              { icon: HelpCircle, title: 'Check yourself', desc: 'Quizzes at the end of a lesson confirm what stuck.' },
             ].map((item) => (
               <div key={item.title} className="relative">
                 <div className={`w-11 h-11 rounded-xl ${theme.solidBg} text-white flex items-center justify-center mb-3`}>
@@ -308,13 +315,13 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
         <div className="absolute -right-12 -bottom-12 w-64 h-64 bg-white/10 rotate-45" />
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-2xl font-extrabold text-white mb-2">Ready to start?</h2>
-          <p className="text-white/80 mb-6">Jump in. Your first module is free.</p>
-          <Link
-            href={`/courses/${course.id}/modules/${course.modules[0].id}`}
+          <p className="text-white/80 mb-6">Jump into the course content above.</p>
+          <a
+            href="#course-content"
             className={`inline-flex items-center justify-center gap-2 rounded-full bg-white px-8 py-3.5 text-sm font-bold ${theme.solidText} hover:bg-white/90 transition-colors shadow-lg`}
           >
-            <Play className="w-4 h-4" /> Start free module
-          </Link>
+            <Play className="w-4 h-4" /> View course content
+          </a>
         </div>
       </section>
     </main>

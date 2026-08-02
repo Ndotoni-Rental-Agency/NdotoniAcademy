@@ -1,8 +1,11 @@
 import type { MetadataRoute } from 'next';
 import { SITE_URL } from '@/lib/site';
-import { courses } from '@/lib/mock-data';
 import { articles } from '@/lib/knowledge-mock-data';
 
+// Individual course pages (/courses/[id]) aren't listed here — they're real,
+// backend-authored content now, fetched client-side, with no build-time data
+// source to enumerate ids from. The /courses catalog itself stays listed;
+// it's how both search engines and learners discover what's published.
 export default function sitemap(): MetadataRoute.Sitemap {
   const staticRoutes: MetadataRoute.Sitemap = [
     '',
@@ -17,15 +20,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     lastModified: new Date(),
   }));
 
-  const courseRoutes: MetadataRoute.Sitemap = courses.map((course) => ({
-    url: `${SITE_URL}/courses/${course.id}`,
-    lastModified: new Date(),
-  }));
-
   const articleRoutes: MetadataRoute.Sitemap = articles.map((article) => ({
     url: `${SITE_URL}/knowledge/${article.id}`,
     lastModified: new Date(),
   }));
 
-  return [...staticRoutes, ...courseRoutes, ...articleRoutes];
+  return [...staticRoutes, ...articleRoutes];
 }

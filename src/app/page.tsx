@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import {
-  ArrowRight, BookOpen, Clock, GraduationCap, Users, Presentation,
+  ArrowRight, Clock, GraduationCap, Users, Presentation,
   Award, Zap, UserCheck, Layers, Briefcase,
 } from 'lucide-react';
 import { courses } from '@/lib/mock-data';
@@ -11,6 +11,7 @@ import Reveal from '@/components/Reveal';
 import CourseExperiencePreview from '@/components/CourseExperiencePreview';
 import CertificatePreview from '@/components/CertificatePreview';
 import LearnerDashboardPreview from '@/components/LearnerDashboardPreview';
+import HomepageCourseList from '@/components/HomepageCourseList';
 
 export default function HomePage() {
   const featuredCourse = courses.find((c) => c.id === 'project-management');
@@ -117,38 +118,7 @@ export default function HomePage() {
             </Link>
           </div>
 
-          <div className="divide-y divide-ink-100">
-            {courses.map((course, i) => {
-              const theme = getCategoryTheme(course.category);
-              return (
-                <Reveal key={course.id} delay={i * 0.08}>
-                  <Link
-                    href={`/courses/${course.id}`}
-                    className="flex items-center gap-5 py-5 group"
-                  >
-                    {/* Category color dot */}
-                    <div className={`w-3 h-3 rounded-full flex-shrink-0 ${theme.solidBg}`} />
-
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-ink-900 group-hover:text-indigo-600 transition-colors truncate">
-                        {course.title}
-                      </h3>
-                      <p className="text-sm text-ink-500 mt-0.5 hidden sm:block">{course.shortDescription}</p>
-                      <div className="flex items-center gap-3 mt-1.5 text-xs text-ink-400">
-                        <span className="flex items-center gap-1"><BookOpen className="w-3 h-3" /> {course.modules.length} modules</span>
-                        <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {course.duration}</span>
-                        <span className="font-medium text-brand-600">Free preview</span>
-                      </div>
-                    </div>
-
-                    {/* Arrow */}
-                    <ArrowRight className="w-4 h-4 text-ink-300 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all flex-shrink-0" />
-                  </Link>
-                </Reveal>
-              );
-            })}
-          </div>
+          <HomepageCourseList />
         </div>
       </section>
 

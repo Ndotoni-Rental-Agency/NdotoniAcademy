@@ -1,22 +1,36 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Search, BookOpen, Clock, ArrowRight, Users, Award } from 'lucide-react';
-import { courses } from '@/lib/mock-data';
-import CourseCard from '@/components/CourseCard';
+import { Search, BookOpen, ArrowRight, Award, Loader2, User } from 'lucide-react';
+import { fetchPublicCourses, instructorDisplayName, type PublicCourse } from '@/graphql/public-course-queries';
+import PublicCourseCard from '@/components/PublicCourseCard';
 
 const categories = ['All', 'Project Management', 'Marketing', 'Design', 'Technology'];
-const featuredCourse = courses.find((c) => c.id === 'digital-marketing') ?? courses[0];
 
 export default function CoursesPageClient() {
+  const [courses, setCourses] = useState<PublicCourse[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
 
+  useEffect(() => {
+    (async () => {
+      try {
+        setCourses(await fetchPublicCourses());
+      } catch (err) {
+        console.error('[CoursesPageClient] fetchPublicCourses failed ->', err);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  const featuredCourse = courses[0];
   const filteredCourses = courses.filter((course) => {
     const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      course.shortDescription.toLowerCase().includes(searchQuery.toLowerCase());
+      (course.description ?? '').toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === 'All' || course.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
@@ -28,7 +42,7 @@ export default function CoursesPageClient() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
             <h1 className="text-3xl sm:text-4xl font-extrabold text-ink-900 mb-1">Explore courses</h1>
-            <p className="text-ink-500">Find your next skill. Module 1 is always free.</p>
+            <p className="text-ink-500">Find your next skill.</p>
           </motion.div>
 
           {/* Search + filters */}
@@ -62,68 +76,83 @@ export default function CoursesPageClient() {
         </div>
       </section>
 
-      {/* Featured course */}
-      <section className="bg-white py-8 sm:py-10">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-          >
-            <Link
-              href={`/courses/${featuredCourse.id}`}
-              className="block rounded-3xl overflow-hidden bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-700 hover:to-indigo-600 transition-all group"
-            >
-              <div className="flex flex-col md:flex-row">
-                {/* Left content */}
-                <div className="flex-1 p-7 sm:p-10 text-white">
-                  <span className="inline-block text-[11px] font-bold uppercase tracking-wide bg-white/20 px-3 py-1 rounded-full mb-4">
-                    Featured
-                  </span>
-                  <h2 className="text-2xl sm:text-3xl font-extrabold mb-3 leading-tight">{featuredCourse.title}</h2>
-                  <p className="text-indigo-100 mb-5 leading-relaxed line-clamp-2">{featuredCourse.shortDescription}</p>
-                  <div className="flex flex-wrap gap-4 text-sm text-indigo-200 mb-6">
-                    <span className="flex items-center gap-1.5"><BookOpen className="w-4 h-4" /> {featuredCourse.modules.length} modules</span>
-                    <span className="flex items-center gap-1.5"><Clock className="w-4 h-4" /> {featuredCourse.duration}</span>
-                    <span className="flex items-center gap-1.5"><Users className="w-4 h-4" /> {featuredCourse.enrolledCount}+ enrolled</span>
-                  </div>
-                  <span className="inline-flex items-center gap-2 text-sm font-bold text-white group-hover:gap-3 transition-all">
-                    Start free module <ArrowRight className="w-4 h-4" />
-                  </span>
-                </div>
-                {/* Right visual */}
-                <div className="hidden md:flex items-center justify-center w-72 bg-white/10">
-                  <BookOpen className="w-16 h-16 text-white/30" />
-                </div>
+      {loading ? (
+        <div className="flex items-center justify-center py-24">
+          <Loader2 className="w-6 h-6 text-ink-400 animate-spin" />
+        </div>
+      ) : (
+        <>
+          {/* Featured course */}
+          {featuredCourse && (
+            <section className="bg-white py-8 sm:py-10">
+              <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                <motion.div
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                >
+                  <Link
+                    href={`/courses/${featuredCourse.id}`}
+                    className="block rounded-3xl overflow-hidden bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-700 hover:to-indigo-600 transition-all group"
+                  >
+                    <div className="flex flex-col md:flex-row">
+                      {/* Left content */}
+                      <div className="flex-1 p-7 sm:p-10 text-white">
+                        <span className="inline-block text-[11px] font-bold uppercase tracking-wide bg-white/20 px-3 py-1 rounded-full mb-4">
+                          Featured
+                        </span>
+                        <h2 className="text-2xl sm:text-3xl font-extrabold mb-3 leading-tight">{featuredCourse.title}</h2>
+                        {featuredCourse.description && (
+                          <p className="text-indigo-100 mb-5 leading-relaxed line-clamp-2">{featuredCourse.description}</p>
+                        )}
+                        <div className="flex flex-wrap items-center gap-4 text-sm text-indigo-200 mb-6">
+                          {instructorDisplayName(featuredCourse) && (
+                            <span className="flex items-center gap-1.5"><User className="w-4 h-4" /> {instructorDisplayName(featuredCourse)}</span>
+                          )}
+                          <span className="font-bold text-white">TZS {featuredCourse.priceTzs.toLocaleString()}</span>
+                        </div>
+                        <span className="inline-flex items-center gap-2 text-sm font-bold text-white group-hover:gap-3 transition-all">
+                          View course <ArrowRight className="w-4 h-4" />
+                        </span>
+                      </div>
+                      {/* Right visual */}
+                      <div className="hidden md:flex items-center justify-center w-72 bg-white/10">
+                        <BookOpen className="w-16 h-16 text-white/30" />
+                      </div>
+                    </div>
+                  </Link>
+                </motion.div>
               </div>
-            </Link>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* All courses grid */}
-      <section className="bg-ink-50 py-10 sm:py-14">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-xl font-extrabold text-ink-900 mb-6">All courses</h2>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {filteredCourses.map((course, i) => (
-              <motion.div
-                key={course.id}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 + i * 0.05 }}
-              >
-                <CourseCard course={course} />
-              </motion.div>
-            ))}
-          </div>
-
-          {filteredCourses.length === 0 && (
-            <p className="text-center text-ink-400 py-16">No courses match your search.</p>
+            </section>
           )}
-        </div>
-      </section>
+
+          {/* All courses grid */}
+          <section className="bg-ink-50 py-10 sm:py-14">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+              <h2 className="text-xl font-extrabold text-ink-900 mb-6">All courses</h2>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                {filteredCourses.map((course, i) => (
+                  <motion.div
+                    key={course.id}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 + i * 0.05 }}
+                  >
+                    <PublicCourseCard course={course} />
+                  </motion.div>
+                ))}
+              </div>
+
+              {filteredCourses.length === 0 && (
+                <p className="text-center text-ink-400 py-16">
+                  {courses.length === 0 ? 'No courses published yet.' : 'No courses match your search.'}
+                </p>
+              )}
+            </div>
+          </section>
+        </>
+      )}
 
       {/* Bottom CTA */}
       <section className="bg-white border-t border-ink-100 py-12 sm:py-14">
