@@ -2,12 +2,7 @@
 
 import { useRef, useState } from 'react';
 import { Loader2, Upload, X, XCircle } from 'lucide-react';
-import { GraphQLClient } from '@/lib/graphql-client';
-import { getCourseMediaUploadUrl } from '@/graphql/mutations';
-import type {
-  GetCourseMediaUploadUrlMutation,
-  GetCourseMediaUploadUrlMutationVariables,
-} from '@/API';
+import { uploadMedia } from '@/lib/upload-media';
 
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
@@ -37,17 +32,8 @@ export function ThumbnailUploader({ value, onUploaded, label = 'Thumbnail' }: Th
     setError('');
     setUploading(true);
     try {
-      const { getCourseMediaUploadUrl: media } = await GraphQLClient.execute<GetCourseMediaUploadUrlMutation>(
-        getCourseMediaUploadUrl,
-        { fileName: file.name, contentType: file.type } satisfies GetCourseMediaUploadUrlMutationVariables
-      );
-      const putResponse = await fetch(media.uploadUrl, {
-        method: 'PUT',
-        headers: { 'Content-Type': file.type },
-        body: file,
-      });
-      if (!putResponse.ok) throw new Error('Upload to storage failed. Please try again.');
-      onUploaded(media.fileUrl);
+      const fileUrl = await uploadMedia(file);
+      onUploaded(fileUrl);
     } catch (err) {
       console.error('[ThumbnailUploader] upload failed ->', err);
       setError(err instanceof Error ? err.message : 'Upload failed. Please try again.');

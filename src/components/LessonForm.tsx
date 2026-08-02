@@ -6,6 +6,8 @@ import { GraphQLClient } from '@/lib/graphql-client';
 import { createLessonForModule } from '@/graphql/mutations';
 import { LessonType } from '@/API';
 import type { CreateLessonForModuleMutation, CreateLessonForModuleMutationVariables, CreateLessonInput } from '@/API';
+import type { MediaValue } from './MediaField';
+import FlashcardEditor, { type CardDraft } from './FlashcardEditor';
 
 export const LESSON_TYPE_ICONS: Record<LessonType, typeof Video> = {
   [LessonType.VIDEO]: Video,
@@ -36,12 +38,6 @@ interface QuestionDraft {
   correctIndex: number;
 }
 
-interface CardDraft {
-  id: string;
-  front: string;
-  back: string;
-}
-
 interface LessonFormProps {
   moduleId: string;
   onCreated: () => void;
@@ -69,7 +65,7 @@ export default function LessonForm({ moduleId, onCreated, onCancel }: LessonForm
       setQuestions([{ id: crypto.randomUUID(), question: '', options: ['', ''], correctIndex: 0 }]);
     }
     if (next === LessonType.FLASHCARDS && cards.length === 0) {
-      setCards([{ id: crypto.randomUUID(), front: '', back: '' }]);
+      setCards([{ id: crypto.randomUUID(), front: '', back: '', frontMedia: null, backMedia: null }]);
     }
   }
 
@@ -96,18 +92,6 @@ export default function LessonForm({ moduleId, onCreated, onCancel }: LessonForm
       options[index] = value;
       return { ...q, options };
     }));
-  }
-
-  function addCard() {
-    setCards((prev) => [...prev, { id: crypto.randomUUID(), front: '', back: '' }]);
-  }
-
-  function removeCard(id: string) {
-    setCards((prev) => prev.filter((c) => c.id !== id));
-  }
-
-  function updateCard(id: string, patch: Partial<CardDraft>) {
-    setCards((prev) => prev.map((c) => (c.id === id ? { ...c, ...patch } : c)));
   }
 
   function validate(): string {
@@ -157,7 +141,11 @@ export default function LessonForm({ moduleId, onCreated, onCancel }: LessonForm
     setError('');
     setSubmitting(true);
     try {
-      const input: CreateLessonInput = { title: title.trim(), type };
+      // `cards[].frontMedia`/`backMedia` aren't in the generated `CreateLessonInput`
+      // yet (schema shipped, awaiting a deploy + codegen refresh) — widen just the
+      // `cards` field locally rather than editing the generated type.
+      type CardInputDraft = { id: string; front: string; back: string; frontMedia?: MediaValue; backMedia?: MediaValue };
+      const input: Omit<CreateLessonInput, 'cards'> & { cards?: CardInputDraft[] } = { title: title.trim(), type };
       if (type === LessonType.VIDEO) {
         input.videoUrl = videoUrl.trim();
         input.durationSeconds = durationMinutes * 60;
@@ -178,7 +166,13 @@ export default function LessonForm({ moduleId, onCreated, onCancel }: LessonForm
           correctIndex: q.correctIndex,
         }));
       } else if (type === LessonType.FLASHCARDS) {
-        input.cards = cards.map((c) => ({ id: c.id, front: c.front.trim(), back: c.back.trim() }));
+        input.cards = cards.map((c) => ({
+          id: c.id,
+          front: c.front.trim(),
+          back: c.back.trim(),
+          ...(c.frontMedia ? { frontMedia: c.frontMedia } : {}),
+          ...(c.backMedia ? { backMedia: c.backMedia } : {}),
+        }));
       }
 
       await GraphQLClient.execute<CreateLessonForModuleMutation>(createLessonForModule, {
@@ -318,22 +312,7 @@ export default function LessonForm({ moduleId, onCreated, onCancel }: LessonForm
       )}
 
       {type === LessonType.FLASHCARDS && (
-        <div className="space-y-2">
-          {cards.map((c, ci) => (
-            <div key={c.id} className="flex items-center gap-2">
-              <input type="text" placeholder={`Card ${ci + 1} front`} value={c.front} onChange={(e) => updateCard(c.id, { front: e.target.value })} disabled={submitting} className={`${inputClass} flex-1`} />
-              <input type="text" placeholder={`Card ${ci + 1} back`} value={c.back} onChange={(e) => updateCard(c.id, { back: e.target.value })} disabled={submitting} className={`${inputClass} flex-1`} />
-              {cards.length > 1 && (
-                <button type="button" onClick={() => removeCard(c.id)} className="text-ink-300 hover:text-red-500 transition-colors flex-shrink-0" aria-label="Remove card">
-                  <X className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-          ))}
-          <button type="button" onClick={addCard} className="text-xs font-bold text-coral-600 hover:text-coral-700 transition-colors">
-            + Add card
-          </button>
-        </div>
+        <FlashcardEditor cards={cards} onChange={setCards} disabled={submitting} />
       )}
 
       {error && (
