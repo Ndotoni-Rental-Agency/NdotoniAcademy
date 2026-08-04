@@ -1399,6 +1399,37 @@ export type TranscribeDocumentMutation = {
   transcribeDocument: string,
 };
 
+export type GenerateFlashcardsFromTextMutationVariables = {
+  text: string,
+  count?: number | null,
+};
+
+export type GenerateFlashcardsFromTextMutation = {
+  generateFlashcardsFromText:  Array< {
+    __typename: "Flashcard",
+    id: string,
+    front: string,
+    back: string,
+    frontMedia?: Media | null,
+    backMedia?: Media | null,
+  } >,
+};
+
+export type GenerateQuizFromTextMutationVariables = {
+  text: string,
+  count?: number | null,
+};
+
+export type GenerateQuizFromTextMutation = {
+  generateQuizFromText:  Array< {
+    __typename: "QuizQuestion",
+    id: string,
+    question: string,
+    options: Array< string >,
+    correctIndex: number,
+  } >,
+};
+
 export type UpdateCourseMutationVariables = {
   id: string,
   input: UpdateCourseInput,

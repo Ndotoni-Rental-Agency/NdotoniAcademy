@@ -4,23 +4,20 @@ import { useState } from 'react';
 import { Check, Loader2, Plus, XCircle, Video, Music, Link2, Sparkles, FileText, Layers, HelpCircle, Paperclip, Upload } from 'lucide-react';
 import { GraphQLClient } from '@/lib/graphql-client';
 import { useToast } from '@/lib/toast-context';
-import { uploadMedia } from '@/lib/upload-media';
-import { splitPdfIntoChunks } from '@/lib/split-pdf';
-import { createLessonForModule, updateLesson, transcribeDocument } from '@/graphql/mutations';
+import { transcribeUploadedFile, TRANSCRIBABLE_TYPES } from '@/lib/transcribe-file';
+import { createLessonForModule, updateLesson } from '@/graphql/mutations';
 import { LessonType, MediaType } from '@/API';
 import type {
   CreateLessonForModuleMutation, CreateLessonForModuleMutationVariables, CreateLessonInput,
   UpdateLessonMutation, UpdateLessonMutationVariables, UpdateLessonInput, LessonQuery,
-  TranscribeDocumentMutation, TranscribeDocumentMutationVariables,
 } from '@/API';
 import FlashcardEditor, { type CardDraft } from './FlashcardEditor';
 import QuizEditor, { type QuestionDraft } from './QuizEditor';
+import GenerateFromDocumentButton from './GenerateFromDocumentButton';
 import DocumentUploader from './DocumentUploader';
 import LessonMarkdown from './LessonMarkdown';
 import MediaUrlField from './MediaUrlField';
 import type { MediaValue } from './MediaField';
-
-const TRANSCRIBABLE_TYPES = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
 
 export type EditableLesson = NonNullable<LessonQuery['lesson']>;
 
@@ -123,31 +120,12 @@ export default function LessonForm({ moduleId, courseId, editLesson, onSaved, on
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
-    if (!TRANSCRIBABLE_TYPES.includes(file.type)) {
-      setTranscribeError('Only PDF or Word (.docx) documents can be transcribed.');
-      return;
-    }
     setTranscribeError('');
     setTranscribing(true);
     try {
-      // A long PDF would blow past AppSync's fixed 30s resolver timeout as
-      // one Textract job — split into page-range chunks first so each is
-      // its own small job, transcribed one at a time and stitched back
-      // together. No-op (returns the file unchanged) for anything already
-      // within the limit, and for .docx (mammoth doesn't have this
-      // problem — no OCR job, no per-call time ceiling to work around).
-      const chunks = file.type === 'application/pdf' ? await splitPdfIntoChunks(file) : [file];
-      const texts: string[] = [];
-      for (let i = 0; i < chunks.length; i++) {
-        if (chunks.length > 1) setTranscribeProgress({ current: i + 1, total: chunks.length });
-        const fileUrl = await uploadMedia(chunks[i]);
-        const { transcribeDocument: text } = await GraphQLClient.execute<TranscribeDocumentMutation>(
-          transcribeDocument,
-          { fileUrl } satisfies TranscribeDocumentMutationVariables
-        );
-        texts.push(text);
-      }
-      const combined = texts.join('\n\n');
+      const combined = await transcribeUploadedFile(file, (current, total) => {
+        if (total > 1) setTranscribeProgress({ current, total });
+      });
       setBody((prev) => (prev.trim() ? `${prev.trim()}\n\n${combined}` : combined));
       setBodyPreview(true);
       toast.success('Document transcribed.');
@@ -421,11 +399,25 @@ export default function LessonForm({ moduleId, courseId, editLesson, onSaved, on
       )}
 
       {type === LessonType.QUIZ && (
-        <QuizEditor questions={questions} onChange={setQuestions} disabled={submitting} />
+        <div>
+          <GenerateFromDocumentButton
+            kind="quiz"
+            disabled={submitting}
+            onGenerated={(items) => setQuestions((prev) => [...prev, ...items])}
+          />
+          <QuizEditor questions={questions} onChange={setQuestions} disabled={submitting} />
+        </div>
       )}
 
       {type === LessonType.FLASHCARDS && (
-        <FlashcardEditor cards={cards} onChange={setCards} disabled={submitting} />
+        <div>
+          <GenerateFromDocumentButton
+            kind="flashcards"
+            disabled={submitting}
+            onGenerated={(items) => setCards((prev) => [...prev, ...items])}
+          />
+          <FlashcardEditor cards={cards} onChange={setCards} disabled={submitting} />
+        </div>
       )}
 
       {type === LessonType.DOCUMENT && (

@@ -132,6 +132,8 @@ type Mutation {
   deleteCourse(id: ID!): Boolean @aws_cognito_user_pools
   deleteLesson(id: ID!): Boolean @aws_cognito_user_pools
   deleteModule(id: ID!): Boolean @aws_cognito_user_pools
+  generateFlashcardsFromText(count: Int, text: String!): [Flashcard!]! @aws_cognito_user_pools
+  generateQuizFromText(count: Int, text: String!): [QuizQuestion!]! @aws_cognito_user_pools
   getCourseMediaUploadUrl(contentType: String!, fileName: String!): MediaUploadResponse! @aws_cognito_user_pools
   inviteMember(email: AWSEmail!, organizationId: ID!, role: MembershipRole!): OrganizationInvitation @aws_cognito_user_pools
   removeLessonFromModule(lessonId: ID!, moduleId: ID!): Boolean @aws_cognito_user_pools

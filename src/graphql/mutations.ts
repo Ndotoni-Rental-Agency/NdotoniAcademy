@@ -1051,6 +1051,37 @@ export const transcribeDocument = /* GraphQL */ `mutation TranscribeDocument($fi
   APITypes.TranscribeDocumentMutationVariables,
   APITypes.TranscribeDocumentMutation
 >;
+export const generateFlashcardsFromText = /* GraphQL */ `mutation GenerateFlashcardsFromText($text: String!, $count: Int) {
+  generateFlashcardsFromText(text: $text, count: $count) {
+    id
+    front
+    back
+    frontMedia {
+      type
+      url
+    }
+    backMedia {
+      type
+      url
+    }
+  }
+}
+` as GeneratedMutation<
+  APITypes.GenerateFlashcardsFromTextMutationVariables,
+  APITypes.GenerateFlashcardsFromTextMutation
+>;
+export const generateQuizFromText = /* GraphQL */ `mutation GenerateQuizFromText($text: String!, $count: Int) {
+  generateQuizFromText(text: $text, count: $count) {
+    id
+    question
+    options
+    correctIndex
+  }
+}
+` as GeneratedMutation<
+  APITypes.GenerateQuizFromTextMutationVariables,
+  APITypes.GenerateQuizFromTextMutation
+>;
 export const updateCourse = /* GraphQL */ `mutation UpdateCourse($id: ID!, $input: UpdateCourseInput!) {
   updateCourse(id: $id, input: $input) {
     category
