@@ -19,6 +19,15 @@ import { DocumentIcon, extensionFromUrl, filenameFromUrl } from '@/lib/document-
 
 type Lesson = NonNullable<LessonQuery['lesson']>;
 
+/** Shared fallback for a lesson type whose content field is missing — same dashed-border language already used for the locked-lesson and "end of course" states, so a blank/incomplete lesson reads as a deliberate empty state, not a broken page. */
+function EmptyLessonContent({ message }: { message: string }) {
+  return (
+    <div className="rounded-2xl border-2 border-dashed border-ink-200 py-16 px-6 text-center">
+      <p className="text-sm text-ink-400">{message}</p>
+    </div>
+  );
+}
+
 export default function LessonViewerPage() {
   const params = useParams();
   const courseId = params.id as string;
@@ -143,32 +152,39 @@ export default function LessonViewerPage() {
               </div>
             ) : (
               <>
-                {lesson.type === LessonType.VIDEO && lesson.videoUrl && (
-                  <VideoPlayer videoUrl={lesson.videoUrl} title={lesson.title} />
+                {lesson.type === LessonType.VIDEO && (
+                  lesson.videoUrl
+                    ? <VideoPlayer videoUrl={lesson.videoUrl} title={lesson.title} />
+                    : <EmptyLessonContent message="This video hasn't been added yet." />
                 )}
 
-                {lesson.type === LessonType.AUDIO && lesson.audioUrl && (
-                  // eslint-disable-next-line jsx-a11y/media-has-caption -- instructor-supplied audio has no caption track to attach
-                  <audio controls src={lesson.audioUrl} className="w-full" />
+                {lesson.type === LessonType.AUDIO && (
+                  lesson.audioUrl
+                    ? <audio controls src={lesson.audioUrl} className="w-full" />
+                    : <EmptyLessonContent message="This audio hasn't been added yet." />
                 )}
 
-                {lesson.type === LessonType.EMBED && lesson.embedUrl && (
-                  <iframe
-                    src={toEmbeddableUrl(lesson.embedUrl)}
-                    className="w-full aspect-video rounded-2xl border border-ink-200"
-                    sandbox="allow-scripts allow-same-origin allow-popups"
-                    title={lesson.title}
-                  />
+                {lesson.type === LessonType.EMBED && (
+                  lesson.embedUrl
+                    ? (
+                      <iframe
+                        src={toEmbeddableUrl(lesson.embedUrl)}
+                        className="w-full aspect-video rounded-2xl border border-ink-200"
+                        sandbox="allow-scripts allow-same-origin allow-popups"
+                        title={lesson.title}
+                      />
+                    )
+                    : <EmptyLessonContent message="This embed hasn't been added yet." />
                 )}
 
                 {lesson.type === LessonType.ANIMATION && (
-                  <div className="rounded-2xl border-2 border-dashed border-ink-200 py-16 px-6 text-center">
-                    <p className="text-sm text-ink-400">Animation lessons aren&apos;t rendered yet.</p>
-                  </div>
+                  <EmptyLessonContent message="Animation playback isn't available in the viewer yet — check back soon." />
                 )}
 
-                {lesson.type === LessonType.TEXT && lesson.body && (
-                  <LessonMarkdown content={lesson.body} />
+                {lesson.type === LessonType.TEXT && (
+                  lesson.body
+                    ? <LessonMarkdown content={lesson.body} />
+                    : <EmptyLessonContent message="This lesson doesn't have any text yet." />
                 )}
 
                 {lesson.type === LessonType.FLASHCARDS && (

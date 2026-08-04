@@ -62,7 +62,12 @@ export default function CourseOutline({ courseId, outline, currentModuleId, curr
                 onClick={() => toggle(mod.moduleId)}
                 className="w-full flex items-center justify-between gap-2 px-4 py-3 text-left hover:bg-ink-50 transition-colors"
               >
-                <span className="text-sm font-bold text-ink-900 truncate">{mod.title}</span>
+                <span className="min-w-0">
+                  <span className="block text-sm font-bold text-ink-900 truncate">{mod.title}</span>
+                  <span className="block text-[11px] text-ink-400 mt-0.5">
+                    {mod.lessons.length} lesson{mod.lessons.length === 1 ? '' : 's'}
+                  </span>
+                </span>
                 <ChevronRight className={`w-4 h-4 text-ink-400 flex-shrink-0 transition-transform ${isOpen ? 'rotate-90' : ''}`} />
               </button>
               {isOpen && (
@@ -83,7 +88,9 @@ export default function CourseOutline({ courseId, outline, currentModuleId, curr
                         )}
                       </>
                     );
-                    const rowClass = `flex items-center gap-2 pl-8 pr-4 py-2 text-xs ${isCurrent ? 'bg-indigo-50' : ''}`;
+                    const rowClass = `flex items-center gap-2 pl-8 pr-4 py-2 text-xs border-l-2 ${
+                      isCurrent ? 'bg-indigo-50 border-indigo-500' : 'border-transparent'
+                    }`;
                     return lesson.isFree ? (
                       <Link
                         key={lesson.lessonId}
