@@ -655,6 +655,41 @@ export const deleteModule = /* GraphQL */ `mutation DeleteModule($id: ID!) {
   APITypes.DeleteModuleMutationVariables,
   APITypes.DeleteModuleMutation
 >;
+export const generateFlashcardsFromText = /* GraphQL */ `mutation GenerateFlashcardsFromText($count: Int, $text: String!) {
+  generateFlashcardsFromText(count: $count, text: $text) {
+    back
+    backMedia {
+      type
+      url
+      __typename
+    }
+    front
+    frontMedia {
+      type
+      url
+      __typename
+    }
+    id
+    __typename
+  }
+}
+` as GeneratedMutation<
+  APITypes.GenerateFlashcardsFromTextMutationVariables,
+  APITypes.GenerateFlashcardsFromTextMutation
+>;
+export const generateQuizFromText = /* GraphQL */ `mutation GenerateQuizFromText($count: Int, $text: String!) {
+  generateQuizFromText(count: $count, text: $text) {
+    correctIndex
+    id
+    options
+    question
+    __typename
+  }
+}
+` as GeneratedMutation<
+  APITypes.GenerateQuizFromTextMutationVariables,
+  APITypes.GenerateQuizFromTextMutation
+>;
 export const getCourseMediaUploadUrl = /* GraphQL */ `mutation GetCourseMediaUploadUrl($contentType: String!, $fileName: String!) {
   getCourseMediaUploadUrl(contentType: $contentType, fileName: $fileName) {
     fileUrl
@@ -727,6 +762,18 @@ export const inviteMember = /* GraphQL */ `mutation InviteMember(
 ` as GeneratedMutation<
   APITypes.InviteMemberMutationVariables,
   APITypes.InviteMemberMutation
+>;
+export const markLessonComplete = /* GraphQL */ `mutation MarkLessonComplete($courseId: ID!, $lessonId: ID!) {
+  markLessonComplete(courseId: $courseId, lessonId: $lessonId) {
+    completedLessonIds
+    courseId
+    totalLessons
+    __typename
+  }
+}
+` as GeneratedMutation<
+  APITypes.MarkLessonCompleteMutationVariables,
+  APITypes.MarkLessonCompleteMutation
 >;
 export const removeLessonFromModule = /* GraphQL */ `mutation RemoveLessonFromModule($lessonId: ID!, $moduleId: ID!) {
   removeLessonFromModule(lessonId: $lessonId, moduleId: $moduleId)
@@ -1050,37 +1097,6 @@ export const transcribeDocument = /* GraphQL */ `mutation TranscribeDocument($fi
 ` as GeneratedMutation<
   APITypes.TranscribeDocumentMutationVariables,
   APITypes.TranscribeDocumentMutation
->;
-export const generateFlashcardsFromText = /* GraphQL */ `mutation GenerateFlashcardsFromText($text: String!, $count: Int) {
-  generateFlashcardsFromText(text: $text, count: $count) {
-    id
-    front
-    back
-    frontMedia {
-      type
-      url
-    }
-    backMedia {
-      type
-      url
-    }
-  }
-}
-` as GeneratedMutation<
-  APITypes.GenerateFlashcardsFromTextMutationVariables,
-  APITypes.GenerateFlashcardsFromTextMutation
->;
-export const generateQuizFromText = /* GraphQL */ `mutation GenerateQuizFromText($text: String!, $count: Int) {
-  generateQuizFromText(text: $text, count: $count) {
-    id
-    question
-    options
-    correctIndex
-  }
-}
-` as GeneratedMutation<
-  APITypes.GenerateQuizFromTextMutationVariables,
-  APITypes.GenerateQuizFromTextMutation
 >;
 export const updateCourse = /* GraphQL */ `mutation UpdateCourse($id: ID!, $input: UpdateCourseInput!) {
   updateCourse(id: $id, input: $input) {

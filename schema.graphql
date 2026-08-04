@@ -33,6 +33,12 @@ type CourseModule {
   totalDurationSeconds: Int!
 }
 
+type CourseProgress {
+  completedLessonIds: [ID!]!
+  courseId: ID!
+  totalLessons: Int!
+}
+
 type Flashcard {
   back: String!
   backMedia: Media
@@ -136,6 +142,7 @@ type Mutation {
   generateQuizFromText(count: Int, text: String!): [QuizQuestion!]! @aws_cognito_user_pools
   getCourseMediaUploadUrl(contentType: String!, fileName: String!): MediaUploadResponse! @aws_cognito_user_pools
   inviteMember(email: AWSEmail!, organizationId: ID!, role: MembershipRole!): OrganizationInvitation @aws_cognito_user_pools
+  markLessonComplete(courseId: ID!, lessonId: ID!): CourseProgress! @aws_cognito_user_pools
   removeLessonFromModule(lessonId: ID!, moduleId: ID!): Boolean @aws_cognito_user_pools
   removeMember(organizationId: ID!, userId: ID!): Boolean @aws_cognito_user_pools
   removeModuleFromCourse(courseId: ID!, moduleId: ID!): Boolean @aws_cognito_user_pools
@@ -195,6 +202,7 @@ type Query {
   me: User @aws_cognito_user_pools
   module(id: ID!): Module @aws_cognito_user_pools
   modulesForCourse(courseId: ID!): [CourseModule!]! @aws_cognito_user_pools
+  myCourseProgress(courseId: ID!): CourseProgress! @aws_cognito_user_pools
   myCourses: [Course!]! @aws_cognito_user_pools
   myLessons: [Lesson!]! @aws_cognito_user_pools
   myModules: [Module!]! @aws_cognito_user_pools

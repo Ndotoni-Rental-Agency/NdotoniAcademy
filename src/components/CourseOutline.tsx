@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ChevronRight, Lock, Play } from 'lucide-react';
+import { CheckCircle2, ChevronRight, Lock, Play } from 'lucide-react';
 import { LESSON_TYPE_ICONS } from './LessonForm';
 import type { LessonType } from '@/API';
 
@@ -25,17 +25,17 @@ interface CourseOutlineProps {
   outline: OutlineModule[];
   currentModuleId: string;
   currentLessonId: string;
+  /** Omit while progress hasn't loaded yet — the "X of Y completed" summary and per-lesson checkmarks just don't render until then. */
+  completedLessonIds?: Set<string>;
 }
 
 /**
  * Always-visible course map alongside the lesson being viewed — the same
  * idea as Khan Academy/Quizlet's unit sidebar: see the whole course, jump to
- * any free lesson directly, not just the one right after this one. No
- * "completed" checkmarks — there's no lesson-progress tracking in this app
- * yet (see the lesson viewer's own note on that), so this only ever
- * highlights *current*, not *done*.
+ * any free lesson directly, not just the one right after this one, and see
+ * which ones are already done.
  */
-export default function CourseOutline({ courseId, outline, currentModuleId, currentLessonId }: CourseOutlineProps) {
+export default function CourseOutline({ courseId, outline, currentModuleId, currentLessonId, completedLessonIds }: CourseOutlineProps) {
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set([currentModuleId]));
 
   function toggle(moduleId: string) {
@@ -47,11 +47,19 @@ export default function CourseOutline({ courseId, outline, currentModuleId, curr
     });
   }
 
+  const totalLessons = outline.reduce((sum, m) => sum + m.lessons.length, 0);
+  const completedCount = completedLessonIds
+    ? outline.reduce((sum, m) => sum + m.lessons.filter((l) => completedLessonIds.has(l.lessonId)).length, 0)
+    : null;
+
   return (
     <div className="rounded-2xl border border-ink-200 overflow-hidden">
-      <p className="px-4 py-3 text-xs font-bold text-ink-400 uppercase tracking-wide border-b border-ink-100 bg-ink-50">
-        Course content
-      </p>
+      <div className="px-4 py-3 border-b border-ink-100 bg-ink-50">
+        <p className="text-xs font-bold text-ink-400 uppercase tracking-wide">Course content</p>
+        {completedCount !== null && (
+          <p className="text-[11px] text-ink-500 mt-0.5">{completedCount} of {totalLessons} completed</p>
+        )}
+      </div>
       <div className="divide-y divide-ink-100">
         {outline.map((mod) => {
           const isOpen = expanded.has(mod.moduleId);
@@ -74,10 +82,15 @@ export default function CourseOutline({ courseId, outline, currentModuleId, curr
                 <div className="pb-2">
                   {mod.lessons.map((lesson) => {
                     const isCurrent = lesson.lessonId === currentLessonId && mod.moduleId === currentModuleId;
+                    const isDone = completedLessonIds?.has(lesson.lessonId) ?? false;
                     const Icon = LESSON_TYPE_ICONS[lesson.type];
                     const content = (
                       <>
-                        <Icon className={`w-3.5 h-3.5 flex-shrink-0 ${isCurrent ? 'text-indigo-600' : 'text-ink-400'}`} />
+                        {isDone ? (
+                          <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0 text-brand-600" />
+                        ) : (
+                          <Icon className={`w-3.5 h-3.5 flex-shrink-0 ${isCurrent ? 'text-indigo-600' : 'text-ink-400'}`} />
+                        )}
                         <span className={`flex-1 min-w-0 truncate ${isCurrent ? 'font-bold text-indigo-700' : 'text-ink-600'}`}>
                           {lesson.title}
                         </span>

@@ -7,17 +7,49 @@ import { ArrowLeft, ArrowRight, Lock, Loader2, CheckCircle2, PartyPopper, XCircl
 import LessonMarkdown from '@/components/LessonMarkdown';
 import CourseOutline, { type OutlineModule, type OutlineLesson } from '@/components/CourseOutline';
 import { GraphQLClient } from '@/lib/graphql-client';
-import { lesson as lessonQuery, modulesForCourse as modulesForCourseQuery, lessonsForModule as lessonsForModuleQuery } from '@/graphql/queries';
+import { useToast } from '@/lib/toast-context';
+import {
+  lesson as lessonQuery, modulesForCourse as modulesForCourseQuery,
+  lessonsForModule as lessonsForModuleQuery, myCourseProgress as myCourseProgressQuery,
+} from '@/graphql/queries';
+import { markLessonComplete } from '@/graphql/mutations';
 import { LessonType } from '@/API';
-import type { LessonQuery, ModulesForCourseQuery, LessonsForModuleQuery } from '@/API';
+import type {
+  LessonQuery, ModulesForCourseQuery, LessonsForModuleQuery, CourseProgress,
+  MyCourseProgressQuery, MyCourseProgressQueryVariables, MarkLessonCompleteMutation, MarkLessonCompleteMutationVariables,
+} from '@/API';
 import { LESSON_TYPE_ICONS, LESSON_TYPE_LABELS } from '@/components/LessonForm';
 import VideoPlayer from '@/components/VideoPlayer';
 import Quiz from '@/components/Quiz';
 import FlashcardViewer from '@/components/FlashcardViewer';
+import MarkCompleteButton from '@/components/MarkCompleteButton';
 import { toEmbeddableUrl } from '@/lib/embed-url';
 import { DocumentIcon, extensionFromUrl, filenameFromUrl } from '@/lib/document-file';
 
 type Lesson = NonNullable<LessonQuery['lesson']>;
+
+// Floor/ceiling for MarkCompleteButton's dwell delay — long enough that
+// clicking every lesson in a course back to back isn't instant, short
+// enough that a genuinely quick lesson doesn't feel punitive.
+const MIN_DWELL_MS = 10_000;
+const MAX_DWELL_MS = 60_000;
+
+/**
+ * How long MarkCompleteButton stays disabled, scaled to the content: a
+ * video/audio's own stored duration, roughly 1s per 20 words for text, a
+ * flat floor for everything else (document/embed/animation/flashcards) —
+ * there's no length signal for those short of heavier per-type tracking.
+ */
+function dwellMsFor(lesson: Lesson): number {
+  if ((lesson.type === LessonType.VIDEO || lesson.type === LessonType.AUDIO) && lesson.durationSeconds) {
+    return Math.min(Math.max(lesson.durationSeconds * 1000, MIN_DWELL_MS), MAX_DWELL_MS);
+  }
+  if (lesson.type === LessonType.TEXT && lesson.body) {
+    const words = lesson.body.trim().split(/\s+/).filter(Boolean).length;
+    return Math.min(Math.max((words / 20) * 1000, MIN_DWELL_MS), MAX_DWELL_MS);
+  }
+  return MIN_DWELL_MS;
+}
 
 /** Shared fallback for a lesson type whose content field is missing — same dashed-border language already used for the locked-lesson and "end of course" states, so a blank/incomplete lesson reads as a deliberate empty state, not a broken page. */
 function EmptyLessonContent({ message }: { message: string }) {
@@ -30,6 +62,7 @@ function EmptyLessonContent({ message }: { message: string }) {
 
 export default function LessonViewerPage() {
   const params = useParams();
+  const toast = useToast();
   const courseId = params.id as string;
   const moduleId = params.moduleId as string;
   const lessonId = params.lessonId as string;
@@ -38,10 +71,12 @@ export default function LessonViewerPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [quizResult, setQuizResult] = useState<{ score: number; total: number } | null>(null);
+  const [retakingQuiz, setRetakingQuiz] = useState(false);
   // Full course map — powers both the "Course content" sidebar and the "up
   // next" card, the same idea Khan Academy/Quizlet use: let learners see
   // (and jump to) what's ahead, not just link to the single next lesson.
   const [outline, setOutline] = useState<OutlineModule[] | null>(null);
+  const [progress, setProgress] = useState<CourseProgress | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -64,6 +99,14 @@ export default function LessonViewerPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  // The route component doesn't remount between two lessons of the same
+  // type (e.g. quiz -> quiz via "Up next") — reset per-lesson quiz UI state
+  // explicitly instead of leaking the previous lesson's result/retake state.
+  useEffect(() => {
+    setQuizResult(null);
+    setRetakingQuiz(false);
+  }, [lessonId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -96,10 +139,41 @@ export default function LessonViewerPage() {
     };
   }, [courseId]);
 
-  // No lesson-completion tracking exists in this app yet (see Quiz's own
-  // "This score isn't saved anywhere yet") — the next lesson is offered
-  // unconditionally at the bottom of every lesson, not gated behind marking
-  // this one "done".
+  const loadProgress = useCallback(async () => {
+    try {
+      const { myCourseProgress: fetched } = await GraphQLClient.execute<MyCourseProgressQuery>(
+        myCourseProgressQuery,
+        { courseId } satisfies MyCourseProgressQueryVariables
+      );
+      setProgress(fetched);
+    } catch (err) {
+      console.error('[LessonViewerPage] progress load failed ->', err);
+    }
+  }, [courseId]);
+
+  useEffect(() => {
+    void loadProgress();
+  }, [loadProgress]);
+
+  async function handleMarkComplete() {
+    try {
+      const { markLessonComplete: updated } = await GraphQLClient.execute<MarkLessonCompleteMutation>(
+        markLessonComplete,
+        { lessonId, courseId } satisfies MarkLessonCompleteMutationVariables
+      );
+      setProgress(updated);
+      toast.success('Lesson marked complete.');
+    } catch (err) {
+      console.error('[LessonViewerPage] markLessonComplete failed ->', err);
+      toast.error(err instanceof Error ? err.message : 'Could not mark this lesson complete.');
+    }
+  }
+
+  const isLessonComplete = progress?.completedLessonIds.includes(lessonId) ?? false;
+
+  // The next lesson is offered unconditionally at the bottom of every
+  // lesson, not gated behind marking this one complete — completion is
+  // tracked (see progress above) but never blocks navigation.
   const flatLessons = outline?.flatMap((m) => m.lessons) ?? null;
   const currentIndex = flatLessons?.findIndex((l) => l.lessonId === lessonId) ?? -1;
   const nextLesson: OutlineLesson | 'end' | null =
@@ -242,9 +316,19 @@ export default function LessonViewerPage() {
                           <XCircle className="w-10 h-10 text-ink-300 mx-auto mb-3" />
                         )}
                         <p className="text-lg font-bold text-ink-900">You scored {quizResult.score}/{quizResult.total}</p>
-                        <p className="text-xs text-ink-400 mt-1">This score isn&apos;t saved anywhere yet.</p>
                         <button
                           onClick={() => setQuizResult(null)}
+                          className="mt-4 text-sm font-bold text-indigo-600 hover:text-indigo-700 transition-colors"
+                        >
+                          Retake
+                        </button>
+                      </div>
+                    ) : isLessonComplete && !retakingQuiz ? (
+                      <div className="rounded-2xl border-2 border-ink-100 p-8 text-center">
+                        <CheckCircle2 className="w-10 h-10 text-brand-600 mx-auto mb-3" />
+                        <p className="text-sm font-bold text-ink-900">You&apos;ve already completed this quiz</p>
+                        <button
+                          onClick={() => setRetakingQuiz(true)}
                           className="mt-4 text-sm font-bold text-indigo-600 hover:text-indigo-700 transition-colors"
                         >
                           Retake
@@ -253,10 +337,22 @@ export default function LessonViewerPage() {
                     ) : (
                       <Quiz
                         questions={lesson.questions ?? []}
-                        onComplete={(score, total) => setQuizResult({ score, total })}
+                        onComplete={(score, total) => {
+                          setQuizResult({ score, total });
+                          void handleMarkComplete();
+                        }}
                       />
                     )}
                   </>
+                )}
+
+                {lesson.type !== LessonType.QUIZ && (
+                  <MarkCompleteButton
+                    key={lesson.lessonId}
+                    dwellMs={dwellMsFor(lesson)}
+                    completed={isLessonComplete}
+                    onComplete={handleMarkComplete}
+                  />
                 )}
               </>
             )}
@@ -306,7 +402,13 @@ export default function LessonViewerPage() {
 
           {outline && outline.length > 0 && (
             <aside className="mt-10 lg:mt-0 lg:sticky lg:top-8">
-              <CourseOutline courseId={courseId} outline={outline} currentModuleId={moduleId} currentLessonId={lessonId} />
+              <CourseOutline
+                courseId={courseId}
+                outline={outline}
+                currentModuleId={moduleId}
+                currentLessonId={lessonId}
+                completedLessonIds={progress ? new Set(progress.completedLessonIds) : undefined}
+              />
             </aside>
           )}
         </div>

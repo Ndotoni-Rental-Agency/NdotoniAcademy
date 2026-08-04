@@ -448,6 +448,18 @@ export const modulesForCourse = /* GraphQL */ `query ModulesForCourse($courseId:
   APITypes.ModulesForCourseQueryVariables,
   APITypes.ModulesForCourseQuery
 >;
+export const myCourseProgress = /* GraphQL */ `query MyCourseProgress($courseId: ID!) {
+  myCourseProgress(courseId: $courseId) {
+    completedLessonIds
+    courseId
+    totalLessons
+    __typename
+  }
+}
+` as GeneratedQuery<
+  APITypes.MyCourseProgressQueryVariables,
+  APITypes.MyCourseProgressQuery
+>;
 export const myCourses = /* GraphQL */ `query MyCourses {
   myCourses {
     category

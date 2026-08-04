@@ -280,6 +280,13 @@ export enum InvitationStatus {
 }
 
 
+export type CourseProgress = {
+  __typename: "CourseProgress",
+  completedLessonIds: Array< string >,
+  courseId: string,
+  totalLessons: number,
+};
+
 export type ModuleLessonSummary = {
   __typename: "ModuleLessonSummary",
   createdAt: string,
@@ -999,6 +1006,45 @@ export type DeleteModuleMutation = {
   deleteModule?: boolean | null,
 };
 
+export type GenerateFlashcardsFromTextMutationVariables = {
+  count?: number | null,
+  text: string,
+};
+
+export type GenerateFlashcardsFromTextMutation = {
+  generateFlashcardsFromText:  Array< {
+    __typename: "Flashcard",
+    back: string,
+    backMedia?:  {
+      __typename: "Media",
+      type: MediaType,
+      url: string,
+    } | null,
+    front: string,
+    frontMedia?:  {
+      __typename: "Media",
+      type: MediaType,
+      url: string,
+    } | null,
+    id: string,
+  } >,
+};
+
+export type GenerateQuizFromTextMutationVariables = {
+  count?: number | null,
+  text: string,
+};
+
+export type GenerateQuizFromTextMutation = {
+  generateQuizFromText:  Array< {
+    __typename: "QuizQuestion",
+    correctIndex: number,
+    id: string,
+    options: Array< string >,
+    question: string,
+  } >,
+};
+
 export type GetCourseMediaUploadUrlMutationVariables = {
   contentType: string,
   fileName: string,
@@ -1071,6 +1117,20 @@ export type InviteMemberMutation = {
     role: MembershipRole,
     status: InvitationStatus,
   } | null,
+};
+
+export type MarkLessonCompleteMutationVariables = {
+  courseId: string,
+  lessonId: string,
+};
+
+export type MarkLessonCompleteMutation = {
+  markLessonComplete:  {
+    __typename: "CourseProgress",
+    completedLessonIds: Array< string >,
+    courseId: string,
+    totalLessons: number,
+  },
 };
 
 export type RemoveLessonFromModuleMutationVariables = {
@@ -1397,37 +1457,6 @@ export type TranscribeDocumentMutationVariables = {
 
 export type TranscribeDocumentMutation = {
   transcribeDocument: string,
-};
-
-export type GenerateFlashcardsFromTextMutationVariables = {
-  text: string,
-  count?: number | null,
-};
-
-export type GenerateFlashcardsFromTextMutation = {
-  generateFlashcardsFromText:  Array< {
-    __typename: "Flashcard",
-    id: string,
-    front: string,
-    back: string,
-    frontMedia?: Media | null,
-    backMedia?: Media | null,
-  } >,
-};
-
-export type GenerateQuizFromTextMutationVariables = {
-  text: string,
-  count?: number | null,
-};
-
-export type GenerateQuizFromTextMutation = {
-  generateQuizFromText:  Array< {
-    __typename: "QuizQuestion",
-    id: string,
-    question: string,
-    options: Array< string >,
-    correctIndex: number,
-  } >,
 };
 
 export type UpdateCourseMutationVariables = {
@@ -2141,6 +2170,19 @@ export type ModulesForCourseQuery = {
     title: string,
     totalDurationSeconds: number,
   } >,
+};
+
+export type MyCourseProgressQueryVariables = {
+  courseId: string,
+};
+
+export type MyCourseProgressQuery = {
+  myCourseProgress:  {
+    __typename: "CourseProgress",
+    completedLessonIds: Array< string >,
+    courseId: string,
+    totalLessons: number,
+  },
 };
 
 export type MyCoursesQueryVariables = {

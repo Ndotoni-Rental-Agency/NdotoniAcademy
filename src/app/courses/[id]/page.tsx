@@ -10,8 +10,9 @@ import {
 import { getCategoryTheme } from '@/lib/category-theme';
 import { instructorDisplayName } from '@/lib/course-display';
 import { GraphQLClient } from '@/lib/graphql-client';
-import { course as courseQuery, modulesForCourse, lessonsForModule } from '@/graphql/queries';
-import type { CourseQuery, ModulesForCourseQuery, LessonsForModuleQuery } from '@/API';
+import { useAuth } from '@/lib/auth-context';
+import { course as courseQuery, modulesForCourse, lessonsForModule, myCourseProgress as myCourseProgressQuery } from '@/graphql/queries';
+import type { CourseQuery, ModulesForCourseQuery, LessonsForModuleQuery, CourseProgress, MyCourseProgressQuery, MyCourseProgressQueryVariables } from '@/API';
 import { LESSON_TYPE_ICONS } from '@/components/LessonForm';
 
 type PublicCourse = NonNullable<CourseQuery['course']>;
@@ -122,12 +123,14 @@ function ModuleRow({
 
 export default function CourseDetailPage() {
   const params = useParams();
+  const { user } = useAuth();
   const courseId = params.id as string;
 
   const [course, setCourse] = useState<PublicCourse | null>(null);
   const [modules, setModules] = useState<CourseModule[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [progress, setProgress] = useState<CourseProgress | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -154,6 +157,24 @@ export default function CourseDetailPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  // Best-effort, separate from the main load — an unauthenticated visitor
+  // (browsing is public, unlike this query) just never gets progress, no
+  // error shown for that expected case.
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      try {
+        const { myCourseProgress: fetched } = await GraphQLClient.execute<MyCourseProgressQuery>(
+          myCourseProgressQuery,
+          { courseId } satisfies MyCourseProgressQueryVariables
+        );
+        setProgress(fetched);
+      } catch (err) {
+        console.error('[CourseDetailPage] progress load failed ->', err);
+      }
+    })();
+  }, [user, courseId]);
 
   if (loading) {
     return (
@@ -245,6 +266,23 @@ export default function CourseDetailPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Only shown once the learner has actually started — a "0%"
+                  bar before anyone's begun would just be noise. */}
+              {progress && progress.completedLessonIds.length > 0 && (
+                <div className="mb-6">
+                  <div className="flex items-center justify-between text-xs font-bold text-ink-500 mb-1.5">
+                    <span>Your progress</span>
+                    <span>{progress.completedLessonIds.length}/{progress.totalLessons}</span>
+                  </div>
+                  <div className="h-2 rounded-full bg-ink-100 overflow-hidden">
+                    <div
+                      className={`h-full rounded-full ${theme.solidBg}`}
+                      style={{ width: `${Math.min(100, Math.round((progress.completedLessonIds.length / Math.max(progress.totalLessons, 1)) * 100))}%` }}
+                    />
+                  </div>
+                </div>
+              )}
 
               <a
                 href="#course-content"
