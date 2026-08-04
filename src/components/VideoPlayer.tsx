@@ -9,12 +9,19 @@ interface VideoPlayerProps {
   title?: string;
 }
 
+function needsIframe(videoUrl: string): boolean {
+  try {
+    const host = new URL(videoUrl).hostname.replace(/^www\./, '');
+    return host === 'youtube.com' || host === 'youtu.be' || host === 'vimeo.com';
+  } catch {
+    return false;
+  }
+}
+
 export default function VideoPlayer({ videoUrl, title }: VideoPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
 
-  const isYouTube = videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be');
-
-  if (isYouTube && isPlaying) {
+  if (isPlaying && needsIframe(videoUrl)) {
     return (
       <div className="relative w-full aspect-video rounded-2xl overflow-hidden bg-ink-900 border border-ink-200">
         <iframe
@@ -25,6 +32,20 @@ export default function VideoPlayer({ videoUrl, title }: VideoPlayerProps) {
           title={title || 'Video lesson'}
         />
       </div>
+    );
+  }
+
+  // A directly hosted file — our own upload, or any other direct link —
+  // gets a native player instead of an iframe.
+  if (isPlaying) {
+    return (
+      <video
+        src={videoUrl}
+        controls
+        autoPlay
+        aria-label={title || 'Video lesson'}
+        className="w-full aspect-video rounded-2xl overflow-hidden bg-ink-900 border border-ink-200"
+      />
     );
   }
 

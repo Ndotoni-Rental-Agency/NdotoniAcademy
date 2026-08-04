@@ -29,11 +29,13 @@ interface StudioModuleListProps {
 
 function SortableModuleRow({
   module: mod,
+  index,
   selected,
   onSelect,
   onEdit,
 }: {
   module: CourseModuleData;
+  index: number;
   selected: boolean;
   onSelect: () => void;
   onEdit: () => void;
@@ -46,24 +48,39 @@ function SortableModuleRow({
       ref={setNodeRef}
       style={style}
       onClick={onSelect}
-      className={`group flex items-center gap-2 rounded-xl px-2.5 py-2.5 cursor-pointer transition-colors ${
-        selected ? 'bg-coral-50 border-2 border-coral-200' : 'border-2 border-transparent hover:bg-ink-50'
+      className={`group flex items-center gap-2.5 rounded-xl px-2.5 py-2.5 cursor-pointer transition-all ${
+        selected ? 'bg-coral-50 border-2 border-coral-200 shadow-sm' : 'border-2 border-transparent hover:bg-ink-50'
       }`}
     >
       <button
         {...attributes}
         {...listeners}
         onClick={(e) => e.stopPropagation()}
+        title="Drag to reorder"
         className="text-ink-300 hover:text-ink-500 cursor-grab active:cursor-grabbing flex-shrink-0 touch-none"
         aria-label="Drag to reorder"
       >
         <GripVertical className="w-4 h-4" />
       </button>
+      <span
+        className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[10.5px] font-extrabold ${
+          selected ? 'bg-coral-600 text-white' : 'bg-ink-100 text-ink-500'
+        }`}
+      >
+        {index + 1}
+      </span>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold text-ink-900 truncate">{mod.title}</p>
-        <p className="text-[11px] text-ink-400">
-          {mod.lessonCount} lesson{mod.lessonCount === 1 ? '' : 's'} · {mod.isFree ? 'Free' : 'Paid'}
-        </p>
+        <div className="flex items-center gap-1.5 mt-0.5">
+          <span className="text-[11px] text-ink-400">
+            {mod.lessonCount} lesson{mod.lessonCount === 1 ? '' : 's'}
+          </span>
+          <span className={`text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full flex-shrink-0 ${
+            mod.isFree ? 'bg-brand-100 text-brand-700' : 'bg-ink-100 text-ink-500'
+          }`}>
+            {mod.isFree ? 'Free' : 'Paid'}
+          </span>
+        </div>
       </div>
       <button
         type="button"
@@ -105,6 +122,10 @@ export default function StudioModuleList({
         courseId,
         moduleIds: reordered.map((m) => m.moduleId),
       } satisfies ReorderCourseModulesMutationVariables);
+      // The backend computes isFree from position (course is free, or this
+      // is module #1) — reordering can change which module that is, so
+      // refetch rather than trust the locally-reordered isFree values.
+      onModuleSaved();
     } catch (err) {
       console.error('[StudioModuleList] reorder failed ->', err);
       setError('Could not save the new order.');
@@ -114,20 +135,34 @@ export default function StudioModuleList({
 
   return (
     <aside className="w-full lg:w-72 flex-shrink-0 border-b lg:border-b-0 lg:border-r border-ink-200 bg-white flex flex-col lg:h-full">
-      <div className="px-4 pt-4 pb-2">
+      <div className="px-4 pt-4 pb-2 flex items-baseline justify-between gap-2">
         <p className="text-xs font-bold text-ink-400 uppercase tracking-wide">Course structure</p>
+        {modules.length > 1 && (
+          <span className="flex items-center gap-1 text-[10px] text-ink-300 flex-shrink-0">
+            <GripVertical className="w-3 h-3" /> Drag to reorder
+          </span>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto px-2.5 space-y-1.5 max-h-72 lg:max-h-none">
         {modules.length === 0 ? (
-          <p className="text-xs text-ink-400 px-2 py-4">No modules yet.</p>
+          <button
+            type="button"
+            onClick={() => { setEditingModule(null); setModuleModalOpen(true); }}
+            className="w-full flex flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-ink-200 px-3 py-6 text-center hover:border-coral-300 hover:bg-coral-50/40 transition-colors"
+          >
+            <Plus className="w-4 h-4 text-coral-500" />
+            <span className="text-xs font-bold text-ink-700">Add your first module</span>
+            <span className="text-[11px] text-ink-400">Modules hold your lessons</span>
+          </button>
         ) : (
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext items={modules.map((m) => m.moduleId)} strategy={verticalListSortingStrategy}>
-              {modules.map((mod) => (
+              {modules.map((mod, index) => (
                 <SortableModuleRow
                   key={mod.moduleId}
                   module={mod}
+                  index={index}
                   selected={mod.moduleId === selectedModuleId}
                   onSelect={() => onSelect(mod.moduleId)}
                   onEdit={() => { setEditingModule(mod); setModuleModalOpen(true); }}

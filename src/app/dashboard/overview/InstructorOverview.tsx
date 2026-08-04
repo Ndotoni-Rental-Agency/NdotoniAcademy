@@ -3,18 +3,24 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Award, Loader2, Sparkles } from 'lucide-react';
+import { Award, Loader2, Sparkles, TrendingUp, FilePlus2, Layers, Rocket } from 'lucide-react';
 import { getCourse, demoEnrolledCourses, demoCertificates } from '@/lib/mock-data';
 import { type AuthUser } from '@/lib/auth-context';
 import { accentByMode } from '@/lib/dashboard-accent';
-import { getCategoryTheme } from '@/lib/category-theme';
 import { GraphQLClient } from '@/lib/graphql-client';
 import { myCourses } from '@/graphql/queries';
 import { CourseStatus } from '@/API';
 import type { MyCoursesQuery } from '@/API';
 import EnrolledCourseCard from '@/components/EnrolledCourseCard';
 import DashboardStatCard from '@/components/DashboardStatCard';
+import InstructorCourseCard from '@/components/InstructorCourseCard';
 import { CreateCourseModal } from '@/components/CreateCourseModal';
+
+const GETTING_STARTED_STEPS = [
+  { icon: FilePlus2, title: 'Create a course', body: 'Give it a title, a category, and a price — or make it free.' },
+  { icon: Layers, title: 'Add modules & lessons', body: 'Mix video, text, flashcards, quizzes, and documents.' },
+  { icon: Rocket, title: 'Publish it', body: 'It shows up in the catalog immediately — no review wait.' },
+];
 
 // ============================================================
 // Instructors teach — independently, or as an INSTRUCTOR-role member of an
@@ -112,9 +118,19 @@ export default function InstructorOverview({ user }: { user: AuthUser }) {
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-3 mb-6 max-w-xs">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6 max-w-2xl">
         <DashboardStatCard value={published.length} label="Published" />
         <DashboardStatCard value={drafts.length} label="Drafts" />
+        {/* Enrollment/revenue insights need real student activity, which the
+            platform doesn't have yet (auth-only MVP) — shown as an honest
+            "coming soon" tile rather than a fabricated number. */}
+        <div className="col-span-2 sm:col-span-1 rounded-xl border border-dashed border-ink-200 bg-ink-50/60 px-3.5 py-3 flex items-center gap-2.5">
+          <TrendingUp className="w-4 h-4 text-ink-300 flex-shrink-0" />
+          <div className="min-w-0">
+            <p className="text-[11px] font-bold text-ink-500 truncate">Enrollment &amp; revenue</p>
+            <p className="text-[10px] text-ink-400">Coming soon</p>
+          </div>
+        </div>
       </div>
 
       <section className="mb-6">
@@ -127,31 +143,27 @@ export default function InstructorOverview({ user }: { user: AuthUser }) {
             <Loader2 className="w-5 h-5 text-ink-400 animate-spin" />
           </div>
         ) : teachingCourses.length === 0 ? (
-          <p className="text-ink-400 text-sm">You have not built a course yet.</p>
-        ) : (
-          <div className="rounded-xl border border-ink-200 bg-white divide-y divide-ink-100">
-            {teachingCourses.map((course) => {
-              const theme = getCategoryTheme(course.category ?? '');
-              return (
-                <Link
-                  key={course.id}
-                  href={`/studio/${course.id}`}
-                  className="flex items-center gap-3 py-2.5 px-3.5 hover:bg-ink-50 transition-colors"
-                >
-                  <span className={`w-2 h-2 rounded-full flex-shrink-0 ${theme.solidBg}`} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[13.5px] font-semibold text-ink-900 truncate">{course.title}</p>
-                    <p className="text-[11.5px] text-ink-400 truncate">{course.category ?? 'Uncategorized'}</p>
-                  </div>
-                  <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full flex-shrink-0 ${
-                    course.status === CourseStatus.PUBLISHED ? 'bg-brand-100 text-brand-700' : 'bg-ink-100 text-ink-500'
-                  }`}>
-                    {course.status.toLowerCase()}
+          <div className="rounded-2xl border border-ink-200 bg-white p-5">
+            <p className="text-sm font-bold text-ink-900 mb-4">Your first course, in three steps</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {GETTING_STARTED_STEPS.map((step, i) => (
+                <div key={step.title} className="flex gap-3">
+                  <span className={`flex-shrink-0 w-8 h-8 rounded-full ${accent.bg100} ${accent.text700} flex items-center justify-center`}>
+                    <step.icon className="w-4 h-4" />
                   </span>
-                  <span className="text-xs font-bold text-ink-700 flex-shrink-0">TZS {course.priceTzs.toLocaleString()}</span>
-                </Link>
-              );
-            })}
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-ink-900">{i + 1}. {step.title}</p>
+                    <p className="text-[11.5px] text-ink-500 mt-0.5">{step.body}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+            {teachingCourses.slice(0, 4).map((course) => (
+              <InstructorCourseCard key={course.id} course={course} />
+            ))}
           </div>
         )}
       </section>

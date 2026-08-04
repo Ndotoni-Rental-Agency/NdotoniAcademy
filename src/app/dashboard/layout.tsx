@@ -50,14 +50,17 @@ function NavLink({
   return (
     <Link
       href={item.href}
-      className={`flex items-center gap-2.5 rounded-lg font-bold transition-colors ${
+      className={`relative flex items-center gap-2.5 rounded-lg font-bold transition-colors ${
         compact ? 'px-3 py-2 text-xs whitespace-nowrap' : 'px-3 py-2 text-sm'
       } ${
         isActive
-          ? `${accent.bg50} ${accent.text700}`
+          ? `${accent.bg50} ${accent.text700} shadow-sm`
           : `text-ink-600 ${compact ? '' : 'font-medium'} hover:bg-ink-50 hover:text-ink-900`
       }`}
     >
+      {isActive && !compact && (
+        <span className={`absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-full ${accent.bg600}`} />
+      )}
       <item.icon className={`${compact ? 'w-3.5 h-3.5' : 'w-4 h-4'} ${isActive ? accent.text700 : 'text-ink-400'}`} />
       {item.label}
     </Link>
@@ -112,23 +115,38 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Sidebar */}
         <aside className="hidden lg:flex lg:flex-col w-56 border-r border-ink-200 bg-white flex-shrink-0">
           {mode === 'organization' && org ? (
-            <div className="px-4 pt-4 pb-3 border-b border-ink-100 mb-2">
-              <p className="text-xs font-extrabold text-ink-900 truncate">{org.name}</p>
-              <p className="text-[10px] text-ink-400 capitalize">{membership.role.toLowerCase()} account</p>
+            <div className="flex items-center gap-2.5 px-4 pt-4 pb-3 border-b border-ink-100 mb-2">
+              <span className={`flex-shrink-0 w-8 h-8 rounded-full ${accent.bg100} ${accent.text700} flex items-center justify-center text-xs font-extrabold`}>
+                {org.name.charAt(0).toUpperCase()}
+              </span>
+              <div className="min-w-0">
+                <p className="text-xs font-extrabold text-ink-900 truncate">{org.name}</p>
+                <p className="text-[10px] text-ink-400 capitalize">{membership.role.toLowerCase()} account</p>
+              </div>
             </div>
           ) : isOrgMember && org ? (
-            <div className="px-4 pt-4 pb-3 border-b border-ink-100 mb-2">
-              <p className="text-xs font-extrabold text-ink-900 truncate">{displayName(user)}</p>
-              <p className="text-[10px] text-ink-400 truncate">
-                {mode === 'instructor' ? 'Instructor at' : 'Member at'} {org.name}
-              </p>
+            <div className="flex items-center gap-2.5 px-4 pt-4 pb-3 border-b border-ink-100 mb-2">
+              <span className={`flex-shrink-0 w-8 h-8 rounded-full ${accent.bg100} ${accent.text700} flex items-center justify-center text-xs font-extrabold`}>
+                {displayName(user).charAt(0).toUpperCase()}
+              </span>
+              <div className="min-w-0">
+                <p className="text-xs font-extrabold text-ink-900 truncate">{displayName(user)}</p>
+                <p className="text-[10px] text-ink-400 truncate">
+                  {mode === 'instructor' ? 'Instructor at' : 'Member at'} {org.name}
+                </p>
+              </div>
             </div>
           ) : (
-            <div className="px-4 pt-4 pb-3 border-b border-ink-100 mb-2">
-              <p className="text-xs font-extrabold text-ink-900 truncate">{displayName(user)}</p>
-              <p className="text-[10px] text-ink-400">
-                {mode === 'instructor' ? 'Independent instructor' : 'Individual account'}
-              </p>
+            <div className="flex items-center gap-2.5 px-4 pt-4 pb-3 border-b border-ink-100 mb-2">
+              <span className={`flex-shrink-0 w-8 h-8 rounded-full ${accent.bg100} ${accent.text700} flex items-center justify-center text-xs font-extrabold`}>
+                {displayName(user).charAt(0).toUpperCase()}
+              </span>
+              <div className="min-w-0">
+                <p className="text-xs font-extrabold text-ink-900 truncate">{displayName(user)}</p>
+                <p className="text-[10px] text-ink-400">
+                  {mode === 'instructor' ? 'Independent instructor' : 'Individual account'}
+                </p>
+              </div>
             </div>
           )}
 

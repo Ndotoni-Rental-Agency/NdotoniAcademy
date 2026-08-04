@@ -1,11 +1,9 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import Link from 'next/link';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Loader2, Plus } from 'lucide-react';
+import { Loader2, Plus, Search } from 'lucide-react';
 import { courses, demoEnrolledCourses } from '@/lib/mock-data';
-import { getCategoryTheme } from '@/lib/category-theme';
 import { useAuth, dashboardModeFor, type DashboardMode } from '@/lib/auth-context';
 import { accentByMode } from '@/lib/dashboard-accent';
 import { GraphQLClient } from '@/lib/graphql-client';
@@ -14,7 +12,83 @@ import { CourseStatus } from '@/API';
 import type { MyCoursesQuery, CoursesForOrganizationQuery, PublicCoursesQuery } from '@/API';
 import EnrolledCourseCard from '@/components/EnrolledCourseCard';
 import PublicCourseCard, { type PublicCourse } from '@/components/PublicCourseCard';
+import InstructorCourseCard from '@/components/InstructorCourseCard';
 import { CreateCourseModal } from '@/components/CreateCourseModal';
+
+type StatusFilter = 'all' | 'published' | 'draft';
+type SortKey = 'updated' | 'title';
+
+/** Client-side search + status filter + sort over an already-fetched course list — small lists, no point round-tripping to the server. */
+function useCourseFilters<T extends { title: string; status: CourseStatus; updatedAt: string }>(list: T[]) {
+  const [query, setQuery] = useState('');
+  const [status, setStatus] = useState<StatusFilter>('all');
+  const [sort, setSort] = useState<SortKey>('updated');
+
+  const filtered = useMemo(() => {
+    let next = list;
+    if (status !== 'all') {
+      next = next.filter((c) => c.status === (status === 'published' ? CourseStatus.PUBLISHED : CourseStatus.DRAFT));
+    }
+    if (query.trim()) {
+      const q = query.trim().toLowerCase();
+      next = next.filter((c) => c.title.toLowerCase().includes(q));
+    }
+    return [...next].sort((a, b) =>
+      sort === 'title' ? a.title.localeCompare(b.title) : +new Date(b.updatedAt) - +new Date(a.updatedAt)
+    );
+  }, [list, query, status, sort]);
+
+  return { query, setQuery, status, setStatus, sort, setSort, filtered };
+}
+
+function CourseFilterBar({
+  query, onQuery, status, onStatus, sort, onSort, accentText,
+}: {
+  query: string;
+  onQuery: (v: string) => void;
+  status: StatusFilter;
+  onStatus: (v: StatusFilter) => void;
+  sort: SortKey;
+  onSort: (v: SortKey) => void;
+  accentText: string;
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-2.5 mb-4">
+      <div className="relative flex-1 min-w-[160px]">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-ink-300" />
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => onQuery(e.target.value)}
+          placeholder="Search your courses"
+          className="w-full rounded-lg border border-ink-200 pl-8 pr-3 py-1.5 text-xs text-ink-900 placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-ink-200"
+        />
+      </div>
+      <div className="flex items-center gap-1 rounded-lg border border-ink-200 p-0.5">
+        {(['all', 'published', 'draft'] as const).map((s) => (
+          <button
+            key={s}
+            type="button"
+            onClick={() => onStatus(s)}
+            className={`px-2.5 py-1 rounded-md text-[11px] font-bold capitalize transition-colors ${
+              status === s ? `bg-ink-900 text-white` : 'text-ink-500 hover:bg-ink-50'
+            }`}
+          >
+            {s}
+          </button>
+        ))}
+      </div>
+      <select
+        value={sort}
+        onChange={(e) => onSort(e.target.value as SortKey)}
+        className={`rounded-lg border border-ink-200 px-2.5 py-1.5 text-[11px] font-bold text-ink-600 focus:outline-none focus:ring-2 focus:ring-ink-200 ${accentText}`}
+      >
+        <option value="updated">Recently updated</option>
+        <option value="title">Title A&ndash;Z</option>
+      </select>
+    </div>
+  );
+}
 
 export default function CoursesPage() {
   const { user, wantsToTeach } = useAuth();
@@ -94,25 +168,10 @@ function OrganizationCoursesPage({ organizationId }: { organizationId: string })
             No courses yet. An org member with the Instructor role can create one from their own Courses page.
           </p>
         ) : (
-          <div className="rounded-xl border border-ink-200 bg-white divide-y divide-ink-100">
-            {orgCourses.map((course) => {
-              const theme = getCategoryTheme(course.category ?? '');
-              return (
-                <div key={course.id} className="flex items-center gap-3 py-2.5 px-3.5">
-                  <span className={`w-2 h-2 rounded-full flex-shrink-0 ${theme.solidBg}`} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[13.5px] font-semibold text-ink-900 truncate">{course.title}</p>
-                    <p className="text-[11.5px] text-ink-400 truncate">{course.category ?? 'Uncategorized'}</p>
-                  </div>
-                  <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full flex-shrink-0 ${
-                    course.status === CourseStatus.PUBLISHED ? 'bg-brand-100 text-brand-700' : 'bg-ink-100 text-ink-500'
-                  }`}>
-                    {course.status.toLowerCase()}
-                  </span>
-                  <span className="text-xs font-bold text-ink-700 flex-shrink-0">TZS {course.priceTzs.toLocaleString()}</span>
-                </div>
-              );
-            })}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+            {orgCourses.map((course) => (
+              <InstructorCourseCard key={course.id} course={course} manageable={false} />
+            ))}
           </div>
         )}
       </section>
@@ -162,6 +221,7 @@ function LearnerCoursesPage({
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [catalog, setCatalog] = useState<PublicCourse[]>([]);
   const [loadingCatalog, setLoadingCatalog] = useState(true);
+  const teachingFilters = useCourseFilters(teachingCourses);
 
   const loadCourses = useCallback(async () => {
     setLoadingCourses(true);
@@ -254,32 +314,30 @@ function LearnerCoursesPage({
           ) : teachingCourses.length === 0 ? (
             <p className="text-ink-400 text-sm">You have not built a course yet. Add one above.</p>
           ) : (
-            <div className="rounded-xl border border-ink-200 bg-white divide-y divide-ink-100">
-              {teachingCourses.map((course) => {
-                const theme = getCategoryTheme(course.category ?? '');
-                return (
-                  <Link
-                    key={course.id}
-                    href={`/studio/${course.id}`}
-                    className="flex items-center gap-3 py-2.5 px-3.5 hover:bg-ink-50 transition-colors"
-                  >
-                    <span className={`w-2 h-2 rounded-full flex-shrink-0 ${theme.solidBg}`} />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[13.5px] font-semibold text-ink-900 truncate">{course.title}</p>
-                      <p className="text-[11.5px] text-ink-400 truncate">{course.category ?? 'Uncategorized'}</p>
-                    </div>
-                    <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full flex-shrink-0 ${
-                      course.status === 'PUBLISHED' ? 'bg-brand-100 text-brand-700' : 'bg-ink-100 text-ink-500'
-                    }`}>
-                      {course.status.toLowerCase()}
-                    </span>
-                    <span className="text-xs font-bold text-ink-700 flex-shrink-0">
-                      TZS {course.priceTzs.toLocaleString()}
-                    </span>
-                  </Link>
-                );
-              })}
-            </div>
+            <>
+              {teachingCourses.length > 4 && (
+                <CourseFilterBar
+                  query={teachingFilters.query}
+                  onQuery={teachingFilters.setQuery}
+                  status={teachingFilters.status}
+                  onStatus={teachingFilters.setStatus}
+                  sort={teachingFilters.sort}
+                  onSort={teachingFilters.setSort}
+                  accentText={teachAccent.text600}
+                />
+              )}
+              {teachingFilters.filtered.length === 0 ? (
+                <p className="text-ink-400 text-sm bg-white rounded-xl border border-ink-200 px-4 py-5 text-center">
+                  No courses match that search.
+                </p>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+                  {teachingFilters.filtered.map((course) => (
+                    <InstructorCourseCard key={course.id} course={course} />
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </section>
       )}

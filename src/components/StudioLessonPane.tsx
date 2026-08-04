@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { GripVertical, Pencil, Plus, X, Loader2, XCircle } from 'lucide-react';
+import { GripVertical, Pencil, Plus, Trash2, X, Loader2, XCircle } from 'lucide-react';
 import {
   DndContext, closestCenter, PointerSensor, KeyboardSensor,
   useSensor, useSensors, type DragEndEvent,
@@ -25,7 +25,7 @@ import type {
   RemoveModuleFromCourseMutation, RemoveModuleFromCourseMutationVariables,
   DeleteModuleMutation, DeleteModuleMutationVariables,
 } from '@/API';
-import { LESSON_TYPE_ICONS } from './LessonForm';
+import { LESSON_TYPE_ICONS, LESSON_TYPE_TINTS } from './LessonForm';
 import LessonModal from './LessonModal';
 
 export interface CourseModuleData {
@@ -70,19 +70,21 @@ function SortableLessonRow({
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: lesson.lessonId });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
   const Icon = LESSON_TYPE_ICONS[lesson.type];
+  const tint = LESSON_TYPE_TINTS[lesson.type];
   const duration = formatDuration(lesson.durationSeconds);
 
   return (
-    <div ref={setNodeRef} style={style} className="group flex items-center gap-3 rounded-lg border border-ink-100 px-3 py-2.5">
+    <div ref={setNodeRef} style={style} className="group flex items-center gap-3 rounded-lg border border-ink-100 px-3 py-2.5 hover:border-ink-200 transition-colors">
       <button
         {...attributes}
         {...listeners}
+        title="Drag to reorder"
         className="text-ink-300 hover:text-ink-500 cursor-grab active:cursor-grabbing flex-shrink-0 touch-none"
         aria-label="Drag to reorder"
       >
         <GripVertical className="w-4 h-4" />
       </button>
-      <div className="w-8 h-8 rounded-lg bg-coral-50 text-coral-700 flex items-center justify-center flex-shrink-0">
+      <div className={`w-8 h-8 rounded-lg ${tint.bg} ${tint.text} flex items-center justify-center flex-shrink-0`}>
         <Icon className="w-4 h-4" />
       </div>
       <button type="button" onClick={onEdit} className="flex-1 min-w-0 text-left">
@@ -221,24 +223,27 @@ export default function StudioLessonPane({ module: mod, onModuleDeleted }: Studi
       <div className="flex items-start justify-between gap-4 mb-1">
         <h2 className="text-xl font-extrabold text-ink-900 truncate min-w-0">{mod.title}</h2>
         <div className="flex items-center gap-2 flex-shrink-0">
-          {mod.isFree && (
-            <span className="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full bg-brand-100 text-brand-700">
-              Free preview
-            </span>
-          )}
           <button
             type="button"
             onClick={handleDeleteModule}
             disabled={moduleBusy}
-            className="text-xs font-semibold text-ink-400 hover:text-red-600 transition-colors disabled:opacity-60"
+            className="inline-flex items-center gap-1.5 rounded-lg border-2 border-ink-200 px-3 py-1.5 text-xs font-bold text-ink-500 hover:border-red-200 hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-60"
           >
-            {moduleBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Delete module'}
+            {moduleBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+            Delete module
           </button>
         </div>
       </div>
-      <p className="text-sm text-ink-500 mb-6">
-        {mod.lessonCount} lesson{mod.lessonCount === 1 ? '' : 's'}
-        {mod.totalDurationSeconds > 0 && ` · ${formatDuration(mod.totalDurationSeconds)}`}
+      <p className="text-sm text-ink-500 mb-6 flex items-center gap-3">
+        <span>
+          {mod.lessonCount} lesson{mod.lessonCount === 1 ? '' : 's'}
+          {mod.totalDurationSeconds > 0 && ` · ${formatDuration(mod.totalDurationSeconds)}`}
+        </span>
+        {lessons.length > 1 && (
+          <span className="flex items-center gap-1 text-xs text-ink-400">
+            <GripVertical className="w-3.5 h-3.5" /> Drag to reorder
+          </span>
+        )}
       </p>
 
       {error && (
@@ -254,7 +259,10 @@ export default function StudioLessonPane({ module: mod, onModuleDeleted }: Studi
       ) : (
         <div className="space-y-2 max-w-2xl">
           {lessons.length === 0 ? (
-            <p className="text-sm text-ink-400">No lessons in this module yet.</p>
+            <div className="rounded-xl border border-dashed border-ink-200 px-4 py-6 text-center">
+              <p className="text-sm font-semibold text-ink-700">No lessons in this module yet</p>
+              <p className="text-xs text-ink-400 mt-1">Add video, text, flashcards, a quiz, or a document below.</p>
+            </div>
           ) : (
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
               <SortableContext items={lessons.map((l) => l.lessonId)} strategy={verticalListSortingStrategy}>

@@ -17,6 +17,7 @@ import FlashcardEditor, { type CardDraft } from './FlashcardEditor';
 import QuizEditor, { type QuestionDraft } from './QuizEditor';
 import DocumentUploader from './DocumentUploader';
 import LessonMarkdown from './LessonMarkdown';
+import MediaUrlField from './MediaUrlField';
 import type { MediaValue } from './MediaField';
 
 const TRANSCRIBABLE_TYPES = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
@@ -45,6 +46,29 @@ export const LESSON_TYPE_LABELS: Record<LessonType, string> = {
   [LessonType.DOCUMENT]: 'Document',
 };
 
+const LESSON_TYPE_HINTS: Partial<Record<LessonType, string>> = {
+  [LessonType.VIDEO]: 'Upload a file or link one',
+  [LessonType.AUDIO]: 'Upload a file or link one',
+  [LessonType.EMBED]: 'Embed an external page',
+  [LessonType.ANIMATION]: 'Reference an animation',
+  [LessonType.TEXT]: 'Write or paste Markdown',
+  [LessonType.FLASHCARDS]: 'Front/back study cards',
+  [LessonType.QUIZ]: 'Multiple-choice questions',
+  [LessonType.DOCUMENT]: 'Upload a PDF or doc',
+};
+
+/** Per-type icon tint, reusing the existing palette families (no new colors) so lesson rows and the type-picker read at a glance instead of every type sharing one color. */
+export const LESSON_TYPE_TINTS: Record<LessonType, { bg: string; text: string }> = {
+  [LessonType.VIDEO]: { bg: 'bg-sky-50', text: 'text-sky-600' },
+  [LessonType.AUDIO]: { bg: 'bg-indigo-50', text: 'text-indigo-600' },
+  [LessonType.EMBED]: { bg: 'bg-brand-50', text: 'text-brand-600' },
+  [LessonType.ANIMATION]: { bg: 'bg-coral-50', text: 'text-coral-600' },
+  [LessonType.TEXT]: { bg: 'bg-ink-100', text: 'text-ink-600' },
+  [LessonType.FLASHCARDS]: { bg: 'bg-warm-50', text: 'text-warm-600' },
+  [LessonType.QUIZ]: { bg: 'bg-brand-50', text: 'text-brand-700' },
+  [LessonType.DOCUMENT]: { bg: 'bg-ink-100', text: 'text-ink-700' },
+};
+
 const LESSON_TYPES = Object.values(LessonType);
 
 interface LessonFormProps {
@@ -66,9 +90,7 @@ export default function LessonForm({ moduleId, courseId, editLesson, onSaved, on
   const [embedUrl, setEmbedUrl] = useState(editLesson?.embedUrl ?? '');
   const [animationRef, setAnimationRef] = useState(editLesson?.animationRef ?? '');
   const [body, setBody] = useState(editLesson?.body ?? '');
-  const [durationMinutes, setDurationMinutes] = useState(
-    editLesson?.durationSeconds ? Math.round(editLesson.durationSeconds / 60) : 5
-  );
+  const [durationSeconds, setDurationSeconds] = useState<number | null>(editLesson?.durationSeconds ?? null);
   const [questions, setQuestions] = useState<QuestionDraft[]>(
     editLesson?.questions?.map((q) => ({ id: q.id, question: q.question, options: q.options, correctIndex: q.correctIndex })) ?? []
   );
@@ -193,10 +215,10 @@ export default function LessonForm({ moduleId, courseId, editLesson, onSaved, on
       const contentFields: Partial<CreateLessonInput> = {};
       if (type === LessonType.VIDEO) {
         contentFields.videoUrl = videoUrl.trim();
-        contentFields.durationSeconds = durationMinutes * 60;
+        if (durationSeconds != null) contentFields.durationSeconds = durationSeconds;
       } else if (type === LessonType.AUDIO) {
         contentFields.audioUrl = audioUrl.trim();
-        contentFields.durationSeconds = durationMinutes * 60;
+        if (durationSeconds != null) contentFields.durationSeconds = durationSeconds;
       } else if (type === LessonType.EMBED) {
         contentFields.embedUrl = embedUrl.trim();
       } else if (type === LessonType.ANIMATION) {
@@ -255,17 +277,24 @@ export default function LessonForm({ moduleId, courseId, editLesson, onSaved, on
     return (
       <div className="px-6 py-5">
         <p className="text-xs font-bold text-ink-500 mb-3">What kind of lesson?</p>
-        <div className="flex flex-wrap gap-2 mb-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-4">
           {LESSON_TYPES.map((t) => {
             const Icon = LESSON_TYPE_ICONS[t];
+            const tint = LESSON_TYPE_TINTS[t];
             return (
               <button
                 key={t}
                 type="button"
                 onClick={() => pickType(t)}
-                className="inline-flex items-center gap-1.5 rounded-full border-2 border-ink-100 px-3 py-1.5 text-xs font-bold text-ink-700 hover:border-coral-200 hover:bg-coral-50 hover:text-coral-700 transition-colors"
+                className="flex flex-col items-start gap-2 rounded-xl border-2 border-ink-100 p-3 text-left hover:border-coral-200 hover:bg-coral-50/40 transition-colors"
               >
-                <Icon className="w-3.5 h-3.5" /> {LESSON_TYPE_LABELS[t]}
+                <span className={`w-8 h-8 rounded-lg flex items-center justify-center ${tint.bg} ${tint.text}`}>
+                  <Icon className="w-4 h-4" />
+                </span>
+                <span>
+                  <span className="block text-xs font-bold text-ink-900">{LESSON_TYPE_LABELS[t]}</span>
+                  <span className="block text-[10.5px] text-ink-400 leading-snug">{LESSON_TYPE_HINTS[t]}</span>
+                </span>
               </button>
             );
           })}
@@ -296,29 +325,28 @@ export default function LessonForm({ moduleId, courseId, editLesson, onSaved, on
       />
 
       {type === LessonType.VIDEO && (
-        <div className="flex gap-3">
-          <div className="flex-1">
-            <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-ink-400">Video URL</label>
-            <input type="url" placeholder="https://youtube.com/watch?v=..." value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} disabled={submitting} className={inputClass} />
-          </div>
-          <div className="w-20">
-            <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-ink-400">Minutes</label>
-            <input type="number" min={0} aria-label="Duration in minutes" value={durationMinutes} onChange={(e) => setDurationMinutes(Number(e.target.value))} disabled={submitting} className={inputClass} />
-          </div>
-        </div>
+        <MediaUrlField
+          kind="video"
+          label="Video"
+          value={videoUrl}
+          onChange={setVideoUrl}
+          onDurationDetected={setDurationSeconds}
+          linkPlaceholder="https://youtube.com/watch?v=..."
+          linkHint="YouTube and Vimeo links play inline; other links open the file directly."
+          disabled={submitting}
+        />
       )}
 
       {type === LessonType.AUDIO && (
-        <div className="flex gap-3">
-          <div className="flex-1">
-            <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-ink-400">Audio URL</label>
-            <input type="url" placeholder="https://..." value={audioUrl} onChange={(e) => setAudioUrl(e.target.value)} disabled={submitting} className={inputClass} />
-          </div>
-          <div className="w-20">
-            <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-ink-400">Minutes</label>
-            <input type="number" min={0} aria-label="Duration in minutes" value={durationMinutes} onChange={(e) => setDurationMinutes(Number(e.target.value))} disabled={submitting} className={inputClass} />
-          </div>
-        </div>
+        <MediaUrlField
+          kind="audio"
+          label="Audio"
+          value={audioUrl}
+          onChange={setAudioUrl}
+          onDurationDetected={setDurationSeconds}
+          linkPlaceholder="https://..."
+          disabled={submitting}
+        />
       )}
 
       {type === LessonType.EMBED && (

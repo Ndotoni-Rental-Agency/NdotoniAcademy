@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Loader2, XCircle } from 'lucide-react';
+import { ArrowLeft, Eye, Loader2, XCircle } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { GraphQLClient } from '@/lib/graphql-client';
 import { useToast } from '@/lib/toast-context';
@@ -90,14 +90,6 @@ export default function StudioPage() {
     }
   }
 
-  function handleModuleDeleted(moduleId: string) {
-    setModules((prev) => {
-      const next = prev.filter((m) => m.moduleId !== moduleId);
-      setSelectedModuleId(next[0]?.moduleId ?? null);
-      return next;
-    });
-  }
-
   if (authLoading || !user || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-ink-50">
@@ -130,6 +122,14 @@ export default function StudioPage() {
 
   const selectedModule = modules.find((m) => m.moduleId === selectedModuleId) ?? null;
 
+  // What's missing before this reads as a real course — informational only,
+  // doesn't block Publish, since an instructor may want to publish
+  // incrementally and keep adding lessons after.
+  const missing: string[] = [];
+  if (!course.description) missing.push('description');
+  if (!course.thumbnailUrl) missing.push('thumbnail');
+  if (modules.length === 0 || !modules.some((m) => m.lessonCount > 0)) missing.push('lessons');
+
   return (
     <div className="lg:h-dvh flex flex-col bg-white">
       {/* Header */}
@@ -146,13 +146,23 @@ export default function StudioPage() {
               {course.status.toLowerCase()}
             </span>
           </div>
-          {actionError && (
+          {actionError ? (
             <p className="flex items-center gap-1.5 text-xs text-red-600 mt-0.5">
               <XCircle className="w-3.5 h-3.5" /> {actionError}
             </p>
-          )}
+          ) : course.status === CourseStatus.DRAFT && missing.length > 0 ? (
+            <p className="text-[11px] text-ink-400 mt-0.5 truncate">Before publishing: add {missing.join(', ')}</p>
+          ) : null}
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
+          <Link
+            href={`/courses/${course.id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-lg border-2 border-ink-200 px-3.5 py-2 text-xs font-bold text-ink-700 hover:border-ink-300 transition-colors"
+          >
+            <Eye className="w-3.5 h-3.5" /> Preview
+          </Link>
           <button
             onClick={() => setShowEditModal(true)}
             className="rounded-lg border-2 border-ink-200 px-3.5 py-2 text-xs font-bold text-ink-700 hover:border-coral-200 hover:bg-coral-50 hover:text-coral-700 transition-colors"
@@ -195,7 +205,7 @@ export default function StudioPage() {
         {selectedModule ? (
           <StudioLessonPane
             module={selectedModule}
-            onModuleDeleted={() => handleModuleDeleted(selectedModule.moduleId)}
+            onModuleDeleted={() => void load()}
           />
         ) : (
           <div className="flex-1 flex items-center justify-center text-center px-6">
