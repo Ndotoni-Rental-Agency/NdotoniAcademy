@@ -3,9 +3,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, ArrowRight, Lock, Loader2, CheckCircle2, PartyPopper, XCircle, Download } from 'lucide-react';
+import { ArrowLeft, List, Lock, Loader2, CheckCircle2, PartyPopper, XCircle, Download } from 'lucide-react';
 import LessonMarkdown from '@/components/LessonMarkdown';
 import CourseOutline, { type OutlineModule, type OutlineLesson } from '@/components/CourseOutline';
+import Modal from '@/components/Modal';
 import { GraphQLClient } from '@/lib/graphql-client';
 import { useToast } from '@/lib/toast-context';
 import {
@@ -18,7 +19,7 @@ import type {
   LessonQuery, ModulesForCourseQuery, LessonsForModuleQuery, CourseProgress,
   MyCourseProgressQuery, MyCourseProgressQueryVariables, MarkLessonCompleteMutation, MarkLessonCompleteMutationVariables,
 } from '@/API';
-import { LESSON_TYPE_ICONS, LESSON_TYPE_LABELS } from '@/components/LessonForm';
+import { LESSON_TYPE_ICONS, LESSON_TYPE_LABELS, LESSON_TYPE_TINTS } from '@/components/LessonForm';
 import VideoPlayer from '@/components/VideoPlayer';
 import Quiz from '@/components/Quiz';
 import FlashcardViewer from '@/components/FlashcardViewer';
@@ -60,6 +61,41 @@ function EmptyLessonContent({ message }: { message: string }) {
   );
 }
 
+/** Previous/next lesson card — same shape either direction, just a different label, so a learner can move both ways through a course without hunting for the sidebar. */
+function LessonNavCard({ courseId, lesson, label }: { courseId: string; lesson: OutlineLesson; label: string }) {
+  const Icon = LESSON_TYPE_ICONS[lesson.type];
+  const tint = LESSON_TYPE_TINTS[lesson.type];
+
+  if (!lesson.isFree) {
+    return (
+      <div className="flex items-center gap-3 rounded-2xl border-2 border-ink-100 p-4 opacity-70">
+        <div className="w-8 h-8 rounded-lg bg-ink-100 text-ink-400 flex items-center justify-center flex-shrink-0">
+          <Lock className="w-3.5 h-3.5" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[11px] font-bold uppercase tracking-wide text-ink-400 mb-1">{label}</p>
+          <p className="font-bold text-ink-700 truncate text-sm">{lesson.title}</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <Link
+      href={`/courses/${courseId}/modules/${lesson.moduleId}/lessons/${lesson.lessonId}`}
+      className="flex items-center gap-3 rounded-2xl border-2 border-ink-100 p-4 hover:border-indigo-200 hover:bg-indigo-50/40 transition-colors group"
+    >
+      <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${tint.bg} ${tint.text}`}>
+        <Icon className="w-4 h-4" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-[11px] font-bold uppercase tracking-wide text-ink-400 mb-1">{label}</p>
+        <p className="font-bold text-ink-900 truncate text-sm group-hover:text-indigo-700 transition-colors">{lesson.title}</p>
+      </div>
+    </Link>
+  );
+}
+
 export default function LessonViewerPage() {
   const params = useParams();
   const toast = useToast();
@@ -77,6 +113,7 @@ export default function LessonViewerPage() {
   // (and jump to) what's ahead, not just link to the single next lesson.
   const [outline, setOutline] = useState<OutlineModule[] | null>(null);
   const [progress, setProgress] = useState<CourseProgress | null>(null);
+  const [outlineOpen, setOutlineOpen] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -106,6 +143,7 @@ export default function LessonViewerPage() {
   useEffect(() => {
     setQuizResult(null);
     setRetakingQuiz(false);
+    setOutlineOpen(false);
   }, [lessonId]);
 
   useEffect(() => {
@@ -178,6 +216,12 @@ export default function LessonViewerPage() {
   const currentIndex = flatLessons?.findIndex((l) => l.lessonId === lessonId) ?? -1;
   const nextLesson: OutlineLesson | 'end' | null =
     flatLessons && currentIndex !== -1 ? (currentIndex < flatLessons.length - 1 ? flatLessons[currentIndex + 1] : 'end') : null;
+  const prevLesson: OutlineLesson | null =
+    flatLessons && currentIndex > 0 ? flatLessons[currentIndex - 1] : null;
+  const currentModuleTitle = outline?.find((m) => m.moduleId === moduleId)?.title ?? null;
+  const progressPct = progress && progress.totalLessons > 0
+    ? Math.min(100, Math.round((progress.completedLessonIds.length / progress.totalLessons) * 100))
+    : 0;
 
   if (loading) {
     return (
@@ -199,19 +243,52 @@ export default function LessonViewerPage() {
   }
 
   const Icon = LESSON_TYPE_ICONS[lesson.type];
-  const NextIcon = nextLesson && nextLesson !== 'end' ? LESSON_TYPE_ICONS[nextLesson.type] : null;
+  const tint = LESSON_TYPE_TINTS[lesson.type];
 
   return (
     <main className="min-h-screen bg-white">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
-        <Link href={`/courses/${courseId}`} className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink-500 hover:text-indigo-600 transition-colors mb-6">
-          <ArrowLeft className="w-4 h-4" /> Back to course
-        </Link>
+      {/* Sticky course-progress bar — sits just below the site's own sticky
+          nav (h-14, z-50), so top-14 + a lower z-index instead of stacking
+          on top of it. */}
+      <div className="sticky top-14 z-30 bg-white/95 backdrop-blur border-b border-ink-100">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center gap-3">
+          <Link href={`/courses/${courseId}`} className="flex-shrink-0 text-ink-400 hover:text-indigo-600 transition-colors" aria-label="Back to course">
+            <ArrowLeft className="w-4 h-4" />
+          </Link>
+          <div className="flex-1 min-w-0">
+            {progress ? (
+              <>
+                <p className="text-[10px] font-bold text-ink-400 mb-1 truncate">
+                  {progress.completedLessonIds.length} of {progress.totalLessons} lessons complete
+                </p>
+                <div className="h-1.5 rounded-full bg-ink-100 overflow-hidden">
+                  <div className="h-full rounded-full bg-indigo-500 transition-all duration-300" style={{ width: `${progressPct}%` }} />
+                </div>
+              </>
+            ) : (
+              <p className="text-sm font-semibold text-ink-500 truncate">{currentModuleTitle}</p>
+            )}
+          </div>
+          {outline && outline.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setOutlineOpen(true)}
+              className="lg:hidden flex-shrink-0 flex items-center gap-1.5 rounded-lg border border-ink-200 px-2.5 py-1.5 text-xs font-bold text-ink-600 hover:border-indigo-300 hover:text-indigo-700 transition-colors"
+            >
+              <List className="w-3.5 h-3.5" /> Contents
+            </button>
+          )}
+        </div>
+      </div>
 
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         <div className="lg:grid lg:grid-cols-[1fr_300px] lg:gap-10 lg:items-start">
           <div className="max-w-3xl min-w-0">
+            {currentModuleTitle && (
+              <p className="text-xs font-bold text-ink-400 mb-2 truncate">{currentModuleTitle}</p>
+            )}
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0">
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${tint.bg} ${tint.text}`}>
                 <Icon className="w-4 h-4" />
               </div>
               <span className="text-xs font-bold uppercase tracking-wide text-ink-400">{LESSON_TYPE_LABELS[lesson.type]}</span>
@@ -357,35 +434,15 @@ export default function LessonViewerPage() {
               </>
             )}
 
-            {nextLesson && nextLesson !== 'end' && (
-              nextLesson.isFree ? (
-                <Link
-                  href={`/courses/${courseId}/modules/${nextLesson.moduleId}/lessons/${nextLesson.lessonId}`}
-                  className="mt-10 flex items-center gap-4 rounded-2xl border-2 border-ink-100 p-5 hover:border-indigo-200 hover:bg-indigo-50/40 transition-colors group"
-                >
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold uppercase tracking-wide text-ink-400 mb-1.5">Up next</p>
-                    <div className="flex items-center gap-2">
-                      {NextIcon && <NextIcon className="w-4 h-4 text-indigo-600 flex-shrink-0" />}
-                      <p className="font-bold text-ink-900 truncate group-hover:text-indigo-700 transition-colors">{nextLesson.title}</p>
-                    </div>
-                    <p className="text-xs text-ink-400 mt-0.5">{LESSON_TYPE_LABELS[nextLesson.type]}</p>
+            {(prevLesson || (nextLesson && nextLesson !== 'end')) && (
+              <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {prevLesson && <LessonNavCard courseId={courseId} lesson={prevLesson} label="Previous" />}
+                {nextLesson && nextLesson !== 'end' && (
+                  <div className={!prevLesson ? 'sm:col-start-2' : ''}>
+                    <LessonNavCard courseId={courseId} lesson={nextLesson} label="Up next" />
                   </div>
-                  <ArrowRight className="w-5 h-5 text-ink-300 group-hover:text-indigo-600 transition-colors flex-shrink-0" />
-                </Link>
-              ) : (
-                <div className="mt-10 flex items-center gap-4 rounded-2xl border-2 border-ink-100 p-5 opacity-70">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold uppercase tracking-wide text-ink-400 mb-1.5">Up next</p>
-                    <div className="flex items-center gap-2">
-                      {NextIcon && <NextIcon className="w-4 h-4 text-ink-400 flex-shrink-0" />}
-                      <p className="font-bold text-ink-700 truncate">{nextLesson.title}</p>
-                    </div>
-                    <p className="text-xs text-ink-400 mt-0.5">Not free to preview</p>
-                  </div>
-                  <Lock className="w-5 h-5 text-ink-300 flex-shrink-0" />
-                </div>
-              )
+                )}
+              </div>
             )}
 
             {nextLesson === 'end' && (
@@ -401,7 +458,7 @@ export default function LessonViewerPage() {
           </div>
 
           {outline && outline.length > 0 && (
-            <aside className="mt-10 lg:mt-0 lg:sticky lg:top-8">
+            <aside className="hidden lg:block lg:sticky lg:top-20">
               <CourseOutline
                 courseId={courseId}
                 outline={outline}
@@ -413,6 +470,23 @@ export default function LessonViewerPage() {
           )}
         </div>
       </div>
+
+      {/* Mobile course-content drawer — the sidebar above is desktop-only
+          (hidden below lg), so this is the only way a mobile learner sees
+          the outline without scrolling to the very bottom of the lesson. */}
+      {outline && outline.length > 0 && (
+        <Modal open={outlineOpen} onClose={() => setOutlineOpen(false)} title="Course content">
+          <div className="p-4">
+            <CourseOutline
+              courseId={courseId}
+              outline={outline}
+              currentModuleId={moduleId}
+              currentLessonId={lessonId}
+              completedLessonIds={progress ? new Set(progress.completedLessonIds) : undefined}
+            />
+          </div>
+        </Modal>
+      )}
     </main>
   );
 }
