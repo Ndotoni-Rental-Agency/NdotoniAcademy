@@ -127,6 +127,25 @@ export const course = /* GraphQL */ `query Course($id: ID!) {
   }
 }
 ` as GeneratedQuery<APITypes.CourseQueryVariables, APITypes.CourseQuery>;
+export const courseExam = /* GraphQL */ `query CourseExam($courseId: ID!) {
+  courseExam(courseId: $courseId) {
+    courseId
+    passingScorePercent
+    questions {
+      correctIndex
+      id
+      options
+      question
+      __typename
+    }
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedQuery<
+  APITypes.CourseExamQueryVariables,
+  APITypes.CourseExamQuery
+>;
 export const coursesForOrganization = /* GraphQL */ `query CoursesForOrganization($organizationId: ID!) {
   coursesForOrganization(organizationId: $organizationId) {
     category
@@ -231,6 +250,23 @@ export const coursesForOrganization = /* GraphQL */ `query CoursesForOrganizatio
 ` as GeneratedQuery<
   APITypes.CoursesForOrganizationQueryVariables,
   APITypes.CoursesForOrganizationQuery
+>;
+export const examToTake = /* GraphQL */ `query ExamToTake($courseId: ID!) {
+  examToTake(courseId: $courseId) {
+    courseId
+    passingScorePercent
+    questions {
+      id
+      options
+      question
+      __typename
+    }
+    __typename
+  }
+}
+` as GeneratedQuery<
+  APITypes.ExamToTakeQueryVariables,
+  APITypes.ExamToTakeQuery
 >;
 export const invitationsForOrganization = /* GraphQL */ `query InvitationsForOrganization($organizationId: ID!) {
   invitationsForOrganization(organizationId: $organizationId) {
@@ -596,6 +632,20 @@ export const myCourses = /* GraphQL */ `query MyCourses {
   }
 }
 ` as GeneratedQuery<APITypes.MyCoursesQueryVariables, APITypes.MyCoursesQuery>;
+export const myExamAttempt = /* GraphQL */ `query MyExamAttempt($courseId: ID!) {
+  myExamAttempt(courseId: $courseId) {
+    attemptedAt
+    courseId
+    passed
+    score
+    total
+    __typename
+  }
+}
+` as GeneratedQuery<
+  APITypes.MyExamAttemptQueryVariables,
+  APITypes.MyExamAttemptQuery
+>;
 export const myLearning = /* GraphQL */ `query MyLearning {
   myLearning {
     category

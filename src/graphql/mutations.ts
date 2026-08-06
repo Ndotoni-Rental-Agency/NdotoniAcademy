@@ -641,6 +641,13 @@ export const deleteCourse = /* GraphQL */ `mutation DeleteCourse($id: ID!) {
   APITypes.DeleteCourseMutationVariables,
   APITypes.DeleteCourseMutation
 >;
+export const deleteCourseExam = /* GraphQL */ `mutation DeleteCourseExam($courseId: ID!) {
+  deleteCourseExam(courseId: $courseId)
+}
+` as GeneratedMutation<
+  APITypes.DeleteCourseExamMutationVariables,
+  APITypes.DeleteCourseExamMutation
+>;
 export const deleteLesson = /* GraphQL */ `mutation DeleteLesson($id: ID!) {
   deleteLesson(id: $id)
 }
@@ -954,6 +961,25 @@ export const revokeInvitation = /* GraphQL */ `mutation RevokeInvitation($email:
   APITypes.RevokeInvitationMutationVariables,
   APITypes.RevokeInvitationMutation
 >;
+export const setCourseExam = /* GraphQL */ `mutation SetCourseExam($courseId: ID!, $input: SetCourseExamInput!) {
+  setCourseExam(courseId: $courseId, input: $input) {
+    courseId
+    passingScorePercent
+    questions {
+      correctIndex
+      id
+      options
+      question
+      __typename
+    }
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedMutation<
+  APITypes.SetCourseExamMutationVariables,
+  APITypes.SetCourseExamMutation
+>;
 export const setInstructorStatus = /* GraphQL */ `mutation SetInstructorStatus($status: InstructorStatus!, $userId: ID!) {
   setInstructorStatus(status: $status, userId: $userId) {
     avatarUrl
@@ -1090,6 +1116,20 @@ export const setModuleLessonPrerequisites = /* GraphQL */ `mutation SetModuleLes
 ` as GeneratedMutation<
   APITypes.SetModuleLessonPrerequisitesMutationVariables,
   APITypes.SetModuleLessonPrerequisitesMutation
+>;
+export const submitExamAttempt = /* GraphQL */ `mutation SubmitExamAttempt($answers: [Int!]!, $courseId: ID!) {
+  submitExamAttempt(answers: $answers, courseId: $courseId) {
+    attemptedAt
+    courseId
+    passed
+    score
+    total
+    __typename
+  }
+}
+` as GeneratedMutation<
+  APITypes.SubmitExamAttemptMutationVariables,
+  APITypes.SubmitExamAttemptMutation
 >;
 export const transcribeDocument = /* GraphQL */ `mutation TranscribeDocument($fileUrl: AWSURL!) {
   transcribeDocument(fileUrl: $fileUrl)

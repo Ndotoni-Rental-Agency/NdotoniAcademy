@@ -31,6 +31,19 @@ type CourseCertificate {
   totalLessons: Int!
 }
 
+type CourseExam {
+  courseId: ID!
+  passingScorePercent: Int!
+  questions: [QuizQuestion!]!
+  updatedAt: AWSDateTime!
+}
+
+type CourseExamPreview {
+  courseId: ID!
+  passingScorePercent: Int!
+  questions: [ExamQuestionPreview!]!
+}
+
 type CourseLearningSummary {
   category: String
   completedLessonCount: Int!
@@ -60,6 +73,20 @@ type CourseProgress {
   completedLessonIds: [ID!]!
   courseId: ID!
   totalLessons: Int!
+}
+
+type ExamAttempt {
+  attemptedAt: AWSDateTime!
+  courseId: ID!
+  passed: Boolean!
+  score: Int!
+  total: Int!
+}
+
+type ExamQuestionPreview {
+  id: ID!
+  options: [String!]!
+  question: String!
 }
 
 type Flashcard {
@@ -159,6 +186,7 @@ type Mutation {
   createModuleForCourse(courseId: ID!, input: CreateModuleInput!): CourseModule! @aws_cognito_user_pools
   createOrganization(input: CreateOrganizationInput!): Organization @aws_cognito_user_pools
   deleteCourse(id: ID!): Boolean @aws_cognito_user_pools
+  deleteCourseExam(courseId: ID!): Boolean @aws_cognito_user_pools
   deleteLesson(id: ID!): Boolean @aws_cognito_user_pools
   deleteModule(id: ID!): Boolean @aws_cognito_user_pools
   generateFlashcardsFromText(count: Int, text: String!): [Flashcard!]! @aws_cognito_user_pools
@@ -173,8 +201,10 @@ type Mutation {
   reorderModuleLessons(courseId: ID!, lessonIds: [ID!]!, moduleId: ID!): [ModuleLessonSummary!]! @aws_cognito_user_pools
   requestInstructorRole(organizationId: ID!): OrganizationMembership @aws_cognito_user_pools
   revokeInvitation(email: AWSEmail!, organizationId: ID!): Boolean @aws_cognito_user_pools
+  setCourseExam(courseId: ID!, input: SetCourseExamInput!): CourseExam! @aws_cognito_user_pools
   setInstructorStatus(status: InstructorStatus!, userId: ID!): User @aws_cognito_user_pools
   setModuleLessonPrerequisites(courseId: ID!, lessonId: ID!, moduleId: ID!, prerequisites: [ModuleLessonRefInput!]!): ModuleLesson! @aws_cognito_user_pools
+  submitExamAttempt(answers: [Int!]!, courseId: ID!): ExamAttempt! @aws_cognito_user_pools
   transcribeDocument(fileUrl: AWSURL!): String! @aws_cognito_user_pools
   updateCourse(id: ID!, input: UpdateCourseInput!): Course! @aws_cognito_user_pools
   updateLesson(id: ID!, input: UpdateLessonInput!): Lesson! @aws_cognito_user_pools
@@ -219,7 +249,9 @@ type OrganizationMembership {
 type Query {
   certificateByPublicId(id: ID!): CourseCertificate @aws_cognito_user_pools
   course(id: ID!): Course @aws_cognito_user_pools
+  courseExam(courseId: ID!): CourseExam @aws_cognito_user_pools
   coursesForOrganization(organizationId: ID!): [Course!]! @aws_cognito_user_pools
+  examToTake(courseId: ID!): CourseExamPreview @aws_cognito_user_pools
   invitationsForOrganization(organizationId: ID!): [OrganizationInvitation!]! @aws_cognito_user_pools
   lesson(courseId: ID!, lessonId: ID!, moduleId: ID!): ModuleLesson @aws_cognito_user_pools
   lessonsForModule(courseId: ID!, moduleId: ID!): [ModuleLessonSummary!]! @aws_cognito_user_pools
@@ -229,6 +261,7 @@ type Query {
   myCertificates: [CourseCertificate!]! @aws_cognito_user_pools
   myCourseProgress(courseId: ID!): CourseProgress! @aws_cognito_user_pools
   myCourses: [Course!]! @aws_cognito_user_pools
+  myExamAttempt(courseId: ID!): ExamAttempt @aws_cognito_user_pools
   myLearning: [CourseLearningSummary!]! @aws_cognito_user_pools
   myLessons: [Lesson!]! @aws_cognito_user_pools
   myModules: [Module!]! @aws_cognito_user_pools
@@ -388,6 +421,11 @@ input QuizQuestionInput {
   id: ID!
   options: [String!]!
   question: String!
+}
+
+input SetCourseExamInput {
+  passingScorePercent: Int!
+  questions: [QuizQuestionInput!]!
 }
 
 input UpdateCourseInput {

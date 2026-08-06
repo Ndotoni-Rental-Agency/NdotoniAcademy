@@ -300,6 +300,28 @@ export type ModuleLessonSummary = {
   type: LessonType,
 };
 
+export type SetCourseExamInput = {
+  passingScorePercent: number,
+  questions: Array< QuizQuestionInput >,
+};
+
+export type CourseExam = {
+  __typename: "CourseExam",
+  courseId: string,
+  passingScorePercent: number,
+  questions:  Array<QuizQuestion >,
+  updatedAt: string,
+};
+
+export type ExamAttempt = {
+  __typename: "ExamAttempt",
+  attemptedAt: string,
+  courseId: string,
+  passed: boolean,
+  score: number,
+  total: number,
+};
+
 export type UpdateCourseInput = {
   category?: string | null,
   description?: string | null,
@@ -376,6 +398,20 @@ export type CourseCertificate = {
   instructorName?: string | null,
   issuedAt: string,
   totalLessons: number,
+};
+
+export type CourseExamPreview = {
+  __typename: "CourseExamPreview",
+  courseId: string,
+  passingScorePercent: number,
+  questions:  Array<ExamQuestionPreview >,
+};
+
+export type ExamQuestionPreview = {
+  __typename: "ExamQuestionPreview",
+  id: string,
+  options: Array< string >,
+  question: string,
 };
 
 export type CourseLearningSummary = {
@@ -1015,6 +1051,14 @@ export type DeleteCourseMutation = {
   deleteCourse?: boolean | null,
 };
 
+export type DeleteCourseExamMutationVariables = {
+  courseId: string,
+};
+
+export type DeleteCourseExamMutation = {
+  deleteCourseExam?: boolean | null,
+};
+
 export type DeleteLessonMutationVariables = {
   id: string,
 };
@@ -1343,6 +1387,27 @@ export type RevokeInvitationMutation = {
   revokeInvitation?: boolean | null,
 };
 
+export type SetCourseExamMutationVariables = {
+  courseId: string,
+  input: SetCourseExamInput,
+};
+
+export type SetCourseExamMutation = {
+  setCourseExam:  {
+    __typename: "CourseExam",
+    courseId: string,
+    passingScorePercent: number,
+    questions:  Array< {
+      __typename: "QuizQuestion",
+      correctIndex: number,
+      id: string,
+      options: Array< string >,
+      question: string,
+    } >,
+    updatedAt: string,
+  },
+};
+
 export type SetInstructorStatusMutationVariables = {
   status: InstructorStatus,
   userId: string,
@@ -1473,6 +1538,22 @@ export type SetModuleLessonPrerequisitesMutation = {
     title: string,
     type: LessonType,
     videoUrl?: string | null,
+  },
+};
+
+export type SubmitExamAttemptMutationVariables = {
+  answers: Array< number >,
+  courseId: string,
+};
+
+export type SubmitExamAttemptMutation = {
+  submitExamAttempt:  {
+    __typename: "ExamAttempt",
+    attemptedAt: string,
+    courseId: string,
+    passed: boolean,
+    score: number,
+    total: number,
   },
 };
 
@@ -1859,6 +1940,26 @@ export type CourseQuery = {
   } | null,
 };
 
+export type CourseExamQueryVariables = {
+  courseId: string,
+};
+
+export type CourseExamQuery = {
+  courseExam?:  {
+    __typename: "CourseExam",
+    courseId: string,
+    passingScorePercent: number,
+    questions:  Array< {
+      __typename: "QuizQuestion",
+      correctIndex: number,
+      id: string,
+      options: Array< string >,
+      question: string,
+    } >,
+    updatedAt: string,
+  } | null,
+};
+
 export type CoursesForOrganizationQueryVariables = {
   organizationId: string,
 };
@@ -1963,6 +2064,24 @@ export type CoursesForOrganizationQuery = {
     title: string,
     updatedAt: string,
   } >,
+};
+
+export type ExamToTakeQueryVariables = {
+  courseId: string,
+};
+
+export type ExamToTakeQuery = {
+  examToTake?:  {
+    __typename: "CourseExamPreview",
+    courseId: string,
+    passingScorePercent: number,
+    questions:  Array< {
+      __typename: "ExamQuestionPreview",
+      id: string,
+      options: Array< string >,
+      question: string,
+    } >,
+  } | null,
 };
 
 export type InvitationsForOrganizationQueryVariables = {
@@ -2348,6 +2467,21 @@ export type MyCoursesQuery = {
     title: string,
     updatedAt: string,
   } >,
+};
+
+export type MyExamAttemptQueryVariables = {
+  courseId: string,
+};
+
+export type MyExamAttemptQuery = {
+  myExamAttempt?:  {
+    __typename: "ExamAttempt",
+    attemptedAt: string,
+    courseId: string,
+    passed: boolean,
+    score: number,
+    total: number,
+  } | null,
 };
 
 export type MyLearningQueryVariables = {
