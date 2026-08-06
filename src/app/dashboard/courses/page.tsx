@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Loader2, Plus, Search } from 'lucide-react';
 import { useAuth, dashboardModeFor, type DashboardMode } from '@/lib/auth-context';
 import { accentByMode } from '@/lib/dashboard-accent';
@@ -212,7 +212,6 @@ function LearnerCoursesPage({
   const teachAccent = mode === 'instructor' ? accentByMode.instructor : accentByMode.learner;
 
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [teachingCourses, setTeachingCourses] = useState<MyCoursesQuery['myCourses']>([]);
   const [loadingCourses, setLoadingCourses] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -264,17 +263,6 @@ function LearnerCoursesPage({
       }
     })();
   }, []);
-
-  // The sidebar's "Create Course" nav item and the Overview hero CTA both
-  // deep-link here with ?new=1 so the modal opens immediately, wherever the
-  // instructor was — clean the param off the URL so refreshing doesn't
-  // reopen it.
-  useEffect(() => {
-    if (searchParams.get('new') === '1') {
-      setShowCreateModal(true);
-      router.replace('/dashboard/courses');
-    }
-  }, [searchParams, router]);
 
   return (
     <div className="p-6 lg:p-8 max-w-5xl">
