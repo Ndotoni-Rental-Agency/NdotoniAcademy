@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   Award, User, Play, ArrowRight, Zap, TrendingUp, Shield, Star,
-  Video, FileText, HelpCircle, Loader2, ChevronRight, Lock,
+  Video, FileText, HelpCircle, Loader2, ChevronRight, Lock, CheckCircle2,
 } from 'lucide-react';
 import { getCategoryTheme } from '@/lib/category-theme';
 import { instructorDisplayName } from '@/lib/course-display';
@@ -19,19 +19,27 @@ type PublicCourse = NonNullable<CourseQuery['course']>;
 type CourseModule = ModulesForCourseQuery['modulesForCourse'][number];
 type ModuleLesson = LessonsForModuleQuery['lessonsForModule'][number];
 
+interface ResumeTarget {
+  moduleId: string;
+  lessonId: string;
+  title: string;
+}
+
 function formatMinutes(seconds: number): string {
   if (!seconds) return '';
   return `${Math.round(seconds / 60)} min`;
 }
 
 function ModuleRow({
-  courseId, mod, index, theme,
+  courseId, mod, index, theme, completedLessonIds,
 }: {
   courseId: string;
   mod: CourseModule;
   /** Display position (1-based) — `mod.order` is a sparse backend sort key (1000, 2000, ...), not meant to be shown. */
   index: number;
   theme: ReturnType<typeof getCategoryTheme>;
+  /** Undefined for an anonymous visitor or a learner who hasn't started — no badge shown either way. */
+  completedLessonIds?: Set<string>;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [lessons, setLessons] = useState<ModuleLesson[]>([]);
@@ -67,7 +75,9 @@ function ModuleRow({
           <div className="min-w-0">
             <h3 className="font-bold text-ink-900 truncate">{mod.title}</h3>
             <p className="text-xs text-ink-400 mt-0.5">
-              {mod.lessonCount} lesson{mod.lessonCount === 1 ? '' : 's'}
+              {loaded && completedLessonIds
+                ? `${lessons.filter((l) => completedLessonIds.has(l.lessonId)).length}/${lessons.length} complete`
+                : `${mod.lessonCount} lesson${mod.lessonCount === 1 ? '' : 's'}`}
               {mod.totalDurationSeconds > 0 && ` · ${formatMinutes(mod.totalDurationSeconds)}`}
             </p>
           </div>
@@ -86,15 +96,18 @@ function ModuleRow({
           ) : (
             lessons.map((lesson) => {
               const Icon = LESSON_TYPE_ICONS[lesson.type];
+              const isComplete = completedLessonIds?.has(lesson.lessonId) ?? false;
               const content = (
                 <>
-                  <div className="w-8 h-8 rounded-lg bg-ink-100 text-ink-500 flex items-center justify-center flex-shrink-0">
-                    <Icon className="w-4 h-4" />
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                    isComplete ? 'bg-brand-100 text-brand-700' : 'bg-ink-100 text-ink-500'
+                  }`}>
+                    {isComplete ? <CheckCircle2 className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
                   </div>
                   <span className="text-sm font-semibold text-ink-900 flex-1 min-w-0 truncate">{lesson.title}</span>
                   {lesson.durationSeconds ? <span className="text-xs text-ink-400 flex-shrink-0">{formatMinutes(lesson.durationSeconds)}</span> : null}
                   {lesson.isFree ? (
-                    <Play className="w-4 h-4 text-ink-400 flex-shrink-0" />
+                    !isComplete && <Play className="w-4 h-4 text-ink-400 flex-shrink-0" />
                   ) : (
                     <Lock className="w-3.5 h-3.5 text-ink-300 flex-shrink-0" />
                   )}
@@ -131,6 +144,7 @@ export default function CourseDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [progress, setProgress] = useState<CourseProgress | null>(null);
+  const [resumeTarget, setResumeTarget] = useState<ResumeTarget | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -175,6 +189,48 @@ export default function CourseDetailPage() {
       }
     })();
   }, [user, courseId]);
+
+  // Only for a learner who has actually started (same gate the progress bar
+  // above already uses) — walks every module's lessons in order (same
+  // per-module fetches the studio/lesson-viewer already make) to find the
+  // first not-yet-completed one, or the last lesson if the course is fully
+  // done. Skipped entirely for anonymous visitors and fresh learners so
+  // their page load doesn't pay for N extra queries they get no benefit from.
+  useEffect(() => {
+    if (!progress || progress.completedLessonIds.length === 0 || modules.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const completed = new Set(progress.completedLessonIds);
+        const withLessons = await Promise.all(
+          modules.map(async (mod) => {
+            const { lessonsForModule: lessons } = await GraphQLClient.execute<LessonsForModuleQuery>(
+              lessonsForModule,
+              { moduleId: mod.moduleId, courseId }
+            );
+            return { moduleId: mod.moduleId, lessons: [...lessons].sort((a, b) => a.order - b.order) };
+          })
+        );
+        if (cancelled) return;
+        let target: ResumeTarget | null = null;
+        for (const mod of withLessons) {
+          const nextIncomplete = mod.lessons.find((l) => !completed.has(l.lessonId));
+          if (nextIncomplete) {
+            target = { moduleId: mod.moduleId, lessonId: nextIncomplete.lessonId, title: nextIncomplete.title };
+            break;
+          }
+          const last = mod.lessons[mod.lessons.length - 1];
+          if (last) target = { moduleId: mod.moduleId, lessonId: last.lessonId, title: last.title };
+        }
+        setResumeTarget(target);
+      } catch (err) {
+        console.error('[CourseDetailPage] resume target load failed ->', err);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [progress, modules, courseId]);
 
   if (loading) {
     return (
@@ -284,12 +340,21 @@ export default function CourseDetailPage() {
                 </div>
               )}
 
-              <a
-                href="#course-content"
-                className={`flex items-center justify-center gap-2 w-full rounded-xl ${theme.solidBg} text-white font-bold py-3.5 ${theme.solidBgHover} transition-colors text-sm shadow-lg`}
-              >
-                <Play className="w-4 h-4" /> View course content
-              </a>
+              {resumeTarget ? (
+                <Link
+                  href={`/courses/${course.id}/modules/${resumeTarget.moduleId}/lessons/${resumeTarget.lessonId}`}
+                  className={`flex items-center justify-center gap-2 w-full rounded-xl ${theme.solidBg} text-white font-bold py-3.5 ${theme.solidBgHover} transition-colors text-sm shadow-lg`}
+                >
+                  <Play className="w-4 h-4" /> Resume: {resumeTarget.title}
+                </Link>
+              ) : (
+                <a
+                  href="#course-content"
+                  className={`flex items-center justify-center gap-2 w-full rounded-xl ${theme.solidBg} text-white font-bold py-3.5 ${theme.solidBgHover} transition-colors text-sm shadow-lg`}
+                >
+                  <Play className="w-4 h-4" /> View course content
+                </a>
+              )}
               </div>
             </div>
           </div>
@@ -311,7 +376,14 @@ export default function CourseDetailPage() {
           ) : (
             <div className="space-y-4">
               {modules.map((mod, i) => (
-                <ModuleRow key={mod.moduleId} courseId={course.id} mod={mod} index={i + 1} theme={theme} />
+                <ModuleRow
+                  key={mod.moduleId}
+                  courseId={course.id}
+                  mod={mod}
+                  index={i + 1}
+                  theme={theme}
+                  completedLessonIds={progress ? new Set(progress.completedLessonIds) : undefined}
+                />
               ))}
             </div>
           )}
@@ -367,14 +439,25 @@ export default function CourseDetailPage() {
       <section className={`${theme.solidBg} py-12 sm:py-14 relative overflow-hidden`}>
         <div className="absolute -right-12 -bottom-12 w-64 h-64 bg-white/10 rotate-45" />
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-2xl font-extrabold text-white mb-2">Ready to start?</h2>
-          <p className="text-white/80 mb-6">Jump into the course content above.</p>
-          <a
-            href="#course-content"
-            className={`inline-flex items-center justify-center gap-2 rounded-full bg-white px-8 py-3.5 text-sm font-bold ${theme.solidText} hover:bg-white/90 transition-colors shadow-lg`}
-          >
-            <Play className="w-4 h-4" /> View course content
-          </a>
+          <h2 className="text-2xl font-extrabold text-white mb-2">{resumeTarget ? 'Keep going' : 'Ready to start?'}</h2>
+          <p className="text-white/80 mb-6">
+            {resumeTarget ? `Next up: ${resumeTarget.title}` : 'Jump into the course content above.'}
+          </p>
+          {resumeTarget ? (
+            <Link
+              href={`/courses/${course.id}/modules/${resumeTarget.moduleId}/lessons/${resumeTarget.lessonId}`}
+              className={`inline-flex items-center justify-center gap-2 rounded-full bg-white px-8 py-3.5 text-sm font-bold ${theme.solidText} hover:bg-white/90 transition-colors shadow-lg`}
+            >
+              <Play className="w-4 h-4" /> Resume course
+            </Link>
+          ) : (
+            <a
+              href="#course-content"
+              className={`inline-flex items-center justify-center gap-2 rounded-full bg-white px-8 py-3.5 text-sm font-bold ${theme.solidText} hover:bg-white/90 transition-colors shadow-lg`}
+            >
+              <Play className="w-4 h-4" /> View course content
+            </a>
+          )}
         </div>
       </section>
     </main>

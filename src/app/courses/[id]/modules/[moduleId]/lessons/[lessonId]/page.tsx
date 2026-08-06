@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, List, Lock, Loader2, CheckCircle2, PartyPopper, XCircle, Download } from 'lucide-react';
+import { ArrowLeft, List, Lock, Loader2, CheckCircle2, PartyPopper, XCircle, Download, ChevronRight } from 'lucide-react';
 import LessonMarkdown from '@/components/LessonMarkdown';
 import CourseOutline, { type OutlineModule, type OutlineLesson } from '@/components/CourseOutline';
 import Modal from '@/components/Modal';
@@ -281,7 +281,7 @@ export default function LessonViewerPage() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+      <div className={`max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 ${nextLesson && nextLesson !== 'end' && nextLesson.isFree ? 'pb-24 lg:pb-12' : ''}`}>
         <div className="lg:grid lg:grid-cols-[1fr_300px] lg:gap-10 lg:items-start">
           <div className="max-w-3xl min-w-0">
             {currentModuleTitle && (
@@ -486,6 +486,26 @@ export default function LessonViewerPage() {
             />
           </div>
         </Modal>
+      )}
+
+      {/* Mobile sticky "up next" bar — the primary next-step action stays
+          reachable without scrolling past a long video/text lesson to the
+          nav cards at the bottom. Desktop already has room for those cards
+          in view without this. Unconditional, same as the top-of-page "Up
+          next" card — never blocks navigation on completing the current one. */}
+      {nextLesson && nextLesson !== 'end' && nextLesson.isFree && (
+        <Link
+          href={`/courses/${courseId}/modules/${nextLesson.moduleId}/lessons/${nextLesson.lessonId}`}
+          className="lg:hidden fixed bottom-0 inset-x-0 z-40 flex items-center gap-3 bg-white/95 backdrop-blur border-t border-ink-200 px-4 py-3 shadow-[0_-4px_12px_rgba(0,0,0,0.06)]"
+        >
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-ink-400">Up next</p>
+            <p className="text-sm font-bold text-ink-900 truncate">{nextLesson.title}</p>
+          </div>
+          <span className="flex-shrink-0 inline-flex items-center gap-1 rounded-lg bg-indigo-600 px-3.5 py-2 text-xs font-bold text-white">
+            Next <ChevronRight className="w-3.5 h-3.5" />
+          </span>
+        </Link>
       )}
     </main>
   );
