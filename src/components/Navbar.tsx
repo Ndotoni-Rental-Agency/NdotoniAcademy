@@ -17,6 +17,12 @@ export default function Navbar() {
   const router = useRouter();
   const isDashboard = pathname.startsWith('/dashboard');
   const isStudio = pathname.startsWith('/studio');
+  // A specific course (browsing the catalog at exactly /courses still shows
+  // the full nav) — once someone's actually in a course, the course shell's
+  // own tab bar (Modules/Discussion/Assignments/Exam) is the navigation that
+  // matters; the marketing links are dead weight competing for attention.
+  const isViewingCourse = pathname.startsWith('/courses/');
+  const showMarketingLinks = !isDashboard && !isViewingCourse;
   const { user, signOut } = useAuth();
 
   // The studio is meant to feel like a focused editor, not a page within the
@@ -60,8 +66,8 @@ export default function Navbar() {
               </span>
             </Link>
 
-            {/* Desktop Nav: only show on public pages */}
-            {!isDashboard && (
+            {/* Desktop Nav: only show on public pages, not while in a course */}
+            {showMarketingLinks && (
               <div className="hidden md:flex items-center gap-1">
                 {navLinks.map((link) => {
                   const isActive = pathname === link.href || pathname.startsWith(link.href + '/');
@@ -129,7 +135,7 @@ export default function Navbar() {
         {mobileOpen && (
           <div className="md:hidden border-t border-ink-200 bg-white animate-fade-in">
             <div className="px-4 py-3 space-y-1">
-              {navLinks.map((link) => (
+              {showMarketingLinks && navLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}

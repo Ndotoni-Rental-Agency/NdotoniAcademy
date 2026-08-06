@@ -20,42 +20,54 @@ export default function CourseHero({
   const totalLessons = modules.reduce((sum, m) => sum + m.lessonCount, 0);
 
   return (
-    <section className={`relative ${theme.solidBg} text-white overflow-hidden`}>
-      <div className="absolute -right-10 -top-10 w-72 h-72 bg-white/10 rotate-45" />
-      <div className="absolute -left-16 -bottom-16 w-56 h-56 rounded-full bg-white/10" />
+    <section className={`relative bg-gradient-to-br ${theme.heroFrom} to-ink-900 text-white overflow-hidden`}>
+      {/* A fine dot texture instead of a generic rotated square — reads
+          closer to the certificate's printed-stock feel than a template's
+          default "abstract shape" hero. */}
+      <div
+        className="absolute inset-0 opacity-[0.15] mix-blend-overlay pointer-events-none"
+        style={{
+          backgroundImage: 'radial-gradient(rgba(255,255,255,0.9) 1px, transparent 1px)',
+          backgroundSize: '18px 18px',
+        }}
+      />
+      <div className="absolute -right-24 -top-24 w-96 h-96 rounded-full bg-white/10 blur-3xl pointer-events-none" />
 
       <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
           <div className="flex-1">
             {course.category && (
-              <span className="inline-block text-[11px] font-bold uppercase tracking-wide bg-white/20 text-white px-3 py-1 rounded-md mb-4">
-                {course.category}
-              </span>
+              <div className="flex items-center gap-2 mb-5">
+                <span className="w-6 h-px bg-white/40" />
+                <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-white/80">{course.category}</span>
+              </div>
             )}
 
-            <h1 className="text-3xl sm:text-4xl lg:text-[3rem] font-extrabold leading-[1.05] tracking-tight mb-4">{course.title}</h1>
+            <h1 className="font-serif text-3xl sm:text-4xl lg:text-[3.25rem] font-semibold leading-[1.08] tracking-tight mb-4">{course.title}</h1>
             {course.description && (
-              <p className="text-white/85 leading-relaxed mb-6 text-base sm:text-lg line-clamp-2 sm:line-clamp-none">{course.description}</p>
+              <p className="text-white/80 leading-relaxed mb-6 text-base sm:text-lg line-clamp-2 sm:line-clamp-none">{course.description}</p>
             )}
 
             {instructorName && (
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                <div className="w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center flex-shrink-0">
                   <User className="w-5 h-5 text-white" />
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-white">{instructorName}</p>
-                  <p className="text-xs text-white/70">Instructor</p>
+                  <p className="text-xs text-white/60">Instructor</p>
                 </div>
               </div>
             )}
           </div>
 
           {/* CTA card */}
-          <div className="lg:w-80 flex-shrink-0 bg-white rounded-2xl overflow-hidden text-ink-900 shadow-2xl shadow-black/20">
-            {course.thumbnailUrl && (
+          <div className="lg:w-80 flex-shrink-0 bg-white rounded-2xl overflow-hidden text-ink-900 shadow-2xl shadow-black/30 border border-white/10">
+            {course.thumbnailUrl ? (
               // eslint-disable-next-line @next/next/no-img-element -- CloudFront URLs aren't in next.config's image domains
               <img src={course.thumbnailUrl} alt="" className="w-full h-40 object-cover" />
+            ) : (
+              <div className={`h-1.5 ${theme.solidBg}`} />
             )}
             <div className="p-6">
               <div className="space-y-4 mb-6">

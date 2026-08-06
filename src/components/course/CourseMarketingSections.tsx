@@ -22,7 +22,7 @@ export default function CourseMarketingSections({
       {/* Why this course */}
       <section className="border-t border-ink-100 bg-ink-50 py-12 sm:py-16">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-extrabold text-ink-900 mb-8 text-center">Why take this course</h2>
+          <h2 className="font-serif text-2xl font-semibold text-ink-900 mb-8 text-center">Why take this course</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {[
               { icon: Zap, title: 'Learn fast', desc: 'Bite-sized modules you finish in one sitting' },
@@ -45,7 +45,7 @@ export default function CourseMarketingSections({
       {/* How it works */}
       <section className="border-t border-ink-100 py-12 sm:py-16 bg-white">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-extrabold text-ink-900 mb-8">How each lesson works</h2>
+          <h2 className="font-serif text-2xl font-semibold text-ink-900 mb-8">How each lesson works</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {[
               { icon: Video, title: 'Watch or read', desc: 'Video, text, flashcards, or audio, whatever fits the topic.' },
@@ -65,10 +65,10 @@ export default function CourseMarketingSections({
       </section>
 
       {/* Bottom CTA */}
-      <section className={`${theme.solidBg} py-12 sm:py-14 relative overflow-hidden`}>
-        <div className="absolute -right-12 -bottom-12 w-64 h-64 bg-white/10 rotate-45" />
+      <section className={`bg-gradient-to-br ${theme.heroFrom} to-ink-900 py-12 sm:py-14 relative overflow-hidden`}>
+        <div className="absolute -left-16 -bottom-16 w-72 h-72 rounded-full bg-white/10 blur-3xl pointer-events-none" />
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-2xl font-extrabold text-white mb-2">{resumeTarget ? 'Keep going' : 'Ready to start?'}</h2>
+          <h2 className="font-serif text-2xl sm:text-3xl font-semibold text-white mb-2">{resumeTarget ? 'Keep going' : 'Ready to start?'}</h2>
           <p className="text-white/80 mb-6">
             {resumeTarget ? `Next up: ${resumeTarget.title}` : 'Jump into the course content above.'}
           </p>

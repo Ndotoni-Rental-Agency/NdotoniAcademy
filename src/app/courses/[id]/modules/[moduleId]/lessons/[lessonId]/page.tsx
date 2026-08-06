@@ -293,7 +293,7 @@ export default function LessonViewerPage() {
               </div>
               <span className="text-xs font-bold uppercase tracking-wide text-ink-400">{LESSON_TYPE_LABELS[lesson.type]}</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-ink-900 mb-8">{lesson.title}</h1>
+            <h1 className="font-serif text-2xl sm:text-3xl font-semibold text-ink-900 mb-8">{lesson.title}</h1>
 
             {!lesson.isFree ? (
               <div className="flex flex-col items-center justify-center text-center rounded-2xl border-2 border-dashed border-ink-200 py-16 px-6">

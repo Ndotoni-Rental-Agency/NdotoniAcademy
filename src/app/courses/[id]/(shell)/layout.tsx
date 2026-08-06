@@ -51,16 +51,28 @@ export default function CourseShellLayout({ children }: { children: React.ReactN
   return (
     <div className="min-h-screen bg-white">
       {/* Sits below the site's own sticky nav (h-14), same top-14/z-30
-          convention the lesson viewer's own sticky bar already uses. */}
-      <div className="sticky top-14 z-30 bg-white/95 backdrop-blur border-b border-ink-200">
+          convention the lesson viewer's own sticky bar already uses. One
+          integrated strip — identity + tabs together, not two competing
+          rows — with the course title in the serif face this app otherwise
+          only spends on certificates, so a course you're actively taking
+          reads with the same "this is something earned" register as the
+          credential at the end of it. */}
+      <div className="sticky top-14 z-30 bg-white/95 backdrop-blur border-b border-ink-100">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-3 py-2.5">
-            <Link href="/courses" className="flex-shrink-0 text-ink-400 hover:text-indigo-600 transition-colors" aria-label="All courses">
+          <div className="flex items-center gap-3 pt-3 pb-2.5">
+            <Link
+              href="/courses"
+              className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-ink-400 hover:text-ink-700 hover:bg-ink-50 transition-colors"
+              aria-label="All courses"
+            >
               <ArrowLeft className="w-4 h-4" />
             </Link>
-            <p className="text-sm font-bold text-ink-900 truncate">{course?.title ?? ' '}</p>
+            {course?.category && (
+              <span className={`hidden sm:inline-flex flex-shrink-0 w-1.5 h-1.5 rounded-full ${theme.solidBg}`} />
+            )}
+            <p className="font-serif text-[17px] font-semibold text-ink-900 truncate">{course?.title ?? ' '}</p>
           </div>
-          <div className="flex gap-1 overflow-x-auto no-scrollbar">
+          <div className="flex gap-1 overflow-x-auto no-scrollbar pb-2.5">
             {TABS.map((tab) => {
               const href = `${basePath}${tab.suffix}`;
               const isActive = pathname === href;
@@ -68,8 +80,8 @@ export default function CourseShellLayout({ children }: { children: React.ReactN
                 <Link
                   key={tab.suffix}
                   href={href}
-                  className={`flex items-center gap-1.5 whitespace-nowrap px-3.5 py-2.5 text-xs font-bold border-b-2 transition-colors flex-shrink-0 ${
-                    isActive ? `${theme.solidText} border-current` : 'text-ink-400 border-transparent hover:text-ink-700'
+                  className={`flex items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-1.5 text-[13px] font-bold transition-colors flex-shrink-0 ${
+                    isActive ? `${theme.softBg} ${theme.solidText}` : 'text-ink-500 hover:bg-ink-50 hover:text-ink-800'
                   }`}
                 >
                   <tab.icon className="w-3.5 h-3.5" /> {tab.label}

@@ -12,6 +12,10 @@ export interface CategoryTheme {
   borderHover: string;
   ring: string;
   stroke: string;
+  /** Gradient start for dark hero treatments — pairs with a shared `to-ink-900`
+   * so every category still reads as "the same brand, a different subject,"
+   * rather than four unrelated color schemes. */
+  heroFrom: string;
 }
 
 const projectManagement: CategoryTheme = {
@@ -26,6 +30,7 @@ const projectManagement: CategoryTheme = {
   borderHover: 'hover:border-indigo-300',
   ring: 'ring-indigo-500/20',
   stroke: 'stroke-indigo-600',
+  heroFrom: 'from-indigo-600',
 };
 
 const marketing: CategoryTheme = {
@@ -40,6 +45,7 @@ const marketing: CategoryTheme = {
   borderHover: 'hover:border-coral-300',
   ring: 'ring-coral-500/20',
   stroke: 'stroke-coral-600',
+  heroFrom: 'from-coral-600',
 };
 
 const technology: CategoryTheme = {
@@ -54,6 +60,7 @@ const technology: CategoryTheme = {
   borderHover: 'hover:border-sky-300',
   ring: 'ring-sky-500/20',
   stroke: 'stroke-sky-600',
+  heroFrom: 'from-sky-600',
 };
 
 const design: CategoryTheme = {
@@ -68,6 +75,7 @@ const design: CategoryTheme = {
   borderHover: 'hover:border-warm-300',
   ring: 'ring-warm-500/20',
   stroke: 'stroke-warm-600',
+  heroFrom: 'from-warm-600',
 };
 
 export const categoryThemes: Record<string, CategoryTheme> = {
