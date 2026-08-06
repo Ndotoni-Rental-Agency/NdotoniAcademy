@@ -31,7 +31,7 @@ function formatMinutes(seconds: number): string {
 }
 
 function ModuleRow({
-  courseId, mod, index, theme, completedLessonIds,
+  courseId, mod, index, theme, completedLessonIds, completion,
 }: {
   courseId: string;
   mod: CourseModule;
@@ -40,6 +40,8 @@ function ModuleRow({
   theme: ReturnType<typeof getCategoryTheme>;
   /** Undefined for an anonymous visitor or a learner who hasn't started — no badge shown either way. */
   completedLessonIds?: Set<string>;
+  /** Eagerly computed (see CourseDetailPage's resume-target effect) so the module-complete checkmark shows on the collapsed row, without waiting for this row's own lazy lesson fetch. */
+  completion?: { done: number; total: number };
 }) {
   const [expanded, setExpanded] = useState(false);
   const [lessons, setLessons] = useState<ModuleLesson[]>([]);
@@ -63,20 +65,27 @@ function ModuleRow({
     }
   }
 
+  // Prefer the eagerly-computed completion (available before this row is
+  // ever expanded); fall back to this row's own lazily-loaded lesson list
+  // once opened, for the rare case the eager pass didn't run.
+  const doneCount = completion?.done ?? (loaded && completedLessonIds ? lessons.filter((l) => completedLessonIds.has(l.lessonId)).length : null);
+  const totalCount = completion?.total ?? (loaded ? lessons.length : null);
+  const isModuleComplete = doneCount !== null && totalCount !== null && totalCount > 0 && doneCount === totalCount;
+
   return (
     <div className={`rounded-2xl border-2 overflow-hidden transition-all ${mod.isFree ? `${theme.border}` : 'border-ink-200'}`}>
       <button type="button" onClick={toggle} className="w-full flex items-center justify-between p-5 text-left">
         <div className="flex items-center gap-4 min-w-0">
           <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-extrabold flex-shrink-0 ${
-            mod.isFree ? `${theme.solidBg} text-white` : 'bg-ink-100 text-ink-500'
+            isModuleComplete ? 'bg-brand-600 text-white' : mod.isFree ? `${theme.solidBg} text-white` : 'bg-ink-100 text-ink-500'
           }`}>
-            {index}
+            {isModuleComplete ? <CheckCircle2 className="w-5 h-5" /> : index}
           </div>
           <div className="min-w-0">
             <h3 className="font-bold text-ink-900 truncate">{mod.title}</h3>
             <p className="text-xs text-ink-400 mt-0.5">
-              {loaded && completedLessonIds
-                ? `${lessons.filter((l) => completedLessonIds.has(l.lessonId)).length}/${lessons.length} complete`
+              {doneCount !== null && totalCount !== null
+                ? `${doneCount}/${totalCount} complete`
                 : `${mod.lessonCount} lesson${mod.lessonCount === 1 ? '' : 's'}`}
               {mod.totalDurationSeconds > 0 && ` · ${formatMinutes(mod.totalDurationSeconds)}`}
             </p>
@@ -145,6 +154,7 @@ export default function CourseDetailPage() {
   const [error, setError] = useState('');
   const [progress, setProgress] = useState<CourseProgress | null>(null);
   const [resumeTarget, setResumeTarget] = useState<ResumeTarget | null>(null);
+  const [moduleCompletion, setModuleCompletion] = useState<Record<string, { done: number; total: number }> | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -213,16 +223,24 @@ export default function CourseDetailPage() {
         );
         if (cancelled) return;
         let target: ResumeTarget | null = null;
+        let foundIncomplete = false;
+        const completionMap: Record<string, { done: number; total: number }> = {};
         for (const mod of withLessons) {
+          const done = mod.lessons.filter((l) => completed.has(l.lessonId)).length;
+          completionMap[mod.moduleId] = { done, total: mod.lessons.length };
+
+          if (foundIncomplete) continue;
           const nextIncomplete = mod.lessons.find((l) => !completed.has(l.lessonId));
           if (nextIncomplete) {
             target = { moduleId: mod.moduleId, lessonId: nextIncomplete.lessonId, title: nextIncomplete.title };
-            break;
+            foundIncomplete = true;
+            continue;
           }
           const last = mod.lessons[mod.lessons.length - 1];
           if (last) target = { moduleId: mod.moduleId, lessonId: last.lessonId, title: last.title };
         }
         setResumeTarget(target);
+        setModuleCompletion(completionMap);
       } catch (err) {
         console.error('[CourseDetailPage] resume target load failed ->', err);
       }
@@ -383,6 +401,7 @@ export default function CourseDetailPage() {
                   index={i + 1}
                   theme={theme}
                   completedLessonIds={progress ? new Set(progress.completedLessonIds) : undefined}
+                  completion={moduleCompletion?.[mod.moduleId]}
                 />
               ))}
             </div>

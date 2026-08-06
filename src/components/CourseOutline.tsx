@@ -63,17 +63,26 @@ export default function CourseOutline({ courseId, outline, currentModuleId, curr
       <div className="divide-y divide-ink-100">
         {outline.map((mod) => {
           const isOpen = expanded.has(mod.moduleId);
+          const moduleDone = completedLessonIds
+            ? mod.lessons.filter((l) => completedLessonIds.has(l.lessonId)).length
+            : null;
+          const isModuleComplete = moduleDone !== null && mod.lessons.length > 0 && moduleDone === mod.lessons.length;
           return (
             <div key={mod.moduleId}>
               <button
                 type="button"
                 onClick={() => toggle(mod.moduleId)}
-                className="w-full flex items-center justify-between gap-2 px-4 py-3 text-left hover:bg-ink-50 transition-colors"
+                className="w-full flex items-center gap-2.5 px-4 py-3 text-left hover:bg-ink-50 transition-colors"
               >
-                <span className="min-w-0">
+                {isModuleComplete && (
+                  <CheckCircle2 className="w-4 h-4 flex-shrink-0 text-brand-600" />
+                )}
+                <span className="min-w-0 flex-1">
                   <span className="block text-sm font-bold text-ink-900 truncate">{mod.title}</span>
                   <span className="block text-[11px] text-ink-400 mt-0.5">
-                    {mod.lessons.length} lesson{mod.lessons.length === 1 ? '' : 's'}
+                    {moduleDone !== null
+                      ? `${moduleDone}/${mod.lessons.length} complete`
+                      : `${mod.lessons.length} lesson${mod.lessons.length === 1 ? '' : 's'}`}
                   </span>
                 </span>
                 <ChevronRight className={`w-4 h-4 text-ink-400 flex-shrink-0 transition-transform ${isOpen ? 'rotate-90' : ''}`} />
