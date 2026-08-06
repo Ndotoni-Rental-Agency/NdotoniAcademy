@@ -4,6 +4,7 @@ import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle2, XCircle, Zap, Trophy, ArrowRight, ChevronLeft, ChevronRight, Check } from 'lucide-react';
 import { QuizQuestion } from '@/lib/mock-data';
+import InlineMarkdown from './InlineMarkdown';
 
 interface QuizProps {
   questions: QuizQuestion[];
@@ -148,7 +149,7 @@ export default function Quiz({ questions, onComplete }: QuizProps) {
       <AnimatePresence mode="wait">
         <motion.div key={currentIndex} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.25 }}>
           <p className="text-xs text-ink-400 font-semibold mb-2">Question {currentIndex + 1} of {questions.length}</p>
-          <h3 className="text-lg font-bold text-ink-900 mb-5">{current.question}</h3>
+          <h3 className="text-lg font-bold text-ink-900 mb-5"><InlineMarkdown content={current.question} /></h3>
 
           <div className="space-y-2.5">
             {current.options.map((option, i) => {
@@ -181,7 +182,7 @@ export default function Quiz({ questions, onComplete }: QuizProps) {
                        wrongPick === i ? <XCircle className="w-4 h-4" /> :
                        String.fromCharCode(65 + i)}
                     </span>
-                    <span className="text-ink-700">{option}</span>
+                    <span className="text-ink-700"><InlineMarkdown content={option} /></span>
                   </span>
                 </button>
               );

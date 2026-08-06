@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ChevronLeft, ChevronRight, RotateCw } from 'lucide-react';
 import { MediaType } from '@/API';
 import type { MediaValue } from './MediaField';
+import InlineMarkdown from './InlineMarkdown';
 
 interface Flashcard {
   id: string;
@@ -47,7 +48,7 @@ function CardFace({
     >
       <span className={`text-[10px] font-bold uppercase tracking-wide ${tint}`}>{label}</span>
       {media && <CardMedia media={media} />}
-      <p className="text-lg font-bold text-ink-900 line-clamp-6">{text}</p>
+      <p className="text-lg font-bold text-ink-900 line-clamp-6"><InlineMarkdown content={text} /></p>
     </div>
   );
 }

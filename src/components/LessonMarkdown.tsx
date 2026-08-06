@@ -1,11 +1,17 @@
 import ReactMarkdown, { type Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 
-// No rehype-raw / dangerouslySetInnerHTML anywhere in this — react-markdown
-// only ever renders the Markdown AST it parses itself, never raw HTML found
-// in the source string, so lesson bodies (including ones auto-filled from
-// an uploaded document — see LessonForm's transcribe flow) can't smuggle in
+// No rehype-raw anywhere in this — react-markdown only ever renders the
+// Markdown AST it parses itself, never raw HTML found in the source string,
+// so lesson bodies (including ones auto-filled from an uploaded document,
+// or polished by BeautifyMarkdownButton — see LessonForm) can't smuggle in
 // a <script> tag or similar. Keep it that way; don't add rehype-raw here.
+// rehype-katex is a different category: it only ever renders LaTeX source
+// (parsed and sanitized by KaTeX itself, which emits a fixed, controlled
+// set of HTML/MathML elements) inside $...$/$$...$$ delimiters — not a way
+// to inject arbitrary HTML.
 const components: Components = {
   h1: ({ children }) => <h1 className="font-serif text-2xl font-semibold text-ink-900 mt-8 mb-3 first:mt-0">{children}</h1>,
   h2: ({ children }) => <h2 className="font-serif text-xl font-semibold text-ink-900 mt-7 mb-2.5 first:mt-0">{children}</h2>,
@@ -41,7 +47,7 @@ const components: Components = {
 
 export default function LessonMarkdown({ content }: { content: string }) {
   return (
-    <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
+    <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]} components={components}>
       {content}
     </ReactMarkdown>
   );

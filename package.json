@@ -21,13 +21,16 @@
     "@dnd-kit/utilities": "^3.2.2",
     "aws-amplify": "^6.20.0",
     "framer-motion": "^12.42.2",
+    "katex": "^0.18.1",
     "lucide-react": "^1.27.0",
     "next": "16.2.12",
     "pdf-lib": "^1.17.1",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-markdown": "^10.1.0",
-    "remark-gfm": "^4.0.1"
+    "rehype-katex": "^7.0.1",
+    "remark-gfm": "^4.0.1",
+    "remark-math": "^6.0.0"
   },
   "devDependencies": {
     "@aws-amplify/cli": "^14.5.1",

@@ -14,6 +14,7 @@ import type {
 import FlashcardEditor, { type CardDraft } from './FlashcardEditor';
 import QuizEditor, { type QuestionDraft } from './QuizEditor';
 import GenerateFromDocumentButton from './GenerateFromDocumentButton';
+import BeautifyMarkdownButton from './BeautifyMarkdownButton';
 import DocumentUploader from './DocumentUploader';
 import LessonMarkdown from './LessonMarkdown';
 import MediaUrlField from './MediaUrlField';
@@ -348,7 +349,7 @@ export default function LessonForm({ moduleId, courseId, editLesson, onSaved, on
 
       {type === LessonType.TEXT && (
         <div>
-          <div className="mb-1 flex items-center justify-between gap-3">
+          <div className="mb-1 flex items-center justify-between gap-3 flex-wrap">
             <div className="flex items-center gap-2">
               <label className="block text-[11px] font-bold uppercase tracking-wide text-ink-400">Lesson text (Markdown)</label>
               <div className="inline-flex rounded-lg border border-ink-200 p-0.5">
@@ -368,25 +369,28 @@ export default function LessonForm({ moduleId, courseId, editLesson, onSaved, on
                 </button>
               </div>
             </div>
-            <label
-              className={`inline-flex items-center gap-1.5 text-xs font-bold transition-colors flex-shrink-0 ${
-                transcribing || submitting ? 'text-ink-300 cursor-not-allowed' : 'text-coral-600 hover:text-coral-700 cursor-pointer'
-              }`}
-            >
-              {transcribing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
-              {transcribing
-                ? transcribeProgress
-                  ? `Transcribing part ${transcribeProgress.current} of ${transcribeProgress.total}...`
-                  : 'Transcribing...'
-                : 'Upload a document to transcribe'}
-              <input
-                type="file"
-                accept={TRANSCRIBABLE_TYPES.join(',')}
-                disabled={transcribing || submitting}
-                onChange={handleTranscribeFile}
-                className="hidden"
-              />
-            </label>
+            <div className="flex items-center gap-3 flex-shrink-0">
+              <BeautifyMarkdownButton body={body} onBeautified={(text) => { setBody(text); setBodyPreview(true); }} disabled={transcribing || submitting} />
+              <label
+                className={`inline-flex items-center gap-1.5 text-xs font-bold transition-colors flex-shrink-0 ${
+                  transcribing || submitting ? 'text-ink-300 cursor-not-allowed' : 'text-coral-600 hover:text-coral-700 cursor-pointer'
+                }`}
+              >
+                {transcribing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+                {transcribing
+                  ? transcribeProgress
+                    ? `Transcribing part ${transcribeProgress.current} of ${transcribeProgress.total}...`
+                    : 'Transcribing...'
+                  : 'Upload a document to transcribe'}
+                <input
+                  type="file"
+                  accept={TRANSCRIBABLE_TYPES.join(',')}
+                  disabled={transcribing || submitting}
+                  onChange={handleTranscribeFile}
+                  className="hidden"
+                />
+              </label>
+            </div>
           </div>
           {bodyPreview ? (
             <div className="min-h-[9.5rem] rounded-lg border border-ink-200 bg-ink-50/50 px-3 py-2.5">
@@ -396,7 +400,8 @@ export default function LessonForm({ moduleId, courseId, editLesson, onSaved, on
             <textarea rows={6} placeholder="Write the lesson content here, or upload a document above to auto-fill it. # Heading, **bold**, - list, | table | work." value={body} onChange={(e) => setBody(e.target.value)} disabled={submitting} className={inputClass} />
           )}
           {transcribeError && <p className="mt-1 text-[11px] text-red-600">{transcribeError}</p>}
-          <p className="mt-1 text-[11px] text-ink-400">Supports Markdown — headings, bold/italic, links, lists, and tables render styled for learners.</p>
+          <p className="mt-1 text-[11px] text-ink-400">Supports Markdown — headings, bold/italic, links, lists, tables, and $LaTeX math$ all render styled for learners.</p>
+          <p className="mt-1 text-[11px] text-ink-400">&ldquo;Polish formatting with AI&rdquo; reformats whatever&apos;s in the box right now — headings, lists, tables, math — without changing what it says.</p>
           <p className="mt-1 text-[11px] text-ink-400">PDF or Word (.docx) only — extracted text is appended below anything already here, so you can review and edit it. Long PDFs are split into parts automatically.</p>
           <p className="mt-1 text-[11px] text-ink-400">Best for text-heavy notes. If your document has images, tables, or charts you want to keep intact, use a Document lesson instead.</p>
         </div>
