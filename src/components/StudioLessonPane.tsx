@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { GripVertical, Pencil, Plus, Trash2, X, Loader2, XCircle } from 'lucide-react';
 import {
   DndContext, closestCenter, PointerSensor, KeyboardSensor,
@@ -26,7 +27,6 @@ import type {
   DeleteModuleMutation, DeleteModuleMutationVariables,
 } from '@/API';
 import { LESSON_TYPE_ICONS, LESSON_TYPE_TINTS } from './LessonForm';
-import LessonModal from './LessonModal';
 
 export interface CourseModuleData {
   moduleId: string;
@@ -112,11 +112,10 @@ function SortableLessonRow({
 }
 
 export default function StudioLessonPane({ module: mod, onModuleDeleted }: StudioLessonPaneProps) {
+  const router = useRouter();
   const toast = useToast();
   const [lessons, setLessons] = useState<LessonRowData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [lessonModalOpen, setLessonModalOpen] = useState(false);
-  const [editingLessonId, setEditingLessonId] = useState<string | null>(null);
   const [busyLessonId, setBusyLessonId] = useState<string | null>(null);
   const [moduleBusy, setModuleBusy] = useState(false);
   const [error, setError] = useState('');
@@ -272,7 +271,7 @@ export default function StudioLessonPane({ module: mod, onModuleDeleted }: Studi
                     lesson={lesson}
                     busy={busyLessonId === lesson.lessonId}
                     onDelete={() => handleDeleteLesson(lesson.lessonId)}
-                    onEdit={() => { setEditingLessonId(lesson.lessonId); setLessonModalOpen(true); }}
+                    onEdit={() => router.push(`/studio/${mod.courseId}/modules/${mod.moduleId}/lessons/${lesson.lessonId}`)}
                   />
                 ))}
               </SortableContext>
@@ -281,25 +280,13 @@ export default function StudioLessonPane({ module: mod, onModuleDeleted }: Studi
 
           <button
             type="button"
-            onClick={() => { setEditingLessonId(null); setLessonModalOpen(true); }}
+            onClick={() => router.push(`/studio/${mod.courseId}/modules/${mod.moduleId}/lessons/new`)}
             className="w-full rounded-xl border border-dashed border-ink-200 py-2.5 flex items-center justify-center gap-1.5 text-xs font-semibold text-ink-400 hover:border-coral-300 hover:text-coral-600 transition-colors"
           >
             <Plus className="w-3.5 h-3.5" /> Add a lesson
           </button>
         </div>
       )}
-
-      <LessonModal
-        open={lessonModalOpen}
-        onClose={() => setLessonModalOpen(false)}
-        moduleId={mod.moduleId}
-        courseId={mod.courseId}
-        editLessonId={editingLessonId ?? undefined}
-        onSaved={() => {
-          setLessonModalOpen(false);
-          void loadLessons();
-        }}
-      />
     </div>
   );
 }

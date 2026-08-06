@@ -254,8 +254,9 @@ export default function LessonForm({ moduleId, courseId, editLesson, onSaved, on
   if (!type) {
     return (
       <div className="px-6 py-5">
-        <p className="text-xs font-bold text-ink-500 mb-3">What kind of lesson?</p>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-4">
+        <h2 className="text-lg font-extrabold text-ink-900 mb-1">What kind of lesson?</h2>
+        <p className="text-sm text-ink-400 mb-5">Pick a format — you can always add more lessons of a different kind after.</p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
           {LESSON_TYPES.map((t) => {
             const Icon = LESSON_TYPE_ICONS[t];
             const tint = LESSON_TYPE_TINTS[t];
@@ -264,14 +265,14 @@ export default function LessonForm({ moduleId, courseId, editLesson, onSaved, on
                 key={t}
                 type="button"
                 onClick={() => pickType(t)}
-                className="flex flex-col items-start gap-2 rounded-xl border-2 border-ink-100 p-3 text-left hover:border-coral-200 hover:bg-coral-50/40 transition-colors"
+                className={`group flex flex-col items-start gap-3 rounded-2xl border-2 border-transparent p-4 text-left ${tint.bg} transition-all duration-150 hover:-translate-y-0.5 hover:shadow-md hover:border-white/60`}
               >
-                <span className={`w-8 h-8 rounded-lg flex items-center justify-center ${tint.bg} ${tint.text}`}>
-                  <Icon className="w-4 h-4" />
+                <span className="w-10 h-10 rounded-xl bg-white/70 flex items-center justify-center flex-shrink-0 shadow-sm group-hover:scale-110 transition-transform">
+                  <Icon className={`w-5 h-5 ${tint.text}`} />
                 </span>
                 <span>
-                  <span className="block text-xs font-bold text-ink-900">{LESSON_TYPE_LABELS[t]}</span>
-                  <span className="block text-[10.5px] text-ink-400 leading-snug">{LESSON_TYPE_HINTS[t]}</span>
+                  <span className={`block text-sm font-extrabold ${tint.text}`}>{LESSON_TYPE_LABELS[t]}</span>
+                  <span className="block text-[11px] text-ink-500 leading-snug mt-0.5">{LESSON_TYPE_HINTS[t]}</span>
                 </span>
               </button>
             );
@@ -284,10 +285,13 @@ export default function LessonForm({ moduleId, courseId, editLesson, onSaved, on
     );
   }
 
+  const activeTint = LESSON_TYPE_TINTS[type];
+  const ActiveIcon = LESSON_TYPE_ICONS[type];
+
   return (
     <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
-      <div className="flex items-center gap-1.5 text-xs font-bold text-coral-700">
-        {(() => { const Icon = LESSON_TYPE_ICONS[type]; return <Icon className="w-3.5 h-3.5" />; })()}
+      <div className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${activeTint.bg} ${activeTint.text}`}>
+        <ActiveIcon className="w-3.5 h-3.5" />
         {LESSON_TYPE_LABELS[type]}
       </div>
 
