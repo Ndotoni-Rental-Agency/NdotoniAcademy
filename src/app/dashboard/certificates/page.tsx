@@ -1,11 +1,15 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Award, Download } from 'lucide-react';
-import { courses, demoCertificates, Course, Certificate } from '@/lib/mock-data';
+import { Award, Download, Loader2 } from 'lucide-react';
 import { useAuth, displayName, dashboardModeFor } from '@/lib/auth-context';
 import { accentByMode } from '@/lib/dashboard-accent';
+import { GraphQLClient } from '@/lib/graphql-client';
+import { myCertificates as myCertificatesQuery } from '@/graphql/queries';
+import type { MyCertificatesQuery } from '@/API';
+
+type Certificate = MyCertificatesQuery['myCertificates'][number];
 
 const accentHex: Record<string, string> = {
   'Project Management': '#4f46e5',
@@ -14,10 +18,11 @@ const accentHex: Record<string, string> = {
   Design: '#d97706',
 };
 
-function openCertificate(cert: Certificate, userName: string, course?: Course) {
+function openCertificate(cert: Certificate) {
   const issued = new Date(cert.issuedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-  const accent = accentHex[course?.category ?? ''] ?? '#4f46e5';
+  const accent = accentHex[cert.category ?? ''] ?? '#4f46e5';
   const certificateId = `NDT-${cert.id.toUpperCase()}`;
+  const instructorName = cert.instructor ? displayName(cert.instructor) : 'Ndotoni Academy';
   const win = window.open('', '_blank');
   if (!win) return;
   win.document.write(`
@@ -69,14 +74,14 @@ function openCertificate(cert: Certificate, userName: string, course?: Course) {
               </div>
               <p class="serif eyebrow">Certificate of Completion</p>
               <p class="label">This certifies that</p>
-              <p class="serif name">${userName}</p>
+              <p class="serif name">${displayName(cert.holder)}</p>
               <p class="label" style="margin-top:20px;">has successfully completed</p>
               <p class="serif course">${cert.courseTitle}</p>
               <div class="rule"></div>
-              <p class="meta">Score: <strong>${cert.score}%</strong> &middot; <strong>${cert.points}</strong> points &middot; Issued ${issued}</p>
+              <p class="meta"><strong>${cert.totalLessons}</strong> lesson${cert.totalLessons === 1 ? '' : 's'} &middot; Issued ${issued}</p>
               <div class="bottom">
                 <div>
-                  <p class="serif sig">${course?.instructor ?? 'Ndotoni Academy'}</p>
+                  <p class="serif sig">${instructorName}</p>
                   <p class="caption">Instructor</p>
                 </div>
                 <div class="serial">
@@ -102,9 +107,28 @@ export default function CertificatesPage() {
   const isOrgManager = user ? dashboardModeFor(user, wantsToTeach) === 'organization' : false;
   const accent = user ? accentByMode[dashboardModeFor(user, wantsToTeach)] : accentByMode.learner;
 
+  const [certificates, setCertificates] = useState<Certificate[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { myCertificates: fetched } = await GraphQLClient.execute<MyCertificatesQuery>(myCertificatesQuery);
+      setCertificates(fetched);
+    } catch (err) {
+      console.error('[CertificatesPage] myCertificates failed ->', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (isOrgManager) router.replace('/dashboard');
   }, [isOrgManager, router]);
+
+  useEffect(() => {
+    if (user && !isOrgManager) void load();
+  }, [user, isOrgManager, load]);
 
   if (!user || isOrgManager) return null; // no user yet: DashboardLayout is still loading/redirecting
 
@@ -113,30 +137,31 @@ export default function CertificatesPage() {
       <h1 className="text-2xl font-extrabold text-ink-900 mb-1">Certificates</h1>
       <p className="text-sm text-ink-500 mb-8">Certificates you have earned by completing courses.</p>
 
-      {demoCertificates.length > 0 ? (
+      {loading ? (
+        <div className="flex items-center justify-center rounded-xl border border-ink-200 bg-white py-16">
+          <Loader2 className="w-5 h-5 text-ink-400 animate-spin" />
+        </div>
+      ) : certificates.length > 0 ? (
         <div className="rounded-xl border border-ink-200 bg-white divide-y divide-ink-100">
-          {demoCertificates.map((cert) => {
-            const course = courses.find((c) => c.title === cert.courseTitle);
-            return (
-              <div key={cert.id} className="flex items-center gap-3 py-2.5 px-3.5">
-                <div className="w-[30px] h-[30px] rounded-full bg-warm-100 flex items-center justify-center flex-shrink-0">
-                  <Award className="w-3.5 h-3.5 text-warm-600" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[13.5px] font-semibold text-ink-900 truncate">{cert.courseTitle}</p>
-                  <p className="text-[11.5px] text-ink-400">
-                    Score {cert.score}% · {cert.points} points · Issued {new Date(cert.issuedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                  </p>
-                </div>
-                <button
-                  onClick={() => openCertificate(cert, displayName(user), course)}
-                  className={`flex items-center gap-1.5 text-xs font-bold ${accent.text600} hover:underline flex-shrink-0`}
-                >
-                  <Download className="w-3.5 h-3.5" /> Download
-                </button>
+          {certificates.map((cert) => (
+            <div key={cert.id} className="flex items-center gap-3 py-2.5 px-3.5">
+              <div className="w-[30px] h-[30px] rounded-full bg-warm-100 flex items-center justify-center flex-shrink-0">
+                <Award className="w-3.5 h-3.5 text-warm-600" />
               </div>
-            );
-          })}
+              <div className="flex-1 min-w-0">
+                <p className="text-[13.5px] font-semibold text-ink-900 truncate">{cert.courseTitle}</p>
+                <p className="text-[11.5px] text-ink-400">
+                  {cert.totalLessons} lesson{cert.totalLessons === 1 ? '' : 's'} · Issued {new Date(cert.issuedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                </p>
+              </div>
+              <button
+                onClick={() => openCertificate(cert)}
+                className={`flex items-center gap-1.5 text-xs font-bold ${accent.text600} hover:underline flex-shrink-0`}
+              >
+                <Download className="w-3.5 h-3.5" /> Download
+              </button>
+            </div>
+          ))}
         </div>
       ) : (
         <div className="text-center py-16">

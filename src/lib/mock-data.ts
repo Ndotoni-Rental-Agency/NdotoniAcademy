@@ -43,24 +43,6 @@ export interface Course {
   prerequisites: string[];
 }
 
-export interface EnrolledCourse {
-  courseId: string;
-  courseTitle: string;
-  progress: number; // 0-100
-  currentModule: number;
-  totalModules: number;
-  enrolledAt: string;
-  lastAccessedAt: string;
-}
-
-export interface Certificate {
-  id: string;
-  courseTitle: string;
-  issuedAt: string;
-  points: number;
-  score: number;
-}
-
 // ============================================================
 // Course 1: Foundations of Project Management
 // ============================================================
@@ -1149,47 +1131,6 @@ export const courses: Course[] = [
 // ============================================================
 // User Profile (mock authenticated user)
 // ============================================================
-
-// ============================================================
-// Demo learning content — courses/certificates/points aren't part of the
-// real backend yet (intentionally out of scope for the auth-only MVP, see
-// ndotoniAcademyBackend's CLAUDE.md), so this stays static placeholder
-// content rather than mocking a "current user" the way auth data used to.
-// Real identity/organization info now comes from useAuth() instead.
-// ============================================================
-export const demoEnrolledCourses: EnrolledCourse[] = [
-  {
-    courseId: 'project-management',
-    courseTitle: 'Foundations of Project Management',
-    progress: 33,
-    currentModule: 2,
-    totalModules: 6,
-    enrolledAt: '2026-06-15',
-    lastAccessedAt: '2026-07-20',
-  },
-  {
-    courseId: 'digital-marketing',
-    courseTitle: 'Digital Marketing Essentials',
-    progress: 0,
-    currentModule: 1,
-    totalModules: 4,
-    enrolledAt: '2026-07-22',
-    lastAccessedAt: '2026-07-22',
-  },
-];
-
-export const demoCertificates: Certificate[] = [
-  {
-    id: 'cert-001',
-    courseTitle: 'Foundations of Project Management',
-    issuedAt: '2026-05-10',
-    points: 8,
-    score: 85,
-  },
-];
-
-export const demoPoints = { earned: 8, target: 30 };
-export const demoStreakDays = 4;
 
 // ============================================================
 // Helper Functions

@@ -366,6 +366,31 @@ export type UpdateUserProfileInput = {
   lastName?: string | null,
 };
 
+export type CourseCertificate = {
+  __typename: "CourseCertificate",
+  category?: string | null,
+  courseId: string,
+  courseTitle: string,
+  holder: User,
+  id: string,
+  instructor?: User | null,
+  issuedAt: string,
+  totalLessons: number,
+};
+
+export type CourseLearningSummary = {
+  __typename: "CourseLearningSummary",
+  category?: string | null,
+  completedLessonCount: number,
+  courseId: string,
+  lastActivityAt: string,
+  resumeLessonId?: string | null,
+  resumeModuleId?: string | null,
+  thumbnailUrl?: string | null,
+  title: string,
+  totalLessons: number,
+};
+
 export type AcceptInvitationMutationVariables = {
   token: string,
 };
@@ -1710,6 +1735,110 @@ export type UpdateProfileMutation = {
   } | null,
 };
 
+export type CertificateByPublicIdQueryVariables = {
+  id: string,
+};
+
+export type CertificateByPublicIdQuery = {
+  certificateByPublicId?:  {
+    __typename: "CourseCertificate",
+    category?: string | null,
+    courseId: string,
+    courseTitle: string,
+    holder:  {
+      __typename: "User",
+      avatarUrl?: string | null,
+      createdAt: string,
+      email: string,
+      firstName?: string | null,
+      id: string,
+      instructorStatus?: InstructorStatus | null,
+      lastName?: string | null,
+      organizations:  Array< {
+        __typename: "OrganizationMembership",
+        id: string,
+        joinedAt?: string | null,
+        organization?:  {
+          __typename: "Organization",
+          createdAt: string,
+          id: string,
+          name: string,
+          slug: string,
+          status: OrganizationStatus,
+          type: OrganizationType,
+        } | null,
+        organizationId: string,
+        permissions: Array< string >,
+        role: MembershipRole,
+        status: MembershipStatus,
+        user?:  {
+          __typename: "User",
+          avatarUrl?: string | null,
+          createdAt: string,
+          email: string,
+          firstName?: string | null,
+          id: string,
+          instructorStatus?: InstructorStatus | null,
+          lastName?: string | null,
+          status: UserStatus,
+          updatedAt: string,
+        } | null,
+        userId: string,
+        wantsToBeInstructor: boolean,
+      } >,
+      status: UserStatus,
+      updatedAt: string,
+    },
+    id: string,
+    instructor?:  {
+      __typename: "User",
+      avatarUrl?: string | null,
+      createdAt: string,
+      email: string,
+      firstName?: string | null,
+      id: string,
+      instructorStatus?: InstructorStatus | null,
+      lastName?: string | null,
+      organizations:  Array< {
+        __typename: "OrganizationMembership",
+        id: string,
+        joinedAt?: string | null,
+        organization?:  {
+          __typename: "Organization",
+          createdAt: string,
+          id: string,
+          name: string,
+          slug: string,
+          status: OrganizationStatus,
+          type: OrganizationType,
+        } | null,
+        organizationId: string,
+        permissions: Array< string >,
+        role: MembershipRole,
+        status: MembershipStatus,
+        user?:  {
+          __typename: "User",
+          avatarUrl?: string | null,
+          createdAt: string,
+          email: string,
+          firstName?: string | null,
+          id: string,
+          instructorStatus?: InstructorStatus | null,
+          lastName?: string | null,
+          status: UserStatus,
+          updatedAt: string,
+        } | null,
+        userId: string,
+        wantsToBeInstructor: boolean,
+      } >,
+      status: UserStatus,
+      updatedAt: string,
+    } | null,
+    issuedAt: string,
+    totalLessons: number,
+  } | null,
+};
+
 export type CourseQueryVariables = {
   id: string,
 };
@@ -2172,6 +2301,109 @@ export type ModulesForCourseQuery = {
   } >,
 };
 
+export type MyCertificatesQueryVariables = {
+};
+
+export type MyCertificatesQuery = {
+  myCertificates:  Array< {
+    __typename: "CourseCertificate",
+    category?: string | null,
+    courseId: string,
+    courseTitle: string,
+    holder:  {
+      __typename: "User",
+      avatarUrl?: string | null,
+      createdAt: string,
+      email: string,
+      firstName?: string | null,
+      id: string,
+      instructorStatus?: InstructorStatus | null,
+      lastName?: string | null,
+      organizations:  Array< {
+        __typename: "OrganizationMembership",
+        id: string,
+        joinedAt?: string | null,
+        organization?:  {
+          __typename: "Organization",
+          createdAt: string,
+          id: string,
+          name: string,
+          slug: string,
+          status: OrganizationStatus,
+          type: OrganizationType,
+        } | null,
+        organizationId: string,
+        permissions: Array< string >,
+        role: MembershipRole,
+        status: MembershipStatus,
+        user?:  {
+          __typename: "User",
+          avatarUrl?: string | null,
+          createdAt: string,
+          email: string,
+          firstName?: string | null,
+          id: string,
+          instructorStatus?: InstructorStatus | null,
+          lastName?: string | null,
+          status: UserStatus,
+          updatedAt: string,
+        } | null,
+        userId: string,
+        wantsToBeInstructor: boolean,
+      } >,
+      status: UserStatus,
+      updatedAt: string,
+    },
+    id: string,
+    instructor?:  {
+      __typename: "User",
+      avatarUrl?: string | null,
+      createdAt: string,
+      email: string,
+      firstName?: string | null,
+      id: string,
+      instructorStatus?: InstructorStatus | null,
+      lastName?: string | null,
+      organizations:  Array< {
+        __typename: "OrganizationMembership",
+        id: string,
+        joinedAt?: string | null,
+        organization?:  {
+          __typename: "Organization",
+          createdAt: string,
+          id: string,
+          name: string,
+          slug: string,
+          status: OrganizationStatus,
+          type: OrganizationType,
+        } | null,
+        organizationId: string,
+        permissions: Array< string >,
+        role: MembershipRole,
+        status: MembershipStatus,
+        user?:  {
+          __typename: "User",
+          avatarUrl?: string | null,
+          createdAt: string,
+          email: string,
+          firstName?: string | null,
+          id: string,
+          instructorStatus?: InstructorStatus | null,
+          lastName?: string | null,
+          status: UserStatus,
+          updatedAt: string,
+        } | null,
+        userId: string,
+        wantsToBeInstructor: boolean,
+      } >,
+      status: UserStatus,
+      updatedAt: string,
+    } | null,
+    issuedAt: string,
+    totalLessons: number,
+  } >,
+};
+
 export type MyCourseProgressQueryVariables = {
   courseId: string,
 };
@@ -2287,6 +2519,24 @@ export type MyCoursesQuery = {
     thumbnailUrl?: string | null,
     title: string,
     updatedAt: string,
+  } >,
+};
+
+export type MyLearningQueryVariables = {
+};
+
+export type MyLearningQuery = {
+  myLearning:  Array< {
+    __typename: "CourseLearningSummary",
+    category?: string | null,
+    completedLessonCount: number,
+    courseId: string,
+    lastActivityAt: string,
+    resumeLessonId?: string | null,
+    resumeModuleId?: string | null,
+    thumbnailUrl?: string | null,
+    title: string,
+    totalLessons: number,
   } >,
 };
 

@@ -4,13 +4,12 @@ import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Award, Loader2, Sparkles, TrendingUp, FilePlus2, Layers, Rocket } from 'lucide-react';
-import { getCourse, demoEnrolledCourses, demoCertificates } from '@/lib/mock-data';
 import { type AuthUser } from '@/lib/auth-context';
 import { accentByMode } from '@/lib/dashboard-accent';
 import { GraphQLClient } from '@/lib/graphql-client';
-import { myCourses } from '@/graphql/queries';
+import { myCourses, myLearning as myLearningQuery, myCertificates as myCertificatesQuery } from '@/graphql/queries';
 import { CourseStatus } from '@/API';
-import type { MyCoursesQuery } from '@/API';
+import type { MyCoursesQuery, MyLearningQuery, MyCertificatesQuery } from '@/API';
 import EnrolledCourseCard from '@/components/EnrolledCourseCard';
 import DashboardStatCard from '@/components/DashboardStatCard';
 import InstructorCourseCard from '@/components/InstructorCourseCard';
@@ -32,6 +31,8 @@ export default function InstructorOverview({ user }: { user: AuthUser }) {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [teachingCourses, setTeachingCourses] = useState<MyCoursesQuery['myCourses']>([]);
   const [loadingCourses, setLoadingCourses] = useState(true);
+  const [learning, setLearning] = useState<MyLearningQuery['myLearning']>([]);
+  const [certificates, setCertificates] = useState<MyCertificatesQuery['myCertificates']>([]);
   const accent = accentByMode.instructor;
   const membership = user.organizations[0];
   const org = membership?.organization;
@@ -53,6 +54,24 @@ export default function InstructorOverview({ user }: { user: AuthUser }) {
   useEffect(() => {
     void loadCourses();
   }, [loadCourses]);
+
+  // An instructor is still a learner too — this powers the "Continue
+  // learning"/"Certificates" sections below, same real data LearnerOverview
+  // uses, just presented last and small here since teaching is the headline.
+  useEffect(() => {
+    (async () => {
+      try {
+        const [{ myLearning: fetchedLearning }, { myCertificates: fetchedCertificates }] = await Promise.all([
+          GraphQLClient.execute<MyLearningQuery>(myLearningQuery),
+          GraphQLClient.execute<MyCertificatesQuery>(myCertificatesQuery),
+        ]);
+        setLearning(fetchedLearning);
+        setCertificates(fetchedCertificates);
+      } catch (err) {
+        console.error('[InstructorOverview] myLearning/myCertificates failed ->', err);
+      }
+    })();
+  }, []);
 
   return (
     <div className="p-6 lg:p-8 max-w-5xl">
@@ -173,30 +192,25 @@ export default function InstructorOverview({ user }: { user: AuthUser }) {
           teaching. Present, but deliberately last and small, and in the
           learner accent color, not the instructor one — same mixed-sources
           "Assigned" tagging as the Learner view, not a separate mechanism. */}
-      {demoEnrolledCourses.length > 0 && (
+      {learning.length > 0 && (
         <section className="mb-6">
           <div className="flex items-baseline justify-between mb-2.5">
             <h2 className="text-xs font-bold text-ink-400 uppercase tracking-wide">Continue learning</h2>
             <Link href="/dashboard/courses" className="text-xs font-bold text-indigo-600 hover:underline">My learning</Link>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {demoEnrolledCourses.map((enrolled, i) => (
-              <EnrolledCourseCard
-                key={enrolled.courseId}
-                enrolled={enrolled}
-                course={getCourse(enrolled.courseId)}
-                assignedBy={i === 0 && org ? org.name : undefined}
-              />
+            {learning.map((item) => (
+              <EnrolledCourseCard key={item.courseId} learning={item} />
             ))}
           </div>
         </section>
       )}
 
-      {demoCertificates.length > 0 && (
+      {certificates.length > 0 && (
         <section>
           <h2 className="text-xs font-bold text-ink-400 uppercase tracking-wide mb-2.5">Certificates</h2>
           <div className="rounded-xl border border-ink-200 bg-white divide-y divide-ink-100">
-            {demoCertificates.map((cert) => (
+            {certificates.map((cert) => (
               <div key={cert.id} className="flex items-center gap-3 py-2.5 px-3.5">
                 <div className="w-[30px] h-[30px] rounded-full bg-warm-100 flex items-center justify-center flex-shrink-0">
                   <Award className="w-3.5 h-3.5 text-warm-600" />
@@ -204,7 +218,7 @@ export default function InstructorOverview({ user }: { user: AuthUser }) {
                 <div className="flex-1 min-w-0">
                   <p className="text-[13.5px] font-semibold text-ink-900 truncate">{cert.courseTitle}</p>
                   <p className="text-[11.5px] text-ink-400">
-                    Score {cert.score}% · Issued {new Date(cert.issuedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    Issued {new Date(cert.issuedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </p>
                 </div>
                 <Link href="/dashboard/certificates" className="text-xs font-bold text-indigo-600 flex-shrink-0">Download</Link>

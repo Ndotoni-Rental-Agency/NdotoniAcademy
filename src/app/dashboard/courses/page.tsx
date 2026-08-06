@@ -3,13 +3,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2, Plus, Search } from 'lucide-react';
-import { courses, demoEnrolledCourses } from '@/lib/mock-data';
 import { useAuth, dashboardModeFor, type DashboardMode } from '@/lib/auth-context';
 import { accentByMode } from '@/lib/dashboard-accent';
 import { GraphQLClient } from '@/lib/graphql-client';
-import { myCourses, coursesForOrganization, publicCourses as publicCoursesQuery } from '@/graphql/queries';
+import { myCourses, coursesForOrganization, publicCourses as publicCoursesQuery, myLearning as myLearningQuery } from '@/graphql/queries';
 import { CourseStatus } from '@/API';
-import type { MyCoursesQuery, CoursesForOrganizationQuery, PublicCoursesQuery } from '@/API';
+import type { MyCoursesQuery, CoursesForOrganizationQuery, PublicCoursesQuery, MyLearningQuery } from '@/API';
 import EnrolledCourseCard from '@/components/EnrolledCourseCard';
 import PublicCourseCard, { type PublicCourse } from '@/components/PublicCourseCard';
 import InstructorCourseCard from '@/components/InstructorCourseCard';
@@ -102,7 +101,7 @@ export default function CoursesPage() {
   // instructor permission and shouldn't see course-creation UI — an
   // independent learner (no org at all) or a real INSTRUCTOR does.
   const canTeach = mode === 'instructor' || !org;
-  return <LearnerCoursesPage canTeach={canTeach} orgName={org?.name} mode={mode} />;
+  return <LearnerCoursesPage canTeach={canTeach} mode={mode} />;
 }
 
 // ============================================================
@@ -202,11 +201,9 @@ function OrganizationCoursesPage({ organizationId }: { organizationId: string })
 // ============================================================
 function LearnerCoursesPage({
   canTeach,
-  orgName,
   mode,
 }: {
   canTeach: boolean;
-  orgName?: string;
   mode: DashboardMode;
 }) {
   // Same convention as the Overview: teaching uses the instructor accent only
@@ -221,6 +218,8 @@ function LearnerCoursesPage({
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [catalog, setCatalog] = useState<PublicCourse[]>([]);
   const [loadingCatalog, setLoadingCatalog] = useState(true);
+  const [learning, setLearning] = useState<MyLearningQuery['myLearning']>([]);
+  const [loadingLearning, setLoadingLearning] = useState(true);
   const teachingFilters = useCourseFilters(teachingCourses);
 
   const loadCourses = useCallback(async () => {
@@ -238,6 +237,20 @@ function LearnerCoursesPage({
   useEffect(() => {
     if (canTeach) void loadCourses();
   }, [canTeach, loadCourses]);
+
+  useEffect(() => {
+    (async () => {
+      setLoadingLearning(true);
+      try {
+        const { myLearning: fetched } = await GraphQLClient.execute<MyLearningQuery>(myLearningQuery);
+        setLearning(fetched);
+      } catch (err) {
+        console.error('[CoursesPage] myLearning failed ->', err);
+      } finally {
+        setLoadingLearning(false);
+      }
+    })();
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -273,19 +286,15 @@ function LearnerCoursesPage({
       {/* Learning */}
       <section className="mb-12">
         <h2 className="text-xs font-bold text-ink-400 uppercase tracking-wide mb-2.5">Learning</h2>
-        {demoEnrolledCourses.length > 0 ? (
+        {loadingLearning ? (
+          <div className="flex items-center justify-center rounded-xl border border-ink-200 bg-white py-8">
+            <Loader2 className="w-5 h-5 text-ink-400 animate-spin" />
+          </div>
+        ) : learning.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
-            {demoEnrolledCourses.map((enrolled, i) => {
-              const course = courses.find(c => c.id === enrolled.courseId);
-              return (
-                <EnrolledCourseCard
-                  key={enrolled.courseId}
-                  enrolled={enrolled}
-                  course={course}
-                  assignedBy={i === 0 && orgName ? orgName : undefined}
-                />
-              );
-            })}
+            {learning.map((item) => (
+              <EnrolledCourseCard key={item.courseId} learning={item} />
+            ))}
           </div>
         ) : (
           <p className="text-ink-400 text-sm">You have not enrolled in any courses yet.</p>

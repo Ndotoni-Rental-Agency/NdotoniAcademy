@@ -8,6 +8,109 @@ type GeneratedQuery<InputType, OutputType> = string & {
   __generatedQueryOutput: OutputType;
 };
 
+export const certificateByPublicId = /* GraphQL */ `query CertificateByPublicId($id: ID!) {
+  certificateByPublicId(id: $id) {
+    category
+    courseId
+    courseTitle
+    holder {
+      avatarUrl
+      createdAt
+      email
+      firstName
+      id
+      instructorStatus
+      lastName
+      organizations {
+        id
+        joinedAt
+        organization {
+          createdAt
+          id
+          name
+          slug
+          status
+          type
+          __typename
+        }
+        organizationId
+        permissions
+        role
+        status
+        user {
+          avatarUrl
+          createdAt
+          email
+          firstName
+          id
+          instructorStatus
+          lastName
+          status
+          updatedAt
+          __typename
+        }
+        userId
+        wantsToBeInstructor
+        __typename
+      }
+      status
+      updatedAt
+      __typename
+    }
+    id
+    instructor {
+      avatarUrl
+      createdAt
+      email
+      firstName
+      id
+      instructorStatus
+      lastName
+      organizations {
+        id
+        joinedAt
+        organization {
+          createdAt
+          id
+          name
+          slug
+          status
+          type
+          __typename
+        }
+        organizationId
+        permissions
+        role
+        status
+        user {
+          avatarUrl
+          createdAt
+          email
+          firstName
+          id
+          instructorStatus
+          lastName
+          status
+          updatedAt
+          __typename
+        }
+        userId
+        wantsToBeInstructor
+        __typename
+      }
+      status
+      updatedAt
+      __typename
+    }
+    issuedAt
+    totalLessons
+    __typename
+  }
+}
+` as GeneratedQuery<
+  APITypes.CertificateByPublicIdQueryVariables,
+  APITypes.CertificateByPublicIdQuery
+>;
 export const course = /* GraphQL */ `query Course($id: ID!) {
   course(id: $id) {
     category
@@ -448,6 +551,109 @@ export const modulesForCourse = /* GraphQL */ `query ModulesForCourse($courseId:
   APITypes.ModulesForCourseQueryVariables,
   APITypes.ModulesForCourseQuery
 >;
+export const myCertificates = /* GraphQL */ `query MyCertificates {
+  myCertificates {
+    category
+    courseId
+    courseTitle
+    holder {
+      avatarUrl
+      createdAt
+      email
+      firstName
+      id
+      instructorStatus
+      lastName
+      organizations {
+        id
+        joinedAt
+        organization {
+          createdAt
+          id
+          name
+          slug
+          status
+          type
+          __typename
+        }
+        organizationId
+        permissions
+        role
+        status
+        user {
+          avatarUrl
+          createdAt
+          email
+          firstName
+          id
+          instructorStatus
+          lastName
+          status
+          updatedAt
+          __typename
+        }
+        userId
+        wantsToBeInstructor
+        __typename
+      }
+      status
+      updatedAt
+      __typename
+    }
+    id
+    instructor {
+      avatarUrl
+      createdAt
+      email
+      firstName
+      id
+      instructorStatus
+      lastName
+      organizations {
+        id
+        joinedAt
+        organization {
+          createdAt
+          id
+          name
+          slug
+          status
+          type
+          __typename
+        }
+        organizationId
+        permissions
+        role
+        status
+        user {
+          avatarUrl
+          createdAt
+          email
+          firstName
+          id
+          instructorStatus
+          lastName
+          status
+          updatedAt
+          __typename
+        }
+        userId
+        wantsToBeInstructor
+        __typename
+      }
+      status
+      updatedAt
+      __typename
+    }
+    issuedAt
+    totalLessons
+    __typename
+  }
+}
+` as GeneratedQuery<
+  APITypes.MyCertificatesQueryVariables,
+  APITypes.MyCertificatesQuery
+>;
 export const myCourseProgress = /* GraphQL */ `query MyCourseProgress($courseId: ID!) {
   myCourseProgress(courseId: $courseId) {
     completedLessonIds
@@ -562,6 +768,24 @@ export const myCourses = /* GraphQL */ `query MyCourses {
   }
 }
 ` as GeneratedQuery<APITypes.MyCoursesQueryVariables, APITypes.MyCoursesQuery>;
+export const myLearning = /* GraphQL */ `query MyLearning {
+  myLearning {
+    category
+    completedLessonCount
+    courseId
+    lastActivityAt
+    resumeLessonId
+    resumeModuleId
+    thumbnailUrl
+    title
+    totalLessons
+    __typename
+  }
+}
+` as GeneratedQuery<
+  APITypes.MyLearningQueryVariables,
+  APITypes.MyLearningQuery
+>;
 export const myLessons = /* GraphQL */ `query MyLessons {
   myLessons {
     animationRef

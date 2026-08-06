@@ -1,14 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Award, Building2, Download, Loader2, Sparkles } from 'lucide-react';
-import { courses, getCourse, demoEnrolledCourses, demoCertificates, demoPoints, demoStreakDays } from '@/lib/mock-data';
+import { courses } from '@/lib/mock-data';
 import { useAuth, type AuthUser } from '@/lib/auth-context';
 import { accentByMode } from '@/lib/dashboard-accent';
 import { GraphQLClient } from '@/lib/graphql-client';
 import { requestInstructorRole } from '@/graphql/mutations';
-import type { RequestInstructorRoleMutation, RequestInstructorRoleMutationVariables } from '@/API';
+import { myLearning as myLearningQuery, myCertificates as myCertificatesQuery } from '@/graphql/queries';
+import type {
+  RequestInstructorRoleMutation, RequestInstructorRoleMutationVariables,
+  MyLearningQuery, MyCertificatesQuery,
+} from '@/API';
 import EnrolledCourseCard from '@/components/EnrolledCourseCard';
 import CourseCard from '@/components/CourseCard';
 import ProgressRing from '@/components/ProgressRing';
@@ -24,9 +28,44 @@ export default function LearnerOverview({ user }: { user: AuthUser }) {
   const membership = user.organizations[0];
   const org = membership?.organization;
   const isPlainMember = membership?.role === 'MEMBER';
-  const [primary] = demoEnrolledCourses;
-  const primaryCourse = primary ? getCourse(primary.courseId) : undefined;
-  const currentModuleTitle = primaryCourse?.modules.find((m) => m.order === primary?.currentModule)?.title;
+
+  const [learning, setLearning] = useState<MyLearningQuery['myLearning']>([]);
+  const [certificates, setCertificates] = useState<MyCertificatesQuery['myCertificates']>([]);
+  const [loadingLearning, setLoadingLearning] = useState(true);
+
+  const loadLearning = useCallback(async () => {
+    setLoadingLearning(true);
+    try {
+      const [{ myLearning: fetchedLearning }, { myCertificates: fetchedCertificates }] = await Promise.all([
+        GraphQLClient.execute<MyLearningQuery>(myLearningQuery),
+        GraphQLClient.execute<MyCertificatesQuery>(myCertificatesQuery),
+      ]);
+      setLearning(fetchedLearning);
+      setCertificates(fetchedCertificates);
+    } catch (err) {
+      console.error('[LearnerOverview] load failed ->', err);
+    } finally {
+      setLoadingLearning(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadLearning();
+  }, [loadLearning]);
+
+  // myLearning is sorted most-recently-active first — the natural "continue
+  // this one" pick, same idea the old mock hero used.
+  const primary = learning[0];
+  const inProgressCount = learning.filter((l) => l.completedLessonCount < l.totalLessons).length;
+  const lessonsCompleted = learning.reduce((sum, l) => sum + l.completedLessonCount, 0);
+  const primaryHref = primary
+    ? primary.resumeModuleId && primary.resumeLessonId
+      ? `/courses/${primary.courseId}/modules/${primary.resumeModuleId}/lessons/${primary.resumeLessonId}`
+      : `/courses/${primary.courseId}`
+    : undefined;
+  const primaryPercent = primary && primary.totalLessons > 0
+    ? Math.max(Math.round((primary.completedLessonCount / primary.totalLessons) * 100), 3)
+    : 0;
 
   const [requesting, setRequesting] = useState(false);
   const [requestError, setRequestError] = useState('');
@@ -54,17 +93,15 @@ export default function LearnerOverview({ user }: { user: AuthUser }) {
       {/* Hero: one obvious next action, not three equal-weight tiles */}
       {primary && (
         <div className={`flex items-center gap-4 rounded-2xl border border-ink-200 bg-gradient-to-br ${accent.gradientFrom} to-ink-50 p-5 mb-5`}>
-          <ProgressRing progress={primary.progress} colorClassName={accent.stroke600} size={56} strokeWidth={5} />
+          <ProgressRing progress={primaryPercent} colorClassName={accent.stroke600} size={56} strokeWidth={5} />
           <div className="flex-1 min-w-0">
-            <h2 className="font-bold text-ink-900 truncate">
-              Continue &quot;{currentModuleTitle ?? primaryCourse?.title ?? primary.courseTitle}&quot;
-            </h2>
+            <h2 className="font-bold text-ink-900 truncate">Continue &quot;{primary.title}&quot;</h2>
             <p className="text-xs text-ink-500 mt-0.5 truncate">
-              Module {primary.currentModule} of {primary.totalModules} · {primaryCourse?.title ?? primary.courseTitle}
+              {primary.completedLessonCount} of {primary.totalLessons} lessons complete
             </p>
           </div>
           <Link
-            href={`/courses/${primary.courseId}`}
+            href={primaryHref!}
             className={`rounded-xl ${accent.bg600} ${accent.bg600Hover} px-5 py-2.5 text-sm font-bold text-white transition-colors flex-shrink-0`}
           >
             Resume
@@ -129,46 +166,46 @@ export default function LearnerOverview({ user }: { user: AuthUser }) {
       )}
 
       {/* Compact secondary stats — supporting, not the headline */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-        <DashboardStatCard value={demoEnrolledCourses.length} label="In progress" />
-        <DashboardStatCard value={demoCertificates.length} label="Certificates" />
-        <DashboardStatCard value={<>{demoPoints.earned}<span className="text-ink-400 font-semibold text-base">/{demoPoints.target}</span></>} label="Points this month" />
-        <DashboardStatCard value={demoStreakDays} label="Day streak" />
+      <div className="grid grid-cols-3 gap-3 mb-6">
+        <DashboardStatCard value={inProgressCount} label="In progress" />
+        <DashboardStatCard value={certificates.length} label="Certificates" />
+        <DashboardStatCard value={lessonsCompleted} label="Lessons completed" />
       </div>
 
-      {/* Continue learning: mixed sources, tagged, not separated into two lists */}
+      {/* Continue learning */}
       <section className="mb-6">
         <div className="flex items-baseline justify-between mb-2.5">
           <h2 className="text-xs font-bold text-ink-400 uppercase tracking-wide">Continue learning</h2>
           <Link href="/dashboard/courses" className={`text-xs font-bold ${accent.text600} hover:underline`}>My courses</Link>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {demoEnrolledCourses.map((enrolled, i) => (
-            <EnrolledCourseCard
-              key={enrolled.courseId}
-              enrolled={enrolled}
-              course={getCourse(enrolled.courseId)}
-              assignedBy={i === 0 && org ? org.name : undefined}
-            />
-          ))}
-          <Link
-            href="/courses"
-            className="flex items-center justify-center rounded-xl border border-dashed border-ink-200 p-3.5 text-[12.5px] text-ink-400 hover:border-indigo-200 hover:text-indigo-600 transition-colors"
-          >
-            Browse the catalog →
-          </Link>
-        </div>
+        {loadingLearning ? (
+          <div className="flex items-center justify-center rounded-xl border border-ink-200 bg-white py-8">
+            <Loader2 className="w-5 h-5 text-ink-400 animate-spin" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {learning.map((item) => (
+              <EnrolledCourseCard key={item.courseId} learning={item} />
+            ))}
+            <Link
+              href="/courses"
+              className="flex items-center justify-center rounded-xl border border-dashed border-ink-200 p-3.5 text-[12.5px] text-ink-400 hover:border-indigo-200 hover:text-indigo-600 transition-colors"
+            >
+              Browse the catalog →
+            </Link>
+          </div>
+        )}
       </section>
 
       {/* Certificates */}
-      {demoCertificates.length > 0 && (
+      {certificates.length > 0 && (
         <section className="mb-6">
           <div className="flex items-baseline justify-between mb-2.5">
             <h2 className="text-xs font-bold text-ink-400 uppercase tracking-wide">Certificates</h2>
             <Link href="/dashboard/certificates" className={`text-xs font-bold ${accent.text600} hover:underline`}>View all</Link>
           </div>
           <div className="rounded-xl border border-ink-200 bg-white divide-y divide-ink-100">
-            {demoCertificates.map((cert) => (
+            {certificates.map((cert) => (
               <div key={cert.id} className="flex items-center gap-3 py-2.5 px-3.5">
                 <div className="w-[30px] h-[30px] rounded-full bg-warm-100 flex items-center justify-center flex-shrink-0">
                   <Award className="w-3.5 h-3.5 text-warm-600" />
@@ -176,7 +213,7 @@ export default function LearnerOverview({ user }: { user: AuthUser }) {
                 <div className="flex-1 min-w-0">
                   <p className="text-[13.5px] font-semibold text-ink-900 truncate">{cert.courseTitle}</p>
                   <p className="text-[11.5px] text-ink-400">
-                    Score {cert.score}% · Issued {new Date(cert.issuedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    Issued {new Date(cert.issuedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </p>
                 </div>
                 <Link href="/dashboard/certificates" className={`text-xs font-bold ${accent.text600} flex items-center gap-1 flex-shrink-0`}>
