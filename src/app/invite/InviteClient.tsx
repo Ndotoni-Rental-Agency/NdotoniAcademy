@@ -89,7 +89,7 @@ function Invite() {
       {status === 'checking' && (
         <>
           <Loader2 className="w-10 h-10 text-indigo-600 animate-spin mx-auto mb-5" />
-          <h1 className="text-xl font-extrabold text-ink-900 mb-1.5">Checking your invitation…</h1>
+          <h1 className="font-serif text-xl font-semibold text-ink-900 mb-1.5">Checking your invitation…</h1>
         </>
       )}
 
@@ -98,7 +98,7 @@ function Invite() {
           <div className="w-14 h-14 rounded-2xl bg-indigo-50 flex items-center justify-center mx-auto mb-5">
             <LogIn className="w-7 h-7 text-indigo-600" />
           </div>
-          <h1 className="text-xl font-extrabold text-ink-900 mb-1.5">Sign in to accept</h1>
+          <h1 className="font-serif text-xl font-semibold text-ink-900 mb-1.5">Sign in to accept</h1>
           <p className="text-sm text-ink-500 mb-6">
             Use the email address this invite was sent to. Already have an account? Sign in — otherwise, create one.
           </p>
@@ -124,7 +124,7 @@ function Invite() {
           <div className="w-14 h-14 rounded-2xl bg-warm-50 flex items-center justify-center mx-auto mb-5">
             <LogOut className="w-7 h-7 text-warm-600" />
           </div>
-          <h1 className="text-xl font-extrabold text-ink-900 mb-1.5">Wrong account</h1>
+          <h1 className="font-serif text-xl font-semibold text-ink-900 mb-1.5">Wrong account</h1>
           <p className="text-sm text-ink-500 mb-6">
             {signedInEmail ? <>You&apos;re signed in as <strong className="text-ink-700">{signedInEmail}</strong>, but</> : 'You’re signed in, but'} this invitation was sent to a different email address. Sign out and continue with the invited account.
           </p>
@@ -142,7 +142,7 @@ function Invite() {
           <div className="w-14 h-14 rounded-2xl bg-brand-50 flex items-center justify-center mx-auto mb-5">
             <CheckCircle2 className="w-7 h-7 text-brand-600" />
           </div>
-          <h1 className="text-xl font-extrabold text-ink-900 mb-1.5">You&apos;re in</h1>
+          <h1 className="font-serif text-xl font-semibold text-ink-900 mb-1.5">You&apos;re in</h1>
           <p className="text-sm text-ink-500 mb-6">
             {status === 'success'
               ? "You've joined the organization."
@@ -162,7 +162,7 @@ function Invite() {
           <div className="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center mx-auto mb-5">
             <XCircle className="w-7 h-7 text-red-600" />
           </div>
-          <h1 className="text-xl font-extrabold text-ink-900 mb-1.5">Couldn&apos;t accept invitation</h1>
+          <h1 className="font-serif text-xl font-semibold text-ink-900 mb-1.5">Couldn&apos;t accept invitation</h1>
           <p className="text-sm text-ink-500 mb-6">{error || 'This invitation may have expired or been revoked.'}</p>
           <Link
             href="/dashboard"
@@ -178,7 +178,7 @@ function Invite() {
           <div className="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center mx-auto mb-5">
             <XCircle className="w-7 h-7 text-red-600" />
           </div>
-          <h1 className="text-xl font-extrabold text-ink-900 mb-1.5">Invalid invitation link</h1>
+          <h1 className="font-serif text-xl font-semibold text-ink-900 mb-1.5">Invalid invitation link</h1>
           <p className="text-sm text-ink-500 mb-6">
             This link is missing some information. Copy the full link from your invitation email.
           </p>

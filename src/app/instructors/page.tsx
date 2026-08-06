@@ -23,7 +23,7 @@ export default function InstructorsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
             <Reveal y={16} mode="mount">
               <p className="text-sm font-bold text-brand-600 uppercase tracking-wide mb-3">For instructors</p>
-              <h1 className="text-3xl sm:text-4xl lg:text-[2.75rem] font-extrabold text-ink-900 leading-[1.05] tracking-tight mb-4">
+              <h1 className="font-serif text-3xl sm:text-4xl lg:text-[2.75rem] font-semibold text-ink-900 leading-[1.05] tracking-tight mb-4">
                 Teach what you know. Get paid for it.
               </h1>
               <p className="text-base sm:text-lg text-ink-500 leading-relaxed mb-6 max-w-md">
@@ -65,7 +65,7 @@ export default function InstructorsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
             <Reveal y={12}>
               <p className="text-sm font-bold text-brand-600 uppercase tracking-wide mb-3">Straightforward, automatic</p>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-ink-900 mb-4 leading-tight">
+              <h2 className="text-2xl sm:text-3xl font-serif font-semibold text-ink-900 mb-4 leading-tight">
                 How you get paid
               </h2>
               <p className="text-ink-500 leading-relaxed max-w-md">
@@ -88,7 +88,7 @@ export default function InstructorsPage() {
             </Reveal>
             <Reveal y={12}>
               <p className="text-sm font-bold text-brand-600 uppercase tracking-wide mb-3">Mix and match</p>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-ink-900 mb-4 leading-tight">
+              <h2 className="text-2xl sm:text-3xl font-serif font-semibold text-ink-900 mb-4 leading-tight">
                 Every lesson format, one toolkit
               </h2>
               <p className="text-ink-500 leading-relaxed max-w-md mb-5">
@@ -114,7 +114,7 @@ export default function InstructorsPage() {
       {/* CTA */}
       <section className="border-t border-ink-100 py-14 sm:py-16">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-2xl font-extrabold text-ink-900 mb-5">Ready to teach on Ndotoni Academy?</h2>
+          <h2 className="text-2xl font-serif font-semibold text-ink-900 mb-5">Ready to teach on Ndotoni Academy?</h2>
           <AuthButton
             mode="signup"
             next="/dashboard/courses"

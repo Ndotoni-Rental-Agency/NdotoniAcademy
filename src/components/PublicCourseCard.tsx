@@ -37,7 +37,7 @@ export default function PublicCourseCard({ course }: { course: PublicCourse }) {
       </div>
 
       <div className="p-5">
-        <h3 className="font-extrabold text-ink-900 mb-1.5 group-hover:underline decoration-2 underline-offset-2 leading-snug">
+        <h3 className="font-serif font-semibold text-ink-900 mb-1.5 group-hover:underline decoration-2 underline-offset-2 leading-snug">
           {course.title}
         </h3>
         {course.description && (

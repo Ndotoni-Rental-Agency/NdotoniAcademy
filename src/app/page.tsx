@@ -23,7 +23,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mx-auto text-center">
             <Reveal y={20} mode="mount">
-              <h1 className="text-4xl sm:text-5xl lg:text-[3.5rem] font-extrabold text-ink-900 leading-[1.1] tracking-tight">
+              <h1 className="font-serif text-4xl sm:text-5xl lg:text-[3.5rem] font-semibold text-ink-900 leading-[1.1] tracking-tight">
                 Dream. Learn.{' '}
                 <span className="text-indigo-600">Achieve.</span>
               </h1>
@@ -93,7 +93,7 @@ export default function HomePage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
             <Reveal y={12}>
               <p className="text-sm font-bold text-indigo-600 uppercase tracking-wide mb-3">Your dashboard, from day one</p>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-ink-900 mb-4 leading-tight">
+              <h2 className="text-2xl sm:text-3xl font-serif font-semibold text-ink-900 mb-4 leading-tight">
                 One place to see everything you&apos;re working on
               </h2>
               <p className="text-ink-500 leading-relaxed max-w-md">
@@ -112,7 +112,7 @@ export default function HomePage() {
       <section className="border-t border-ink-100 bg-white py-16 sm:py-24">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-end justify-between mb-8">
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-ink-900">Explore courses</h2>
+            <h2 className="text-2xl sm:text-3xl font-serif font-semibold text-ink-900">Explore courses</h2>
             <Link href="/courses" className="inline-flex items-center gap-1 text-sm text-indigo-600 hover:text-indigo-700 font-bold hidden sm:flex">
               See all <ArrowRight className="w-3.5 h-3.5" />
             </Link>
@@ -126,7 +126,7 @@ export default function HomePage() {
       <section className="border-t border-ink-100 bg-white py-16 sm:py-24">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10">
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-ink-900">What you can learn</h2>
+            <h2 className="text-2xl sm:text-3xl font-serif font-semibold text-ink-900">What you can learn</h2>
             <p className="text-ink-500 mt-2">Courses across disciplines. More added every month.</p>
           </div>
 
@@ -163,7 +163,7 @@ export default function HomePage() {
       <section className="border-t border-ink-100 bg-ink-50 py-16 sm:py-24">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10">
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-ink-900">Why Ndotoni Academy</h2>
+            <h2 className="text-2xl sm:text-3xl font-serif font-semibold text-ink-900">Why Ndotoni Academy</h2>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-8">
@@ -213,7 +213,7 @@ export default function HomePage() {
       <section className="border-t border-ink-100 bg-ink-50 py-16 sm:py-24">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-ink-900">How it works</h2>
+            <h2 className="text-2xl sm:text-3xl font-serif font-semibold text-ink-900">How it works</h2>
             <p className="text-ink-500 mt-2">Short modules, immediate feedback, real progress.</p>
           </div>
 
@@ -241,7 +241,7 @@ export default function HomePage() {
       <section className="border-t border-ink-100 bg-white py-16 sm:py-24">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-ink-900">See it in action</h2>
+            <h2 className="text-2xl sm:text-3xl font-serif font-semibold text-ink-900">See it in action</h2>
             <p className="text-ink-500 mt-2">A real quiz question from the platform, and the certificate waiting at the end.</p>
           </div>
 
@@ -271,7 +271,7 @@ export default function HomePage() {
       {/* ─── Final CTA ─── */}
       <section className="border-t border-ink-100 bg-white py-14 sm:py-16">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-2xl font-extrabold text-ink-900 mb-5">
+          <h2 className="text-2xl font-serif font-semibold text-ink-900 mb-5">
             Start learning for free
           </h2>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">

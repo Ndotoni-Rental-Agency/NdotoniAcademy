@@ -27,7 +27,7 @@ export default function CourseCard({ course }: { course: Course }) {
       </div>
 
       <div className="p-5">
-        <h3 className="font-extrabold text-ink-900 mb-1.5 group-hover:underline decoration-2 underline-offset-2 leading-snug">
+        <h3 className="font-serif font-semibold text-ink-900 mb-1.5 group-hover:underline decoration-2 underline-offset-2 leading-snug">
           {course.title}
         </h3>
         <p className="text-sm text-ink-500 line-clamp-2 mb-4">{course.shortDescription}</p>

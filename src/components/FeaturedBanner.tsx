@@ -34,7 +34,7 @@ export default function FeaturedBanner({
             </span>
           )}
         </div>
-        <h2 className="text-2xl sm:text-3xl font-extrabold mb-3 leading-tight tracking-tight">{title}</h2>
+        <h2 className="font-serif text-2xl sm:text-3xl font-semibold mb-3 leading-tight tracking-tight">{title}</h2>
         {description && <p className="text-white/85 mb-5 max-w-lg">{description}</p>}
         {meta && <div className="flex flex-wrap gap-5 text-sm text-white/85 mb-6">{meta}</div>}
         {action}

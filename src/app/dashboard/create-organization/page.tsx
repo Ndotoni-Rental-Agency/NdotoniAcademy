@@ -72,7 +72,7 @@ export default function CreateOrganizationPage() {
       <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center mb-5">
         <Building2 className="w-6 h-6 text-indigo-600" />
       </div>
-      <h1 className="text-2xl font-extrabold text-ink-900 mb-1">Create an organization</h1>
+      <h1 className="font-serif text-2xl font-semibold text-ink-900 mb-1">Create an organization</h1>
       <p className="text-sm text-ink-500 mb-6">
         You&apos;ll be the owner, with full control over settings and roles — your individual account and courses stay exactly as they are.
       </p>

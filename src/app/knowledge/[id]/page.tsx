@@ -57,7 +57,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ id: st
           <span className="text-[11px] font-bold uppercase tracking-wide text-indigo-600">{article.category}</span>
           <span className="text-[11px] text-ink-400">{article.date}</span>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-ink-900 mb-3 leading-tight">{article.title}</h1>
+        <h1 className="font-serif text-2xl sm:text-3xl font-semibold text-ink-900 mb-3 leading-tight">{article.title}</h1>
         <p className="flex items-center gap-1.5 text-sm text-ink-400 mb-8">
           <Clock className="w-3.5 h-3.5" /> {article.readTime} read
         </p>

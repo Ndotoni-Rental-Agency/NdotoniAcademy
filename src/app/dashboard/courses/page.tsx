@@ -151,7 +151,7 @@ function OrganizationCoursesPage({ organizationId }: { organizationId: string })
   return (
     <div className="p-6 lg:p-8 max-w-5xl">
       <div className="mb-8">
-        <h1 className="text-2xl font-extrabold text-ink-900 mb-1">Courses</h1>
+        <h1 className="font-serif text-2xl font-semibold text-ink-900 mb-1">Courses</h1>
         <p className="text-sm text-ink-500">Courses your instructors have published.</p>
       </div>
 
@@ -266,7 +266,7 @@ function LearnerCoursesPage({
 
   return (
     <div className="p-6 lg:p-8 max-w-5xl">
-      <h1 className="text-2xl font-extrabold text-ink-900 mb-1">Courses</h1>
+      <h1 className="font-serif text-2xl font-semibold text-ink-900 mb-1">Courses</h1>
       <p className="text-sm text-ink-500 mb-8">
         {canTeach ? 'Courses you are taking, and courses you teach.' : 'Courses you are taking, self-picked or assigned.'}
       </p>

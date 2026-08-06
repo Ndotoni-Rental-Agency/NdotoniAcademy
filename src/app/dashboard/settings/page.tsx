@@ -109,7 +109,7 @@ export default function SettingsPage() {
 
   return (
     <div className="p-6 lg:p-8 max-w-2xl">
-      <h1 className="text-2xl font-extrabold text-ink-900 mb-1">Settings</h1>
+      <h1 className="font-serif text-2xl font-semibold text-ink-900 mb-1">Settings</h1>
       <p className="text-sm text-ink-500 mb-6">Manage your account.</p>
 
       <div className="flex items-center gap-3 mb-8">
