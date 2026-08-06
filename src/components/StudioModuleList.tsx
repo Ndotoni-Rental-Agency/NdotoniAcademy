@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { GripVertical, Pencil, Plus } from 'lucide-react';
+import { GraduationCap, GripVertical, Pencil, Plus } from 'lucide-react';
 import {
   DndContext, closestCenter, PointerSensor, KeyboardSensor,
   useSensor, useSensors, type DragEndEvent,
@@ -25,6 +25,8 @@ interface StudioModuleListProps {
   onSelect: (id: string) => void;
   onModulesChange: (modules: CourseModuleData[]) => void;
   onModuleSaved: () => void;
+  examSelected: boolean;
+  onSelectExam: () => void;
 }
 
 function SortableModuleRow({
@@ -95,7 +97,7 @@ function SortableModuleRow({
 }
 
 export default function StudioModuleList({
-  courseId, modules, selectedModuleId, onSelect, onModulesChange, onModuleSaved,
+  courseId, modules, selectedModuleId, onSelect, onModulesChange, onModuleSaved, examSelected, onSelectExam,
 }: StudioModuleListProps) {
   const toast = useToast();
   const [moduleModalOpen, setModuleModalOpen] = useState(false);
@@ -174,7 +176,24 @@ export default function StudioModuleList({
         {error && <p className="text-[11px] text-red-600 px-2">{error}</p>}
       </div>
 
-      <div className="p-2.5 border-t border-ink-100">
+      <div className="px-2.5 pt-2 border-t border-ink-100">
+        <button
+          type="button"
+          onClick={onSelectExam}
+          className={`w-full flex items-center gap-2.5 rounded-xl px-2.5 py-2.5 transition-all ${
+            examSelected ? 'bg-brand-50 border-2 border-brand-200 shadow-sm' : 'border-2 border-transparent hover:bg-ink-50'
+          }`}
+        >
+          <span className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${
+            examSelected ? 'bg-brand-600 text-white' : 'bg-ink-100 text-ink-500'
+          }`}>
+            <GraduationCap className="w-3.5 h-3.5" />
+          </span>
+          <span className="text-sm font-semibold text-ink-900">Final exam</span>
+        </button>
+      </div>
+
+      <div className="p-2.5">
         <button
           type="button"
           onClick={() => { setEditingModule(null); setModuleModalOpen(true); }}

@@ -14,6 +14,7 @@ import type { CourseQuery, ModulesForCourseQuery, UpdateCourseMutation, UpdateCo
 import { CreateCourseModal, type EditableCourse } from '@/components/CreateCourseModal';
 import StudioModuleList from '@/components/StudioModuleList';
 import StudioLessonPane, { type CourseModuleData } from '@/components/StudioLessonPane';
+import StudioExamPane from '@/components/StudioExamPane';
 
 type CourseData = NonNullable<CourseQuery['course']>;
 
@@ -28,6 +29,7 @@ export default function StudioPage() {
   const [course, setCourse] = useState<CourseData | null>(null);
   const [modules, setModules] = useState<CourseModuleData[]>([]);
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
+  const [examSelected, setExamSelected] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [showEditModal, setShowEditModal] = useState(false);
@@ -197,12 +199,16 @@ export default function StudioPage() {
           courseId={course.id}
           modules={modules}
           selectedModuleId={selectedModuleId}
-          onSelect={setSelectedModuleId}
+          onSelect={(id) => { setExamSelected(false); setSelectedModuleId(id); }}
           onModulesChange={setModules}
           onModuleSaved={() => void load()}
+          examSelected={examSelected}
+          onSelectExam={() => setExamSelected(true)}
         />
 
-        {selectedModule ? (
+        {examSelected ? (
+          <StudioExamPane courseId={course.id} />
+        ) : selectedModule ? (
           <StudioLessonPane
             module={selectedModule}
             onModuleDeleted={() => void load()}
