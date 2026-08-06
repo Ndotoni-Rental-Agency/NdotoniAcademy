@@ -24,9 +24,9 @@ type CourseCertificate {
   category: String
   courseId: ID!
   courseTitle: String!
-  holder: User!
+  holderName: String!
   id: ID!
-  instructor: User
+  instructorName: String
   issuedAt: AWSDateTime!
   totalLessons: Int!
 }
@@ -149,37 +149,37 @@ type ModuleLessonSummary {
 }
 
 type Mutation {
-  acceptInvitation(token: String!): OrganizationMembership 
-  addLessonToModule(courseId: ID!, lessonId: ID!, moduleId: ID!, prerequisites: [ModuleLessonRefInput!]): ModuleLesson! 
-  addModuleToCourse(courseId: ID!, moduleId: ID!): CourseModule! 
-  applyToBeInstructor: User 
-  changeMemberRole(organizationId: ID!, role: MembershipRole!, userId: ID!): OrganizationMembership 
-  createCourse(input: CreateCourseInput!): Course! 
-  createLessonForModule(courseId: ID!, input: CreateLessonInput!, moduleId: ID!, prerequisites: [ModuleLessonRefInput!]): ModuleLesson! 
-  createModuleForCourse(courseId: ID!, input: CreateModuleInput!): CourseModule! 
-  createOrganization(input: CreateOrganizationInput!): Organization 
-  deleteCourse(id: ID!): Boolean 
-  deleteLesson(id: ID!): Boolean 
-  deleteModule(id: ID!): Boolean 
-  generateFlashcardsFromText(count: Int, text: String!): [Flashcard!]! 
-  generateQuizFromText(count: Int, text: String!): [QuizQuestion!]! 
-  getCourseMediaUploadUrl(contentType: String!, fileName: String!): MediaUploadResponse! 
-  inviteMember(email: AWSEmail!, organizationId: ID!, role: MembershipRole!): OrganizationInvitation 
-  markLessonComplete(courseId: ID!, lessonId: ID!): CourseProgress! 
-  removeLessonFromModule(lessonId: ID!, moduleId: ID!): Boolean 
-  removeMember(organizationId: ID!, userId: ID!): Boolean 
-  removeModuleFromCourse(courseId: ID!, moduleId: ID!): Boolean 
-  reorderCourseModules(courseId: ID!, moduleIds: [ID!]!): [CourseModule!]! 
-  reorderModuleLessons(courseId: ID!, lessonIds: [ID!]!, moduleId: ID!): [ModuleLessonSummary!]! 
-  requestInstructorRole(organizationId: ID!): OrganizationMembership 
-  revokeInvitation(email: AWSEmail!, organizationId: ID!): Boolean 
-  setInstructorStatus(status: InstructorStatus!, userId: ID!): User 
-  setModuleLessonPrerequisites(courseId: ID!, lessonId: ID!, moduleId: ID!, prerequisites: [ModuleLessonRefInput!]!): ModuleLesson! 
-  transcribeDocument(fileUrl: AWSURL!): String! 
-  updateCourse(id: ID!, input: UpdateCourseInput!): Course! 
-  updateLesson(id: ID!, input: UpdateLessonInput!): Lesson! 
-  updateModule(id: ID!, input: UpdateModuleInput!): Module! 
-  updateProfile(input: UpdateUserProfileInput!): User 
+  acceptInvitation(token: String!): OrganizationMembership @aws_cognito_user_pools
+  addLessonToModule(courseId: ID!, lessonId: ID!, moduleId: ID!, prerequisites: [ModuleLessonRefInput!]): ModuleLesson! @aws_cognito_user_pools
+  addModuleToCourse(courseId: ID!, moduleId: ID!): CourseModule! @aws_cognito_user_pools
+  applyToBeInstructor: User @aws_cognito_user_pools
+  changeMemberRole(organizationId: ID!, role: MembershipRole!, userId: ID!): OrganizationMembership @aws_cognito_user_pools
+  createCourse(input: CreateCourseInput!): Course! @aws_cognito_user_pools
+  createLessonForModule(courseId: ID!, input: CreateLessonInput!, moduleId: ID!, prerequisites: [ModuleLessonRefInput!]): ModuleLesson! @aws_cognito_user_pools
+  createModuleForCourse(courseId: ID!, input: CreateModuleInput!): CourseModule! @aws_cognito_user_pools
+  createOrganization(input: CreateOrganizationInput!): Organization @aws_cognito_user_pools
+  deleteCourse(id: ID!): Boolean @aws_cognito_user_pools
+  deleteLesson(id: ID!): Boolean @aws_cognito_user_pools
+  deleteModule(id: ID!): Boolean @aws_cognito_user_pools
+  generateFlashcardsFromText(count: Int, text: String!): [Flashcard!]! @aws_cognito_user_pools
+  generateQuizFromText(count: Int, text: String!): [QuizQuestion!]! @aws_cognito_user_pools
+  getCourseMediaUploadUrl(contentType: String!, fileName: String!): MediaUploadResponse! @aws_cognito_user_pools
+  inviteMember(email: AWSEmail!, organizationId: ID!, role: MembershipRole!): OrganizationInvitation @aws_cognito_user_pools
+  markLessonComplete(courseId: ID!, lessonId: ID!): CourseProgress! @aws_cognito_user_pools
+  removeLessonFromModule(lessonId: ID!, moduleId: ID!): Boolean @aws_cognito_user_pools
+  removeMember(organizationId: ID!, userId: ID!): Boolean @aws_cognito_user_pools
+  removeModuleFromCourse(courseId: ID!, moduleId: ID!): Boolean @aws_cognito_user_pools
+  reorderCourseModules(courseId: ID!, moduleIds: [ID!]!): [CourseModule!]! @aws_cognito_user_pools
+  reorderModuleLessons(courseId: ID!, lessonIds: [ID!]!, moduleId: ID!): [ModuleLessonSummary!]! @aws_cognito_user_pools
+  requestInstructorRole(organizationId: ID!): OrganizationMembership @aws_cognito_user_pools
+  revokeInvitation(email: AWSEmail!, organizationId: ID!): Boolean @aws_cognito_user_pools
+  setInstructorStatus(status: InstructorStatus!, userId: ID!): User @aws_cognito_user_pools
+  setModuleLessonPrerequisites(courseId: ID!, lessonId: ID!, moduleId: ID!, prerequisites: [ModuleLessonRefInput!]!): ModuleLesson! @aws_cognito_user_pools
+  transcribeDocument(fileUrl: AWSURL!): String! @aws_cognito_user_pools
+  updateCourse(id: ID!, input: UpdateCourseInput!): Course! @aws_cognito_user_pools
+  updateLesson(id: ID!, input: UpdateLessonInput!): Lesson! @aws_cognito_user_pools
+  updateModule(id: ID!, input: UpdateModuleInput!): Module! @aws_cognito_user_pools
+  updateProfile(input: UpdateUserProfileInput!): User @aws_cognito_user_pools
 }
 
 type Organization {
@@ -217,24 +217,24 @@ type OrganizationMembership {
 }
 
 type Query {
-  certificateByPublicId(id: ID!): CourseCertificate 
-  course(id: ID!): Course 
-  coursesForOrganization(organizationId: ID!): [Course!]! 
-  invitationsForOrganization(organizationId: ID!): [OrganizationInvitation!]! 
-  lesson(courseId: ID!, lessonId: ID!, moduleId: ID!): ModuleLesson 
-  lessonsForModule(courseId: ID!, moduleId: ID!): [ModuleLessonSummary!]! 
-  me: User 
-  module(id: ID!): Module 
-  modulesForCourse(courseId: ID!): [CourseModule!]! 
-  myCertificates: [CourseCertificate!]! 
-  myCourseProgress(courseId: ID!): CourseProgress! 
-  myCourses: [Course!]! 
-  myLearning: [CourseLearningSummary!]! 
-  myLessons: [Lesson!]! 
-  myModules: [Module!]! 
-  organization(id: ID!): Organization 
-  organizationBySlug(slug: String!): Organization 
-  publicCourses: [Course!]! 
+  certificateByPublicId(id: ID!): CourseCertificate @aws_cognito_user_pools
+  course(id: ID!): Course @aws_cognito_user_pools
+  coursesForOrganization(organizationId: ID!): [Course!]! @aws_cognito_user_pools
+  invitationsForOrganization(organizationId: ID!): [OrganizationInvitation!]! @aws_cognito_user_pools
+  lesson(courseId: ID!, lessonId: ID!, moduleId: ID!): ModuleLesson @aws_cognito_user_pools
+  lessonsForModule(courseId: ID!, moduleId: ID!): [ModuleLessonSummary!]! @aws_cognito_user_pools
+  me: User @aws_cognito_user_pools
+  module(id: ID!): Module @aws_cognito_user_pools
+  modulesForCourse(courseId: ID!): [CourseModule!]! @aws_cognito_user_pools
+  myCertificates: [CourseCertificate!]! @aws_cognito_user_pools
+  myCourseProgress(courseId: ID!): CourseProgress! @aws_cognito_user_pools
+  myCourses: [Course!]! @aws_cognito_user_pools
+  myLearning: [CourseLearningSummary!]! @aws_cognito_user_pools
+  myLessons: [Lesson!]! @aws_cognito_user_pools
+  myModules: [Module!]! @aws_cognito_user_pools
+  organization(id: ID!): Organization @aws_cognito_user_pools
+  organizationBySlug(slug: String!): Organization @aws_cognito_user_pools
+  publicCourses: [Course!]! @aws_cognito_user_pools
 }
 
 type QuizQuestion {
@@ -245,7 +245,7 @@ type QuizQuestion {
 }
 
 type Subscription {
-  organizationMemberJoined(organizationId: ID!): OrganizationMembership  
+  organizationMemberJoined(organizationId: ID!): OrganizationMembership @aws_cognito_user_pools @aws_subscribe(mutations : ["acceptInvitation"])
 }
 
 type User {

@@ -13,95 +13,9 @@ export const certificateByPublicId = /* GraphQL */ `query CertificateByPublicId(
     category
     courseId
     courseTitle
-    holder {
-      avatarUrl
-      createdAt
-      email
-      firstName
-      id
-      instructorStatus
-      lastName
-      organizations {
-        id
-        joinedAt
-        organization {
-          createdAt
-          id
-          name
-          slug
-          status
-          type
-          __typename
-        }
-        organizationId
-        permissions
-        role
-        status
-        user {
-          avatarUrl
-          createdAt
-          email
-          firstName
-          id
-          instructorStatus
-          lastName
-          status
-          updatedAt
-          __typename
-        }
-        userId
-        wantsToBeInstructor
-        __typename
-      }
-      status
-      updatedAt
-      __typename
-    }
+    holderName
     id
-    instructor {
-      avatarUrl
-      createdAt
-      email
-      firstName
-      id
-      instructorStatus
-      lastName
-      organizations {
-        id
-        joinedAt
-        organization {
-          createdAt
-          id
-          name
-          slug
-          status
-          type
-          __typename
-        }
-        organizationId
-        permissions
-        role
-        status
-        user {
-          avatarUrl
-          createdAt
-          email
-          firstName
-          id
-          instructorStatus
-          lastName
-          status
-          updatedAt
-          __typename
-        }
-        userId
-        wantsToBeInstructor
-        __typename
-      }
-      status
-      updatedAt
-      __typename
-    }
+    instructorName
     issuedAt
     totalLessons
     __typename
@@ -556,95 +470,9 @@ export const myCertificates = /* GraphQL */ `query MyCertificates {
     category
     courseId
     courseTitle
-    holder {
-      avatarUrl
-      createdAt
-      email
-      firstName
-      id
-      instructorStatus
-      lastName
-      organizations {
-        id
-        joinedAt
-        organization {
-          createdAt
-          id
-          name
-          slug
-          status
-          type
-          __typename
-        }
-        organizationId
-        permissions
-        role
-        status
-        user {
-          avatarUrl
-          createdAt
-          email
-          firstName
-          id
-          instructorStatus
-          lastName
-          status
-          updatedAt
-          __typename
-        }
-        userId
-        wantsToBeInstructor
-        __typename
-      }
-      status
-      updatedAt
-      __typename
-    }
+    holderName
     id
-    instructor {
-      avatarUrl
-      createdAt
-      email
-      firstName
-      id
-      instructorStatus
-      lastName
-      organizations {
-        id
-        joinedAt
-        organization {
-          createdAt
-          id
-          name
-          slug
-          status
-          type
-          __typename
-        }
-        organizationId
-        permissions
-        role
-        status
-        user {
-          avatarUrl
-          createdAt
-          email
-          firstName
-          id
-          instructorStatus
-          lastName
-          status
-          updatedAt
-          __typename
-        }
-        userId
-        wantsToBeInstructor
-        __typename
-      }
-      status
-      updatedAt
-      __typename
-    }
+    instructorName
     issuedAt
     totalLessons
     __typename

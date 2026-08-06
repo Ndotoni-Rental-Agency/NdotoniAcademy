@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Award, Download, Loader2 } from 'lucide-react';
-import { useAuth, displayName, dashboardModeFor } from '@/lib/auth-context';
+import { useAuth, dashboardModeFor } from '@/lib/auth-context';
 import { accentByMode } from '@/lib/dashboard-accent';
 import { GraphQLClient } from '@/lib/graphql-client';
 import { myCertificates as myCertificatesQuery } from '@/graphql/queries';
@@ -22,7 +22,7 @@ function openCertificate(cert: Certificate) {
   const issued = new Date(cert.issuedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
   const accent = accentHex[cert.category ?? ''] ?? '#4f46e5';
   const certificateId = `NDT-${cert.id.toUpperCase()}`;
-  const instructorName = cert.instructor ? displayName(cert.instructor) : 'Ndotoni Academy';
+  const instructorName = cert.instructorName ?? 'Ndotoni Academy';
   const win = window.open('', '_blank');
   if (!win) return;
   win.document.write(`
@@ -74,7 +74,7 @@ function openCertificate(cert: Certificate) {
               </div>
               <p class="serif eyebrow">Certificate of Completion</p>
               <p class="label">This certifies that</p>
-              <p class="serif name">${displayName(cert.holder)}</p>
+              <p class="serif name">${cert.holderName}</p>
               <p class="label" style="margin-top:20px;">has successfully completed</p>
               <p class="serif course">${cert.courseTitle}</p>
               <div class="rule"></div>
