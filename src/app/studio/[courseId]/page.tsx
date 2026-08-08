@@ -12,9 +12,11 @@ import { updateCourse } from '@/graphql/mutations';
 import { CourseStatus } from '@/API';
 import type { CourseQuery, ModulesForCourseQuery, UpdateCourseMutation, UpdateCourseMutationVariables } from '@/API';
 import { CreateCourseModal, type EditableCourse } from '@/components/CreateCourseModal';
-import StudioModuleList from '@/components/StudioModuleList';
+import StudioModuleList, { type StudioExtraView } from '@/components/StudioModuleList';
 import StudioLessonPane, { type CourseModuleData } from '@/components/StudioLessonPane';
 import StudioExamPane from '@/components/StudioExamPane';
+import StudioDiscussionPane from '@/components/StudioDiscussionPane';
+import StudioAssignmentsPane from '@/components/StudioAssignmentsPane';
 
 type CourseData = NonNullable<CourseQuery['course']>;
 
@@ -29,7 +31,7 @@ export default function StudioPage() {
   const [course, setCourse] = useState<CourseData | null>(null);
   const [modules, setModules] = useState<CourseModuleData[]>([]);
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
-  const [examSelected, setExamSelected] = useState(false);
+  const [activeExtra, setActiveExtra] = useState<StudioExtraView | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [showEditModal, setShowEditModal] = useState(false);
@@ -199,15 +201,19 @@ export default function StudioPage() {
           courseId={course.id}
           modules={modules}
           selectedModuleId={selectedModuleId}
-          onSelect={(id) => { setExamSelected(false); setSelectedModuleId(id); }}
+          onSelect={(id) => { setActiveExtra(null); setSelectedModuleId(id); }}
           onModulesChange={setModules}
           onModuleSaved={() => void load()}
-          examSelected={examSelected}
-          onSelectExam={() => setExamSelected(true)}
+          activeExtra={activeExtra}
+          onSelectExtra={setActiveExtra}
         />
 
-        {examSelected ? (
+        {activeExtra === 'exam' ? (
           <StudioExamPane courseId={course.id} />
+        ) : activeExtra === 'discussion' ? (
+          <StudioDiscussionPane courseId={course.id} />
+        ) : activeExtra === 'assignments' ? (
+          <StudioAssignmentsPane courseId={course.id} />
         ) : selectedModule ? (
           <StudioLessonPane
             module={selectedModule}
