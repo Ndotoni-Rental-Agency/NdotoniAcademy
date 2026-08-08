@@ -202,10 +202,19 @@ export default function CourseExamPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [{ examToTake: fetchedExam }, { myCourseProgress: progress }] = await Promise.all([
-        GraphQLClient.execute<ExamToTakeQuery>(examToTakeQuery, { courseId } satisfies ExamToTakeQueryVariables),
-        GraphQLClient.execute<MyCourseProgressQuery>(myCourseProgressQuery, { courseId } satisfies MyCourseProgressQueryVariables),
-      ]);
+      // Sequential, not Promise.all — firing two concurrent authenticated
+      // calls right on mount was intermittently racing Amplify's session/
+      // token resolution (surfaced as "Cognito identity is missing an email
+      // claim" from whichever of the two needed the caller's identity). One
+      // at a time avoids it — see the same fix on the Assignments tab.
+      const { examToTake: fetchedExam } = await GraphQLClient.execute<ExamToTakeQuery>(
+        examToTakeQuery,
+        { courseId } satisfies ExamToTakeQueryVariables
+      );
+      const { myCourseProgress: progress } = await GraphQLClient.execute<MyCourseProgressQuery>(
+        myCourseProgressQuery,
+        { courseId } satisfies MyCourseProgressQueryVariables
+      );
       setExam(fetchedExam ?? null);
       if (fetchedExam && progress.totalLessons > 0 && progress.completedLessonIds.length < progress.totalLessons) {
         setLocked({ done: progress.completedLessonIds.length, total: progress.totalLessons });

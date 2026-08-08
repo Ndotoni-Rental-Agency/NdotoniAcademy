@@ -36,10 +36,13 @@ export default function LearnerOverview({ user }: { user: AuthUser }) {
   const loadLearning = useCallback(async () => {
     setLoadingLearning(true);
     try {
-      const [{ myLearning: fetchedLearning }, { myCertificates: fetchedCertificates }] = await Promise.all([
-        GraphQLClient.execute<MyLearningQuery>(myLearningQuery),
-        GraphQLClient.execute<MyCertificatesQuery>(myCertificatesQuery),
-      ]);
+      // Sequential, not Promise.all — two concurrent authenticated calls
+      // right on mount intermittently raced Amplify's session/token
+      // resolution (surfaced as "Cognito identity is missing an email
+      // claim"). One at a time avoids it — see the same fix on the course
+      // Exam/Assignments tabs.
+      const { myLearning: fetchedLearning } = await GraphQLClient.execute<MyLearningQuery>(myLearningQuery);
+      const { myCertificates: fetchedCertificates } = await GraphQLClient.execute<MyCertificatesQuery>(myCertificatesQuery);
       setLearning(fetchedLearning);
       setCertificates(fetchedCertificates);
     } catch (err) {

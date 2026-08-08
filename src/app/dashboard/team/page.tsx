@@ -118,14 +118,17 @@ export default function TeamPage() {
       setLoading(true);
       setLoadError('');
       try {
-        const [orgData, invitesData] = await Promise.all([
-          GraphQLClient.execute<OrganizationQuery>(organizationQuery, {
-            id: organizationId,
-          } satisfies OrganizationQueryVariables),
-          GraphQLClient.execute<InvitationsForOrganizationQuery>(invitationsForOrganization, {
-            organizationId,
-          } satisfies InvitationsForOrganizationQueryVariables),
-        ]);
+        // Sequential, not Promise.all — two concurrent authenticated calls
+        // right on mount intermittently raced Amplify's session/token
+        // resolution (surfaced as "Cognito identity is missing an email
+        // claim"). One at a time avoids it — see the same fix on the course
+        // Exam/Assignments tabs and the dashboard Overview pages.
+        const orgData = await GraphQLClient.execute<OrganizationQuery>(organizationQuery, {
+          id: organizationId,
+        } satisfies OrganizationQueryVariables);
+        const invitesData = await GraphQLClient.execute<InvitationsForOrganizationQuery>(invitationsForOrganization, {
+          organizationId,
+        } satisfies InvitationsForOrganizationQueryVariables);
         if (cancelled) return;
 
         const roster: RosterMember[] = (orgData.organization?.members ?? [])

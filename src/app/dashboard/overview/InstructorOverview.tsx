@@ -61,10 +61,11 @@ export default function InstructorOverview({ user }: { user: AuthUser }) {
   useEffect(() => {
     (async () => {
       try {
-        const [{ myLearning: fetchedLearning }, { myCertificates: fetchedCertificates }] = await Promise.all([
-          GraphQLClient.execute<MyLearningQuery>(myLearningQuery),
-          GraphQLClient.execute<MyCertificatesQuery>(myCertificatesQuery),
-        ]);
+        // Sequential, not Promise.all — see LearnerOverview's identical fix
+        // for why (a race in Amplify's session/token resolution under two
+        // concurrent authenticated calls on mount).
+        const { myLearning: fetchedLearning } = await GraphQLClient.execute<MyLearningQuery>(myLearningQuery);
+        const { myCertificates: fetchedCertificates } = await GraphQLClient.execute<MyCertificatesQuery>(myCertificatesQuery);
         setLearning(fetchedLearning);
         setCertificates(fetchedCertificates);
       } catch (err) {
