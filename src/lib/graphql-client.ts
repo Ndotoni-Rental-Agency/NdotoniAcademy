@@ -20,19 +20,21 @@ function getClient() {
 /**
  * Thin wrapper around Amplify's generateClient().graphql().
  *
- * Unlike ndotoniStays' equivalent, there's no API-key fallback here —
- * Academy's AppSync API has exactly one auth mode (Cognito User Pools, see
- * `defaultAuthMode: 'userPool'` in amplify.ts) and every field requires a
- * signed-in user. A call made while signed out fails with an auth error;
- * check `getCurrentUser()` first if that's a case you need to handle
- * gracefully (see src/app/invite/InviteClient.tsx for the pattern).
+ * Signed-in calls explicitly pass the ID token as `authToken` rather than
+ * relying on authMode: 'userPool''s default — Amplify always derives that
+ * default from the access token, which carries no profile claims (no
+ * email/given_name/family_name). The backend's ensureUser() needs `email`
+ * off the identity claims to materialize/look up the caller, so this has to
+ * be the ID token; AppSync's Cognito User Pools authorizer accepts either
+ * token type.
  *
- * Explicitly passes the ID token as `authToken` rather than relying on
- * authMode: 'userPool''s default — Amplify always derives that default from
- * the access token, which carries no profile claims (no email/given_name/
- * family_name). The backend's ensureUser() needs `email` off the identity
- * claims to materialize/look up the caller, so this has to be the ID token;
- * AppSync's Cognito User Pools authorizer accepts either token type.
+ * Signed-out calls fall back to `authMode: 'apiKey'` (the api key itself
+ * comes from Amplify.configure's API.GraphQL.apiKey — see amplify.ts). Only
+ * the small set of fields tagged @aws_api_key on the backend (the public
+ * catalog + free-preview lessons) accept that mode; every other field still
+ * rejects a guest call with a real auth error, exactly as before this
+ * existed. Most call sites don't need to know which mode is in play — the
+ * backend enforces the actual boundary either way.
  */
 // Amplify's own `graphql()` call doesn't consistently resolve with an
 // `{ errors }` result — depending on the failure (a GraphQL error vs. a
@@ -66,7 +68,9 @@ export class GraphQLClient {
     const session = await fetchAuthSession();
     const authToken = session.tokens?.idToken?.toString();
     try {
-      const result = await getClient().graphql({ query, variables, authToken });
+      const result = authToken
+        ? await getClient().graphql({ query, variables, authToken })
+        : await getClient().graphql({ query, variables, authMode: 'apiKey' });
       if ('errors' in result && result.errors?.length) {
         console.error('[GraphQLClient] GraphQL errors ->', result.errors);
         throw new Error(result.errors[0].message);

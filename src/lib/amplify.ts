@@ -10,11 +10,17 @@ import { Amplify } from 'aws-amplify';
 //   UserPoolClientId <- Academy-Auth-<stage> stack output "UserPoolClientId"
 //   CognitoDomain    <- Academy-Auth-<stage> stack output "CognitoDomain"
 //   GraphQLApiUrl    <- Academy-Service-<stage> stack output "GraphQLApiUrl"
+//   GraphQLApiKey    <- Academy-Service-<stage> stack output "GraphQLApiKey"
 const userPoolId = process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID ?? '';
 const userPoolClientId = process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID ?? '';
 const region = process.env.NEXT_PUBLIC_AWS_REGION ?? 'af-south-1';
 const cognitoDomain = process.env.NEXT_PUBLIC_COGNITO_DOMAIN ?? '';
 const graphqlEndpoint = process.env.NEXT_PUBLIC_GRAPHQL_API_URL ?? '';
+// Grants read access to exactly the fields tagged @aws_api_key on the
+// backend (the public catalog + free-preview lessons) — not a secret at
+// this scope, same trust level as the other NEXT_PUBLIC_* values above. See
+// GraphQLClient.execute for where this gets used (only when signed out).
+const graphqlApiKey = process.env.NEXT_PUBLIC_APPSYNC_API_KEY ?? '';
 
 let configured = false;
 
@@ -62,6 +68,7 @@ export function configureAmplify() {
             endpoint: graphqlEndpoint,
             region,
             defaultAuthMode: 'userPool',
+            apiKey: graphqlApiKey || undefined,
           },
         }
       : undefined,
