@@ -293,7 +293,7 @@ export default function LessonViewerPage() {
               </div>
               <span className="text-xs font-bold uppercase tracking-wide text-ink-400">{LESSON_TYPE_LABELS[lesson.type]}</span>
             </div>
-            <h1 className="font-serif text-2xl sm:text-3xl font-semibold text-ink-900 mb-3">{lesson.title}</h1>
+            <h1 className="text-2xl sm:text-3xl font-semibold text-ink-900 mb-3">{lesson.title}</h1>
             <div className={`w-10 h-0.5 rounded-full bg-current ${tint.text} mb-8`} />
 
             {!lesson.isFree ? (

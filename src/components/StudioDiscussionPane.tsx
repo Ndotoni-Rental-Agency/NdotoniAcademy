@@ -86,7 +86,7 @@ export default function StudioDiscussionPane({ courseId }: { courseId: string })
 
   return (
     <div className="flex-1 min-w-0 overflow-y-auto p-6 lg:p-8">
-      <h2 className="font-serif text-xl font-semibold text-ink-900 flex items-center gap-2 mb-1">
+      <h2 className="text-xl font-semibold text-ink-900 flex items-center gap-2 mb-1">
         <MessageSquare className="w-5 h-5 text-indigo-600 flex-shrink-0" /> Discussion
       </h2>
       <p className="text-sm text-ink-500 mb-6">

@@ -17,7 +17,7 @@ export default function CourseModulesSection({
     <section id="course-content" className="py-12 sm:py-16">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between mb-8">
-          <h2 className="font-serif text-2xl font-semibold text-ink-900">Course content</h2>
+          <h2 className="text-2xl font-semibold text-ink-900">Course content</h2>
           <span className="text-sm text-ink-400 bg-ink-100 px-3 py-1 rounded-full">
             {modules.length} module{modules.length === 1 ? '' : 's'}
           </span>

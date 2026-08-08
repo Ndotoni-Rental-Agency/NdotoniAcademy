@@ -81,7 +81,7 @@ function AssignmentCard({
   return (
     <div className="rounded-2xl border border-ink-100 p-5">
       <div className="flex items-start justify-between gap-3 mb-1">
-        <h3 className="font-serif text-lg font-semibold text-ink-900">{assignment.title}</h3>
+        <h3 className="text-lg font-semibold text-ink-900">{assignment.title}</h3>
         <StatusBadge submission={submission} />
       </div>
       {assignment.description && <p className="text-sm text-ink-500 leading-relaxed mb-3">{assignment.description}</p>}

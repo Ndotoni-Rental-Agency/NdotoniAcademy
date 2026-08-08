@@ -13,8 +13,8 @@ import rehypeKatex from 'rehype-katex';
 // set of HTML/MathML elements) inside $...$/$$...$$ delimiters — not a way
 // to inject arbitrary HTML.
 const components: Components = {
-  h1: ({ children }) => <h1 className="font-serif text-2xl font-semibold text-ink-900 mt-8 mb-3 first:mt-0">{children}</h1>,
-  h2: ({ children }) => <h2 className="font-serif text-xl font-semibold text-ink-900 mt-7 mb-2.5 first:mt-0">{children}</h2>,
+  h1: ({ children }) => <h1 className="text-2xl font-semibold text-ink-900 mt-8 mb-3 first:mt-0">{children}</h1>,
+  h2: ({ children }) => <h2 className="text-xl font-semibold text-ink-900 mt-7 mb-2.5 first:mt-0">{children}</h2>,
   h3: ({ children }) => <h3 className="text-base font-bold text-ink-900 mt-6 mb-2 first:mt-0">{children}</h3>,
   h4: ({ children }) => <h4 className="text-sm font-bold uppercase tracking-wide text-ink-500 mt-5 mb-1.5 first:mt-0">{children}</h4>,
   p: ({ children }) => <p className="text-[15px] sm:text-base text-ink-700 leading-[1.75] mb-4 last:mb-0">{children}</p>,

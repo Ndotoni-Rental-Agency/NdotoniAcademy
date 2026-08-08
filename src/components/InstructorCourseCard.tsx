@@ -70,7 +70,7 @@ export default function InstructorCourseCard({
       </div>
 
       <div className="p-4 flex-1 flex flex-col">
-        <h3 className="font-serif font-semibold text-ink-900 mb-1 leading-snug line-clamp-2 group-hover:underline decoration-2 underline-offset-2">
+        <h3 className="font-semibold text-ink-900 mb-1 leading-snug line-clamp-2 group-hover:underline decoration-2 underline-offset-2">
           {course.title}
         </h3>
 

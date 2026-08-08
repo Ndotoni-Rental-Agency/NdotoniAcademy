@@ -45,7 +45,7 @@ export default function CoursesPageClient() {
       <section className="bg-white pt-8 pb-6 sm:pt-12 sm:pb-8 border-b border-ink-100">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-            <h1 className="font-serif text-3xl sm:text-4xl font-semibold text-ink-900 mb-1">Explore courses</h1>
+            <h1 className="text-3xl sm:text-4xl font-semibold text-ink-900 mb-1">Explore courses</h1>
             <p className="text-ink-500">Find your next skill.</p>
           </motion.div>
 
@@ -105,7 +105,7 @@ export default function CoursesPageClient() {
                         <span className="inline-block text-[11px] font-bold uppercase tracking-wide bg-white/20 px-3 py-1 rounded-full mb-4">
                           Featured
                         </span>
-                        <h2 className="font-serif text-2xl sm:text-3xl font-semibold mb-3 leading-tight">{featuredCourse.title}</h2>
+                        <h2 className="text-2xl sm:text-3xl font-semibold mb-3 leading-tight">{featuredCourse.title}</h2>
                         {featuredCourse.description && (
                           <p className="text-indigo-100 mb-5 leading-relaxed line-clamp-2">{featuredCourse.description}</p>
                         )}
@@ -133,7 +133,7 @@ export default function CoursesPageClient() {
           {/* All courses grid */}
           <section className="bg-ink-50 py-10 sm:py-14">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-              <h2 className="text-xl font-serif font-semibold text-ink-900 mb-6">All courses</h2>
+              <h2 className="text-xl font-semibold text-ink-900 mb-6">All courses</h2>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                 {filteredCourses.map((course, i) => (
@@ -165,7 +165,7 @@ export default function CoursesPageClient() {
             <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center">
               <Award className="w-5 h-5 text-indigo-600" />
             </div>
-            <h2 className="text-xl font-serif font-semibold text-ink-900">Want to teach?</h2>
+            <h2 className="text-xl font-semibold text-ink-900">Want to teach?</h2>
           </div>
           <p className="text-ink-500 mb-6 max-w-md mx-auto">Share your expertise. Create a course, reach learners, and earn from your knowledge.</p>
           <Link

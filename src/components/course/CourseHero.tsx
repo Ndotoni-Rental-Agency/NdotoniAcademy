@@ -43,7 +43,7 @@ export default function CourseHero({
               </div>
             )}
 
-            <h1 className="font-serif text-3xl sm:text-4xl lg:text-[3.25rem] font-semibold leading-[1.08] tracking-tight mb-4">{course.title}</h1>
+            <h1 className="text-3xl sm:text-4xl lg:text-[3.25rem] font-semibold leading-[1.08] tracking-tight mb-4">{course.title}</h1>
             {course.description && (
               <p className="text-white/80 leading-relaxed mb-6 text-base sm:text-lg line-clamp-2 sm:line-clamp-none">{course.description}</p>
             )}

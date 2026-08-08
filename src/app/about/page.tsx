@@ -22,7 +22,7 @@ export default function AboutPage() {
       <section className="bg-white pt-16 pb-14 sm:pt-24 sm:pb-20">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <Reveal y={16} mode="mount">
-            <h1 className="font-serif text-4xl sm:text-5xl font-semibold text-ink-900 leading-[1.1] tracking-tight mb-5">
+            <h1 className="text-4xl sm:text-5xl font-semibold text-ink-900 leading-[1.1] tracking-tight mb-5">
               Education should be <span className="text-indigo-600">accessible</span> to everyone.
             </h1>
             <p className="text-lg text-ink-500 max-w-2xl mx-auto leading-relaxed">
@@ -54,13 +54,13 @@ export default function AboutPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
             <Reveal y={12}>
-              <h2 className="text-2xl font-serif font-semibold text-ink-900 mb-3">Our mission</h2>
+              <h2 className="text-2xl font-semibold text-ink-900 mb-3">Our mission</h2>
               <p className="text-ink-600 leading-relaxed">
                 Make professional education accessible, practical, and recognized. We connect learners with expert instructors through short, focused courses that fit into real life.
               </p>
             </Reveal>
             <Reveal y={12} delay={0.1}>
-              <h2 className="text-2xl font-serif font-semibold text-ink-900 mb-3">Our vision</h2>
+              <h2 className="text-2xl font-semibold text-ink-900 mb-3">Our vision</h2>
               <p className="text-ink-600 leading-relaxed">
                 A world where anyone can build skills, earn proof of their expertise, and open new doors. No matter where they started.
               </p>
@@ -73,7 +73,7 @@ export default function AboutPage() {
       <section className="py-14 sm:py-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <Reveal y={12}>
-            <h2 className="text-2xl font-serif font-semibold text-ink-900 mb-6">What makes us different</h2>
+            <h2 className="text-2xl font-semibold text-ink-900 mb-6">What makes us different</h2>
             <div className="space-y-4">
               {[
                 'Courses are built by working professionals.',
@@ -98,7 +98,7 @@ export default function AboutPage() {
       {/* CTA */}
       <section className="border-t border-ink-100 py-14 sm:py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-2xl font-serif font-semibold text-ink-900 mb-5">Join us</h2>
+          <h2 className="text-2xl font-semibold text-ink-900 mb-5">Join us</h2>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link href="/courses" className="inline-flex items-center justify-center rounded-full bg-indigo-600 px-7 py-3 text-sm font-bold text-white hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-600/20">
               Start learning

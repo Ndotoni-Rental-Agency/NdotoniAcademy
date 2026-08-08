@@ -70,7 +70,7 @@ export default function CourseShellLayout({ children }: { children: React.ReactN
             {course?.category && (
               <span className={`hidden sm:inline-flex flex-shrink-0 w-1.5 h-1.5 rounded-full ${theme.solidBg}`} />
             )}
-            <p className="font-serif text-[17px] font-semibold text-ink-900 truncate">{course?.title ?? ' '}</p>
+            <p className="text-[17px] font-semibold text-ink-900 truncate">{course?.title ?? ' '}</p>
           </div>
           <div className="flex gap-1 overflow-x-auto no-scrollbar pb-2.5">
             {TABS.map((tab) => {

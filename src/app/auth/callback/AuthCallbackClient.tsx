@@ -43,7 +43,7 @@ export default function AuthCallbackClient() {
         <div className="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center mx-auto mb-5">
           <XCircle className="w-7 h-7 text-red-600" />
         </div>
-        <h1 className="font-serif text-xl font-semibold text-ink-900 mb-1.5">Couldn&apos;t sign you in</h1>
+        <h1 className="text-xl font-semibold text-ink-900 mb-1.5">Couldn&apos;t sign you in</h1>
         <p className="text-sm text-ink-500 mb-6">{error}</p>
         <Link
           href="/login"

@@ -114,7 +114,7 @@ export default function StudioExamPane({ courseId }: { courseId: string }) {
   return (
     <div className="flex-1 min-w-0 overflow-y-auto p-6 lg:p-8">
       <div className="flex items-start justify-between gap-4 mb-1">
-        <h2 className="font-serif text-xl font-semibold text-ink-900 truncate min-w-0 flex items-center gap-2">
+        <h2 className="text-xl font-semibold text-ink-900 truncate min-w-0 flex items-center gap-2">
           <GraduationCap className="w-5 h-5 text-brand-600 flex-shrink-0" /> Final exam
         </h2>
         {hasExam && (

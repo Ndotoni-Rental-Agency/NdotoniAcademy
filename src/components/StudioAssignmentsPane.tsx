@@ -131,7 +131,7 @@ function GradingView({ courseId, assignment, onBack }: { courseId: string; assig
       <button type="button" onClick={onBack} className="inline-flex items-center gap-1.5 text-xs font-bold text-ink-500 hover:text-ink-800 transition-colors mb-4">
         <ArrowLeft className="w-3.5 h-3.5" /> Assignments
       </button>
-      <h2 className="font-serif text-xl font-semibold text-ink-900 mb-1">{assignment.title}</h2>
+      <h2 className="text-xl font-semibold text-ink-900 mb-1">{assignment.title}</h2>
       <p className="text-sm text-ink-500 mb-6">Grading submissions</p>
 
       {loading ? (
@@ -298,7 +298,7 @@ export default function StudioAssignmentsPane({ courseId }: { courseId: string }
 
   return (
     <div className="flex-1 min-w-0 overflow-y-auto p-6 lg:p-8">
-      <h2 className="font-serif text-xl font-semibold text-ink-900 flex items-center gap-2 mb-1">
+      <h2 className="text-xl font-semibold text-ink-900 flex items-center gap-2 mb-1">
         <ClipboardList className="w-5 h-5 text-indigo-600 flex-shrink-0" /> Assignments
       </h2>
       <p className="text-sm text-ink-500 mb-6">Post work for learners to submit and grade it here.</p>

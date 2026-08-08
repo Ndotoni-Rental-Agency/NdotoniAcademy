@@ -28,7 +28,7 @@ export default function OrganizationsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
             <Reveal y={16} mode="mount">
               <p className="text-sm font-bold text-indigo-600 uppercase tracking-wide mb-3">For organizations</p>
-              <h1 className="font-serif text-3xl sm:text-4xl lg:text-[2.75rem] font-semibold text-ink-900 leading-[1.05] tracking-tight mb-4">
+              <h1 className="text-3xl sm:text-4xl lg:text-[2.75rem] font-semibold text-ink-900 leading-[1.05] tracking-tight mb-4">
                 Training that scales with your team.
               </h1>
               <p className="text-base sm:text-lg text-ink-500 leading-relaxed mb-6 max-w-md">
@@ -60,7 +60,7 @@ export default function OrganizationsPage() {
       <section className="border-t border-ink-100 py-14 sm:py-20">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10">
-            <h2 className="text-2xl sm:text-3xl font-serif font-semibold text-ink-900">Training ready to assign today</h2>
+            <h2 className="text-2xl sm:text-3xl font-semibold text-ink-900">Training ready to assign today</h2>
             <p className="text-ink-500 mt-2">Real courses your team can start the moment they accept an invite.</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -79,7 +79,7 @@ export default function OrganizationsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
             <Reveal y={12} className="order-first lg:order-last">
               <p className="text-sm font-bold text-indigo-600 uppercase tracking-wide mb-3">Your training, your rules</p>
-              <h2 className="text-2xl sm:text-3xl font-serif font-semibold text-ink-900 mb-4 leading-tight">
+              <h2 className="text-2xl sm:text-3xl font-semibold text-ink-900 mb-4 leading-tight">
                 Don&apos;t see what your team needs? Build it.
               </h2>
               <p className="text-ink-500 leading-relaxed max-w-md">
@@ -96,7 +96,7 @@ export default function OrganizationsPage() {
       {/* Concrete walkthrough using the same example org */}
       <section className="bg-ink-50 py-14 sm:py-20">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl sm:text-3xl font-serif font-semibold text-ink-900 text-center mb-12">What a rollout actually looks like</h2>
+          <h2 className="text-2xl sm:text-3xl font-semibold text-ink-900 text-center mb-12">What a rollout actually looks like</h2>
           <div className="space-y-6">
             {[
               {
@@ -143,7 +143,7 @@ export default function OrganizationsPage() {
             </Reveal>
             <Reveal y={12} delay={0.1} className="order-first lg:order-last">
               <p className="text-sm font-bold text-indigo-600 uppercase tracking-wide mb-3">Not just assigned. Finished.</p>
-              <h2 className="text-2xl sm:text-3xl font-serif font-semibold text-ink-900 mb-4 leading-tight">
+              <h2 className="text-2xl sm:text-3xl font-semibold text-ink-900 mb-4 leading-tight">
                 See who&apos;s actually making progress
               </h2>
               <p className="text-ink-500 leading-relaxed max-w-md">
@@ -160,7 +160,7 @@ export default function OrganizationsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
             <Reveal y={12}>
               <p className="text-sm font-bold text-indigo-600 uppercase tracking-wide mb-3">Proof, not just progress</p>
-              <h2 className="text-2xl sm:text-3xl font-serif font-semibold text-ink-900 mb-4 leading-tight">
+              <h2 className="text-2xl sm:text-3xl font-semibold text-ink-900 mb-4 leading-tight">
                 Every completion earns a real certificate
               </h2>
               <p className="text-ink-500 leading-relaxed max-w-md">
@@ -182,7 +182,7 @@ export default function OrganizationsPage() {
       {/* Role breakdown */}
       <section className="py-14 sm:py-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-serif font-semibold text-ink-900 mb-8 text-center">Four roles. No ambiguity about who can do what.</h2>
+          <h2 className="text-2xl font-semibold text-ink-900 mb-8 text-center">Four roles. No ambiguity about who can do what.</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             {roleDescriptions.map((r) => (
               <div key={r.role} className="rounded-2xl border-2 border-ink-100 p-5">
@@ -199,7 +199,7 @@ export default function OrganizationsPage() {
       {/* CTA */}
       <section className="border-t border-ink-100 py-14 sm:py-16">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-2xl font-serif font-semibold text-ink-900 mb-5">Bring your team to Ndotoni Academy</h2>
+          <h2 className="text-2xl font-semibold text-ink-900 mb-5">Bring your team to Ndotoni Academy</h2>
           <OrganizationCTAButton className="inline-flex items-center justify-center gap-2 rounded-full bg-indigo-600 px-8 py-3.5 text-sm font-bold text-white hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-600/20" />
         </div>
       </section>

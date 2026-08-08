@@ -29,7 +29,7 @@ function ResultCard({ attempt, onRetake }: { attempt: ExamAttempt; onRetake: () 
       <div className={`w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center ${attempt.passed ? 'bg-brand-100' : 'bg-ink-100'}`}>
         {attempt.passed ? <Trophy className="w-7 h-7 text-brand-600" /> : <XCircle className="w-7 h-7 text-ink-500" />}
       </div>
-      <h2 className="font-serif text-2xl font-semibold text-ink-900 mb-1">
+      <h2 className="text-2xl font-semibold text-ink-900 mb-1">
         {attempt.passed ? 'You passed' : 'Not quite there'}
       </h2>
       <p className="text-ink-500 mb-1">
@@ -54,7 +54,7 @@ function ExamIntro({ exam, onStart }: { exam: ExamPreview; onStart: () => void }
       <div className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center bg-brand-100">
         <GraduationCap className="w-7 h-7 text-brand-600" />
       </div>
-      <h2 className="font-serif text-2xl font-semibold text-ink-900 mb-2">Final exam</h2>
+      <h2 className="text-2xl font-semibold text-ink-900 mb-2">Final exam</h2>
       <p className="text-ink-500 max-w-sm mx-auto mb-1">
         {exam.questions.length} question{exam.questions.length === 1 ? '' : 's'} · pass with {exam.passingScorePercent}% or higher
       </p>
@@ -263,7 +263,7 @@ export default function CourseExamPage() {
           <div className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center bg-ink-100">
             <Lock className="w-7 h-7 text-ink-400" />
           </div>
-          <h2 className="font-serif text-2xl font-semibold text-ink-900 mb-2">Finish the course first</h2>
+          <h2 className="text-2xl font-semibold text-ink-900 mb-2">Finish the course first</h2>
           <p className="text-ink-500 max-w-sm mx-auto mb-6">
             {locked.done} of {locked.total} lessons complete. The final exam unlocks once every lesson is done.
           </p>

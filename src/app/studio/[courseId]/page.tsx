@@ -143,7 +143,7 @@ export default function StudioPage() {
         </Link>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <h1 className="font-serif text-base font-semibold text-ink-900 truncate">{course.title}</h1>
+            <h1 className="text-base font-semibold text-ink-900 truncate">{course.title}</h1>
             <span className={`flex-shrink-0 text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${
               course.status === CourseStatus.PUBLISHED ? 'bg-brand-100 text-brand-700' : 'bg-ink-100 text-ink-500'
             }`}>

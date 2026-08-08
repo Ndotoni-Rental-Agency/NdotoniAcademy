@@ -114,7 +114,7 @@ export default function LessonEditorPage() {
           </span>
         )}
         <div className="min-w-0 flex-1">
-          <h1 className="font-serif text-base font-semibold text-ink-900 truncate">
+          <h1 className="text-base font-semibold text-ink-900 truncate">
             {isNew ? 'Add a lesson' : editLesson?.title || 'Edit lesson'}
           </h1>
           {editLesson && (

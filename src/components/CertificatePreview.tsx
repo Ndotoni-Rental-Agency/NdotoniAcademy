@@ -46,17 +46,17 @@ export default function CertificatePreview({
             />
           </div>
 
-          <p className="font-serif text-[13px] font-bold uppercase tracking-[0.2em] text-indigo-700 mb-6">
+          <p className="text-[13px] font-bold uppercase tracking-[0.2em] text-indigo-700 mb-6">
             Certificate of Completion
           </p>
 
           <p className="text-sm text-ink-400 mb-2">This certifies that</p>
-          <p className="font-serif text-2xl sm:text-3xl font-bold text-ink-900 mb-2 pb-3 border-b-2 border-ink-100 inline-block px-8">
+          <p className="text-2xl sm:text-3xl font-bold text-ink-900 mb-2 pb-3 border-b-2 border-ink-100 inline-block px-8">
             Your Name
           </p>
 
           <p className="text-sm text-ink-400 mt-5 mb-1.5">has successfully completed</p>
-          <p className="font-serif text-lg sm:text-xl font-bold text-ink-900 mb-6">{courseTitle}</p>
+          <p className="text-lg sm:text-xl font-bold text-ink-900 mb-6">{courseTitle}</p>
 
           <div className="w-16 h-px bg-gradient-to-r from-transparent via-warm-400 to-transparent mx-auto mb-6" />
 
@@ -69,7 +69,7 @@ export default function CertificatePreview({
           {/* Signature + serial row */}
           <div className="flex items-end justify-between gap-4 text-left">
             <div>
-              <p className="font-serif italic text-sm text-ink-800 mb-1 border-b border-ink-200 pb-1 min-w-[110px]">
+              <p className="italic text-sm text-ink-800 mb-1 border-b border-ink-200 pb-1 min-w-[110px]">
                 {instructor}
               </p>
               <p className="text-[10px] text-ink-400 uppercase tracking-wide">Instructor</p>

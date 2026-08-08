@@ -58,7 +58,7 @@ function ResetPassword() {
         <div className="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center mx-auto mb-5">
           <XCircle className="w-7 h-7 text-red-600" />
         </div>
-        <h1 className="font-serif text-xl font-semibold text-ink-900 mb-1.5">Invalid reset link</h1>
+        <h1 className="text-xl font-semibold text-ink-900 mb-1.5">Invalid reset link</h1>
         <p className="text-sm text-ink-500 mb-6">
           This link is missing some information. Copy the full link from your password reset email, or request a new one.
         </p>
@@ -78,7 +78,7 @@ function ResetPassword() {
         <div className="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center mx-auto mb-5">
           <XCircle className="w-7 h-7 text-red-600" />
         </div>
-        <h1 className="font-serif text-xl font-semibold text-ink-900 mb-1.5">This link has expired or was already used</h1>
+        <h1 className="text-xl font-semibold text-ink-900 mb-1.5">This link has expired or was already used</h1>
         <p className="text-sm text-ink-500 mb-6">
           Password reset links only work once and expire after a while, for your security. Request a new one to keep going.
         </p>
@@ -98,7 +98,7 @@ function ResetPassword() {
         <div className="w-14 h-14 rounded-2xl bg-brand-50 flex items-center justify-center mx-auto mb-5">
           <CheckCircle2 className="w-7 h-7 text-brand-600" />
         </div>
-        <h1 className="font-serif text-xl font-semibold text-ink-900 mb-1.5">Password updated</h1>
+        <h1 className="text-xl font-semibold text-ink-900 mb-1.5">Password updated</h1>
         <p className="text-sm text-ink-500 mb-6">You can sign in with your new password now.</p>
         <Link
           href="/login"
@@ -112,7 +112,7 @@ function ResetPassword() {
 
   return (
     <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8">
-      <h1 className="font-serif text-2xl font-semibold text-ink-900 mb-1">Reset your password</h1>
+      <h1 className="text-2xl font-semibold text-ink-900 mb-1">Reset your password</h1>
       <p className="text-sm text-ink-500 mb-6">Choose a new password for your account.</p>
 
       <form onSubmit={handleSubmit} className="space-y-4">

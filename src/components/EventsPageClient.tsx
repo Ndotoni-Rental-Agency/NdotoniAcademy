@@ -27,7 +27,7 @@ export default function EventsPageClient() {
       <section className="bg-white pt-8 pb-6 sm:pt-12 sm:pb-8 border-b border-ink-100">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-            <h1 className="font-serif text-3xl sm:text-4xl font-semibold text-ink-900 mb-1">Events</h1>
+            <h1 className="text-3xl sm:text-4xl font-semibold text-ink-900 mb-1">Events</h1>
             <p className="text-ink-500">Webinars, workshops, and live sessions for the community.</p>
           </motion.div>
         </div>
@@ -65,7 +65,7 @@ export default function EventsPageClient() {
       {/* Upcoming list */}
       <section className="bg-ink-50 py-10 sm:py-14">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-xl font-serif font-semibold text-ink-900 mb-6">Upcoming</h2>
+          <h2 className="text-xl font-semibold text-ink-900 mb-6">Upcoming</h2>
 
           <div className="space-y-4">
             {upcoming.map((event, i) => (
