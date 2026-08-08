@@ -8,6 +8,8 @@ import { GraphQLClient } from '@/lib/graphql-client';
 import { course as courseQuery } from '@/graphql/queries';
 import type { CourseQuery } from '@/API';
 import { getCategoryTheme } from '@/lib/category-theme';
+import { useAuth } from '@/lib/auth-context';
+import CourseGuestPrompt from '@/components/CourseGuestPrompt';
 
 type CourseHeader = NonNullable<CourseQuery['course']>;
 
@@ -29,6 +31,11 @@ export default function CourseShellLayout({ children }: { children: React.ReactN
   const pathname = usePathname();
   const courseId = params.id as string;
   const [course, setCourse] = useState<CourseHeader | null>(null);
+  const { user, loading: authLoading } = useAuth();
+  // Reset per course visited, not per tab switch — this layout stays
+  // mounted across Modules/Discussion/Assignments/Exam, so a plain dismissed
+  // flag would otherwise survive a jump to a different course entirely.
+  const [dismissedFor, setDismissedFor] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -92,6 +99,15 @@ export default function CourseShellLayout({ children }: { children: React.ReactN
         </div>
       </div>
       {children}
+      {course && (
+        <CourseGuestPrompt
+          open={!authLoading && !user && dismissedFor !== courseId}
+          onDismiss={() => setDismissedFor(courseId)}
+          courseTitle={course.title}
+          priceTzs={course.priceTzs}
+          next={basePath}
+        />
+      )}
     </div>
   );
 }
