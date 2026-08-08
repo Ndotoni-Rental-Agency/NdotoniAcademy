@@ -174,6 +174,21 @@ export type CourseModule = {
   totalDurationSeconds: number,
 };
 
+export type CreateAssignmentInput = {
+  description?: string | null,
+  title: string,
+};
+
+export type Assignment = {
+  __typename: "Assignment",
+  courseId: string,
+  createdAt: string,
+  description?: string | null,
+  id: string,
+  title: string,
+  updatedAt: string,
+};
+
 export type CreateCourseInput = {
   category?: string | null,
   description?: string | null,
@@ -205,6 +220,22 @@ export enum CourseStatus {
   PUBLISHED = "PUBLISHED",
 }
 
+
+export type CreateDiscussionPostInput = {
+  body: string,
+  parentPostId?: string | null,
+};
+
+export type DiscussionPost = {
+  __typename: "DiscussionPost",
+  authorId: string,
+  authorName: string,
+  body: string,
+  courseId: string,
+  createdAt: string,
+  id: string,
+  parentPostId?: string | null,
+};
 
 export type CreateLessonInput = {
   animationRef?: string | null,
@@ -261,6 +292,32 @@ export type MediaUploadResponse = {
   uploadUrl: string,
 };
 
+export type GradeAssignmentInput = {
+  feedback?: string | null,
+  score: number,
+};
+
+export type AssignmentSubmission = {
+  __typename: "AssignmentSubmission",
+  assignmentId: string,
+  attachment?: Media | null,
+  body?: string | null,
+  courseId: string,
+  feedback?: string | null,
+  gradedAt?: string | null,
+  score?: number | null,
+  status: SubmissionStatus,
+  submittedAt: string,
+  submitterName: string,
+  userId: string,
+};
+
+export enum SubmissionStatus {
+  GRADED = "GRADED",
+  SUBMITTED = "SUBMITTED",
+}
+
+
 export type OrganizationInvitation = {
   __typename: "OrganizationInvitation",
   createdAt: string,
@@ -313,6 +370,11 @@ export type CourseExam = {
   updatedAt: string,
 };
 
+export type SubmitAssignmentInput = {
+  attachment?: MediaInput | null,
+  body?: string | null,
+};
+
 export type ExamAttempt = {
   __typename: "ExamAttempt",
   attemptedAt: string,
@@ -320,6 +382,11 @@ export type ExamAttempt = {
   passed: boolean,
   score: number,
   total: number,
+};
+
+export type UpdateAssignmentInput = {
+  description?: string | null,
+  title?: string | null,
 };
 
 export type UpdateCourseInput = {
@@ -682,6 +749,14 @@ export type ApplyToBeInstructorMutation = {
   } | null,
 };
 
+export type BeautifyLessonMarkdownMutationVariables = {
+  text: string,
+};
+
+export type BeautifyLessonMarkdownMutation = {
+  beautifyLessonMarkdown: string,
+};
+
 export type ChangeMemberRoleMutationVariables = {
   organizationId: string,
   role: MembershipRole,
@@ -787,6 +862,23 @@ export type ChangeMemberRoleMutation = {
   } | null,
 };
 
+export type CreateAssignmentMutationVariables = {
+  courseId: string,
+  input: CreateAssignmentInput,
+};
+
+export type CreateAssignmentMutation = {
+  createAssignment:  {
+    __typename: "Assignment",
+    courseId: string,
+    createdAt: string,
+    description?: string | null,
+    id: string,
+    title: string,
+    updatedAt: string,
+  },
+};
+
 export type CreateCourseMutationVariables = {
   input: CreateCourseInput,
 };
@@ -890,6 +982,24 @@ export type CreateCourseMutation = {
     thumbnailUrl?: string | null,
     title: string,
     updatedAt: string,
+  },
+};
+
+export type CreateDiscussionPostMutationVariables = {
+  courseId: string,
+  input: CreateDiscussionPostInput,
+};
+
+export type CreateDiscussionPostMutation = {
+  createDiscussionPost:  {
+    __typename: "DiscussionPost",
+    authorId: string,
+    authorName: string,
+    body: string,
+    courseId: string,
+    createdAt: string,
+    id: string,
+    parentPostId?: string | null,
   },
 };
 
@@ -1043,6 +1153,15 @@ export type CreateOrganizationMutation = {
   } | null,
 };
 
+export type DeleteAssignmentMutationVariables = {
+  courseId: string,
+  id: string,
+};
+
+export type DeleteAssignmentMutation = {
+  deleteAssignment?: boolean | null,
+};
+
 export type DeleteCourseMutationVariables = {
   id: string,
 };
@@ -1057,6 +1176,15 @@ export type DeleteCourseExamMutationVariables = {
 
 export type DeleteCourseExamMutation = {
   deleteCourseExam?: boolean | null,
+};
+
+export type DeleteDiscussionPostMutationVariables = {
+  courseId: string,
+  id: string,
+};
+
+export type DeleteDiscussionPostMutation = {
+  deleteDiscussionPost?: boolean | null,
 };
 
 export type DeleteLessonMutationVariables = {
@@ -1125,6 +1253,34 @@ export type GetCourseMediaUploadUrlMutation = {
     fileUrl: string,
     key: string,
     uploadUrl: string,
+  },
+};
+
+export type GradeAssignmentMutationVariables = {
+  assignmentId: string,
+  courseId: string,
+  input: GradeAssignmentInput,
+  userId: string,
+};
+
+export type GradeAssignmentMutation = {
+  gradeAssignment:  {
+    __typename: "AssignmentSubmission",
+    assignmentId: string,
+    attachment?:  {
+      __typename: "Media",
+      type: MediaType,
+      url: string,
+    } | null,
+    body?: string | null,
+    courseId: string,
+    feedback?: string | null,
+    gradedAt?: string | null,
+    score?: number | null,
+    status: SubmissionStatus,
+    submittedAt: string,
+    submitterName: string,
+    userId: string,
   },
 };
 
@@ -1541,6 +1697,33 @@ export type SetModuleLessonPrerequisitesMutation = {
   },
 };
 
+export type SubmitAssignmentMutationVariables = {
+  assignmentId: string,
+  courseId: string,
+  input: SubmitAssignmentInput,
+};
+
+export type SubmitAssignmentMutation = {
+  submitAssignment:  {
+    __typename: "AssignmentSubmission",
+    assignmentId: string,
+    attachment?:  {
+      __typename: "Media",
+      type: MediaType,
+      url: string,
+    } | null,
+    body?: string | null,
+    courseId: string,
+    feedback?: string | null,
+    gradedAt?: string | null,
+    score?: number | null,
+    status: SubmissionStatus,
+    submittedAt: string,
+    submitterName: string,
+    userId: string,
+  },
+};
+
 export type SubmitExamAttemptMutationVariables = {
   answers: Array< number >,
   courseId: string,
@@ -1563,6 +1746,24 @@ export type TranscribeDocumentMutationVariables = {
 
 export type TranscribeDocumentMutation = {
   transcribeDocument: string,
+};
+
+export type UpdateAssignmentMutationVariables = {
+  courseId: string,
+  id: string,
+  input: UpdateAssignmentInput,
+};
+
+export type UpdateAssignmentMutation = {
+  updateAssignment:  {
+    __typename: "Assignment",
+    courseId: string,
+    createdAt: string,
+    description?: string | null,
+    id: string,
+    title: string,
+    updatedAt: string,
+  },
 };
 
 export type UpdateCourseMutationVariables = {
@@ -1816,6 +2017,22 @@ export type UpdateProfileMutation = {
   } | null,
 };
 
+export type AssignmentsForCourseQueryVariables = {
+  courseId: string,
+};
+
+export type AssignmentsForCourseQuery = {
+  assignmentsForCourse:  Array< {
+    __typename: "Assignment",
+    courseId: string,
+    createdAt: string,
+    description?: string | null,
+    id: string,
+    title: string,
+    updatedAt: string,
+  } >,
+};
+
 export type CertificateByPublicIdQueryVariables = {
   id: string,
 };
@@ -2063,6 +2280,23 @@ export type CoursesForOrganizationQuery = {
     thumbnailUrl?: string | null,
     title: string,
     updatedAt: string,
+  } >,
+};
+
+export type DiscussionForCourseQueryVariables = {
+  courseId: string,
+};
+
+export type DiscussionForCourseQuery = {
+  discussionForCourse:  Array< {
+    __typename: "DiscussionPost",
+    authorId: string,
+    authorName: string,
+    body: string,
+    courseId: string,
+    createdAt: string,
+    id: string,
+    parentPostId?: string | null,
   } >,
 };
 
@@ -2569,6 +2803,31 @@ export type MyModulesQuery = {
   } >,
 };
 
+export type MySubmissionsForCourseQueryVariables = {
+  courseId: string,
+};
+
+export type MySubmissionsForCourseQuery = {
+  mySubmissionsForCourse:  Array< {
+    __typename: "AssignmentSubmission",
+    assignmentId: string,
+    attachment?:  {
+      __typename: "Media",
+      type: MediaType,
+      url: string,
+    } | null,
+    body?: string | null,
+    courseId: string,
+    feedback?: string | null,
+    gradedAt?: string | null,
+    score?: number | null,
+    status: SubmissionStatus,
+    submittedAt: string,
+    submitterName: string,
+    userId: string,
+  } >,
+};
+
 export type OrganizationQueryVariables = {
   id: string,
 };
@@ -2811,6 +3070,32 @@ export type PublicCoursesQuery = {
     thumbnailUrl?: string | null,
     title: string,
     updatedAt: string,
+  } >,
+};
+
+export type SubmissionsForAssignmentQueryVariables = {
+  assignmentId: string,
+  courseId: string,
+};
+
+export type SubmissionsForAssignmentQuery = {
+  submissionsForAssignment:  Array< {
+    __typename: "AssignmentSubmission",
+    assignmentId: string,
+    attachment?:  {
+      __typename: "Media",
+      type: MediaType,
+      url: string,
+    } | null,
+    body?: string | null,
+    courseId: string,
+    feedback?: string | null,
+    gradedAt?: string | null,
+    score?: number | null,
+    status: SubmissionStatus,
+    submittedAt: string,
+    submitterName: string,
+    userId: string,
   } >,
 };
 

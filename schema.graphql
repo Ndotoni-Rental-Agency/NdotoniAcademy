@@ -4,6 +4,29 @@ schema {
   subscription: Subscription
 }
 
+type Assignment {
+  courseId: ID!
+  createdAt: AWSDateTime!
+  description: String
+  id: ID!
+  title: String!
+  updatedAt: AWSDateTime!
+}
+
+type AssignmentSubmission {
+  assignmentId: ID!
+  attachment: Media
+  body: String
+  courseId: ID!
+  feedback: String
+  gradedAt: AWSDateTime
+  score: Int
+  status: SubmissionStatus!
+  submittedAt: AWSDateTime!
+  submitterName: String!
+  userId: ID!
+}
+
 type Course {
   category: String
   createdAt: AWSDateTime!
@@ -73,6 +96,16 @@ type CourseProgress {
   completedLessonIds: [ID!]!
   courseId: ID!
   totalLessons: Int!
+}
+
+type DiscussionPost {
+  authorId: ID!
+  authorName: String!
+  body: String!
+  courseId: ID!
+  createdAt: AWSDateTime!
+  id: ID!
+  parentPostId: ID
 }
 
 type ExamAttempt {
@@ -180,18 +213,24 @@ type Mutation {
   addLessonToModule(courseId: ID!, lessonId: ID!, moduleId: ID!, prerequisites: [ModuleLessonRefInput!]): ModuleLesson! @aws_cognito_user_pools
   addModuleToCourse(courseId: ID!, moduleId: ID!): CourseModule! @aws_cognito_user_pools
   applyToBeInstructor: User @aws_cognito_user_pools
+  beautifyLessonMarkdown(text: String!): String! @aws_cognito_user_pools
   changeMemberRole(organizationId: ID!, role: MembershipRole!, userId: ID!): OrganizationMembership @aws_cognito_user_pools
+  createAssignment(courseId: ID!, input: CreateAssignmentInput!): Assignment! @aws_cognito_user_pools
   createCourse(input: CreateCourseInput!): Course! @aws_cognito_user_pools
+  createDiscussionPost(courseId: ID!, input: CreateDiscussionPostInput!): DiscussionPost! @aws_cognito_user_pools
   createLessonForModule(courseId: ID!, input: CreateLessonInput!, moduleId: ID!, prerequisites: [ModuleLessonRefInput!]): ModuleLesson! @aws_cognito_user_pools
   createModuleForCourse(courseId: ID!, input: CreateModuleInput!): CourseModule! @aws_cognito_user_pools
   createOrganization(input: CreateOrganizationInput!): Organization @aws_cognito_user_pools
+  deleteAssignment(courseId: ID!, id: ID!): Boolean @aws_cognito_user_pools
   deleteCourse(id: ID!): Boolean @aws_cognito_user_pools
   deleteCourseExam(courseId: ID!): Boolean @aws_cognito_user_pools
+  deleteDiscussionPost(courseId: ID!, id: ID!): Boolean @aws_cognito_user_pools
   deleteLesson(id: ID!): Boolean @aws_cognito_user_pools
   deleteModule(id: ID!): Boolean @aws_cognito_user_pools
   generateFlashcardsFromText(count: Int, text: String!): [Flashcard!]! @aws_cognito_user_pools
   generateQuizFromText(count: Int, text: String!): [QuizQuestion!]! @aws_cognito_user_pools
   getCourseMediaUploadUrl(contentType: String!, fileName: String!): MediaUploadResponse! @aws_cognito_user_pools
+  gradeAssignment(assignmentId: ID!, courseId: ID!, input: GradeAssignmentInput!, userId: ID!): AssignmentSubmission! @aws_cognito_user_pools
   inviteMember(email: AWSEmail!, organizationId: ID!, role: MembershipRole!): OrganizationInvitation @aws_cognito_user_pools
   markLessonComplete(courseId: ID!, lessonId: ID!): CourseProgress! @aws_cognito_user_pools
   removeLessonFromModule(lessonId: ID!, moduleId: ID!): Boolean @aws_cognito_user_pools
@@ -204,8 +243,10 @@ type Mutation {
   setCourseExam(courseId: ID!, input: SetCourseExamInput!): CourseExam! @aws_cognito_user_pools
   setInstructorStatus(status: InstructorStatus!, userId: ID!): User @aws_cognito_user_pools
   setModuleLessonPrerequisites(courseId: ID!, lessonId: ID!, moduleId: ID!, prerequisites: [ModuleLessonRefInput!]!): ModuleLesson! @aws_cognito_user_pools
+  submitAssignment(assignmentId: ID!, courseId: ID!, input: SubmitAssignmentInput!): AssignmentSubmission! @aws_cognito_user_pools
   submitExamAttempt(answers: [Int!]!, courseId: ID!): ExamAttempt! @aws_cognito_user_pools
   transcribeDocument(fileUrl: AWSURL!): String! @aws_cognito_user_pools
+  updateAssignment(courseId: ID!, id: ID!, input: UpdateAssignmentInput!): Assignment! @aws_cognito_user_pools
   updateCourse(id: ID!, input: UpdateCourseInput!): Course! @aws_cognito_user_pools
   updateLesson(id: ID!, input: UpdateLessonInput!): Lesson! @aws_cognito_user_pools
   updateModule(id: ID!, input: UpdateModuleInput!): Module! @aws_cognito_user_pools
@@ -247,10 +288,12 @@ type OrganizationMembership {
 }
 
 type Query {
+  assignmentsForCourse(courseId: ID!): [Assignment!]! @aws_cognito_user_pools
   certificateByPublicId(id: ID!): CourseCertificate @aws_cognito_user_pools
   course(id: ID!): Course @aws_cognito_user_pools
   courseExam(courseId: ID!): CourseExam @aws_cognito_user_pools
   coursesForOrganization(organizationId: ID!): [Course!]! @aws_cognito_user_pools
+  discussionForCourse(courseId: ID!): [DiscussionPost!]! @aws_cognito_user_pools
   examToTake(courseId: ID!): CourseExamPreview @aws_cognito_user_pools
   invitationsForOrganization(organizationId: ID!): [OrganizationInvitation!]! @aws_cognito_user_pools
   lesson(courseId: ID!, lessonId: ID!, moduleId: ID!): ModuleLesson @aws_cognito_user_pools
@@ -265,9 +308,11 @@ type Query {
   myLearning: [CourseLearningSummary!]! @aws_cognito_user_pools
   myLessons: [Lesson!]! @aws_cognito_user_pools
   myModules: [Module!]! @aws_cognito_user_pools
+  mySubmissionsForCourse(courseId: ID!): [AssignmentSubmission!]! @aws_cognito_user_pools
   organization(id: ID!): Organization @aws_cognito_user_pools
   organizationBySlug(slug: String!): Organization @aws_cognito_user_pools
   publicCourses: [Course!]! @aws_cognito_user_pools
+  submissionsForAssignment(assignmentId: ID!, courseId: ID!): [AssignmentSubmission!]! @aws_cognito_user_pools
 }
 
 type QuizQuestion {
@@ -356,9 +401,19 @@ enum OrganizationType {
   SCHOOL
 }
 
+enum SubmissionStatus {
+  GRADED
+  SUBMITTED
+}
+
 enum UserStatus {
   ACTIVE
   SUSPENDED
+}
+
+input CreateAssignmentInput {
+  description: String
+  title: String!
 }
 
 input CreateCourseInput {
@@ -368,6 +423,11 @@ input CreateCourseInput {
   priceTzs: Int!
   thumbnailUrl: AWSURL
   title: String!
+}
+
+input CreateDiscussionPostInput {
+  body: String!
+  parentPostId: ID
 }
 
 input CreateLessonInput {
@@ -406,6 +466,11 @@ input FlashcardInput {
   id: ID!
 }
 
+input GradeAssignmentInput {
+  feedback: String
+  score: Int!
+}
+
 input MediaInput {
   type: MediaType!
   url: AWSURL!
@@ -426,6 +491,16 @@ input QuizQuestionInput {
 input SetCourseExamInput {
   passingScorePercent: Int!
   questions: [QuizQuestionInput!]!
+}
+
+input SubmitAssignmentInput {
+  attachment: MediaInput
+  body: String
+}
+
+input UpdateAssignmentInput {
+  description: String
+  title: String
 }
 
 input UpdateCourseInput {

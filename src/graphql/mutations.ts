@@ -266,6 +266,13 @@ export const applyToBeInstructor = /* GraphQL */ `mutation ApplyToBeInstructor {
   APITypes.ApplyToBeInstructorMutationVariables,
   APITypes.ApplyToBeInstructorMutation
 >;
+export const beautifyLessonMarkdown = /* GraphQL */ `mutation BeautifyLessonMarkdown($text: String!) {
+  beautifyLessonMarkdown(text: $text)
+}
+` as GeneratedMutation<
+  APITypes.BeautifyLessonMarkdownMutationVariables,
+  APITypes.BeautifyLessonMarkdownMutation
+>;
 export const changeMemberRole = /* GraphQL */ `mutation ChangeMemberRole(
   $organizationId: ID!
   $role: MembershipRole!
@@ -376,6 +383,21 @@ export const changeMemberRole = /* GraphQL */ `mutation ChangeMemberRole(
   APITypes.ChangeMemberRoleMutationVariables,
   APITypes.ChangeMemberRoleMutation
 >;
+export const createAssignment = /* GraphQL */ `mutation CreateAssignment($courseId: ID!, $input: CreateAssignmentInput!) {
+  createAssignment(courseId: $courseId, input: $input) {
+    courseId
+    createdAt
+    description
+    id
+    title
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedMutation<
+  APITypes.CreateAssignmentMutationVariables,
+  APITypes.CreateAssignmentMutation
+>;
 export const createCourse = /* GraphQL */ `mutation CreateCourse($input: CreateCourseInput!) {
   createCourse(input: $input) {
     category
@@ -480,6 +502,25 @@ export const createCourse = /* GraphQL */ `mutation CreateCourse($input: CreateC
 ` as GeneratedMutation<
   APITypes.CreateCourseMutationVariables,
   APITypes.CreateCourseMutation
+>;
+export const createDiscussionPost = /* GraphQL */ `mutation CreateDiscussionPost(
+  $courseId: ID!
+  $input: CreateDiscussionPostInput!
+) {
+  createDiscussionPost(courseId: $courseId, input: $input) {
+    authorId
+    authorName
+    body
+    courseId
+    createdAt
+    id
+    parentPostId
+    __typename
+  }
+}
+` as GeneratedMutation<
+  APITypes.CreateDiscussionPostMutationVariables,
+  APITypes.CreateDiscussionPostMutation
 >;
 export const createLessonForModule = /* GraphQL */ `mutation CreateLessonForModule(
   $courseId: ID!
@@ -634,6 +675,13 @@ export const createOrganization = /* GraphQL */ `mutation CreateOrganization($in
   APITypes.CreateOrganizationMutationVariables,
   APITypes.CreateOrganizationMutation
 >;
+export const deleteAssignment = /* GraphQL */ `mutation DeleteAssignment($courseId: ID!, $id: ID!) {
+  deleteAssignment(courseId: $courseId, id: $id)
+}
+` as GeneratedMutation<
+  APITypes.DeleteAssignmentMutationVariables,
+  APITypes.DeleteAssignmentMutation
+>;
 export const deleteCourse = /* GraphQL */ `mutation DeleteCourse($id: ID!) {
   deleteCourse(id: $id)
 }
@@ -647,6 +695,13 @@ export const deleteCourseExam = /* GraphQL */ `mutation DeleteCourseExam($course
 ` as GeneratedMutation<
   APITypes.DeleteCourseExamMutationVariables,
   APITypes.DeleteCourseExamMutation
+>;
+export const deleteDiscussionPost = /* GraphQL */ `mutation DeleteDiscussionPost($courseId: ID!, $id: ID!) {
+  deleteDiscussionPost(courseId: $courseId, id: $id)
+}
+` as GeneratedMutation<
+  APITypes.DeleteDiscussionPostMutationVariables,
+  APITypes.DeleteDiscussionPostMutation
 >;
 export const deleteLesson = /* GraphQL */ `mutation DeleteLesson($id: ID!) {
   deleteLesson(id: $id)
@@ -708,6 +763,40 @@ export const getCourseMediaUploadUrl = /* GraphQL */ `mutation GetCourseMediaUpl
 ` as GeneratedMutation<
   APITypes.GetCourseMediaUploadUrlMutationVariables,
   APITypes.GetCourseMediaUploadUrlMutation
+>;
+export const gradeAssignment = /* GraphQL */ `mutation GradeAssignment(
+  $assignmentId: ID!
+  $courseId: ID!
+  $input: GradeAssignmentInput!
+  $userId: ID!
+) {
+  gradeAssignment(
+    assignmentId: $assignmentId
+    courseId: $courseId
+    input: $input
+    userId: $userId
+  ) {
+    assignmentId
+    attachment {
+      type
+      url
+      __typename
+    }
+    body
+    courseId
+    feedback
+    gradedAt
+    score
+    status
+    submittedAt
+    submitterName
+    userId
+    __typename
+  }
+}
+` as GeneratedMutation<
+  APITypes.GradeAssignmentMutationVariables,
+  APITypes.GradeAssignmentMutation
 >;
 export const inviteMember = /* GraphQL */ `mutation InviteMember(
   $email: AWSEmail!
@@ -1117,6 +1206,38 @@ export const setModuleLessonPrerequisites = /* GraphQL */ `mutation SetModuleLes
   APITypes.SetModuleLessonPrerequisitesMutationVariables,
   APITypes.SetModuleLessonPrerequisitesMutation
 >;
+export const submitAssignment = /* GraphQL */ `mutation SubmitAssignment(
+  $assignmentId: ID!
+  $courseId: ID!
+  $input: SubmitAssignmentInput!
+) {
+  submitAssignment(
+    assignmentId: $assignmentId
+    courseId: $courseId
+    input: $input
+  ) {
+    assignmentId
+    attachment {
+      type
+      url
+      __typename
+    }
+    body
+    courseId
+    feedback
+    gradedAt
+    score
+    status
+    submittedAt
+    submitterName
+    userId
+    __typename
+  }
+}
+` as GeneratedMutation<
+  APITypes.SubmitAssignmentMutationVariables,
+  APITypes.SubmitAssignmentMutation
+>;
 export const submitExamAttempt = /* GraphQL */ `mutation SubmitExamAttempt($answers: [Int!]!, $courseId: ID!) {
   submitExamAttempt(answers: $answers, courseId: $courseId) {
     attemptedAt
@@ -1137,6 +1258,25 @@ export const transcribeDocument = /* GraphQL */ `mutation TranscribeDocument($fi
 ` as GeneratedMutation<
   APITypes.TranscribeDocumentMutationVariables,
   APITypes.TranscribeDocumentMutation
+>;
+export const updateAssignment = /* GraphQL */ `mutation UpdateAssignment(
+  $courseId: ID!
+  $id: ID!
+  $input: UpdateAssignmentInput!
+) {
+  updateAssignment(courseId: $courseId, id: $id, input: $input) {
+    courseId
+    createdAt
+    description
+    id
+    title
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedMutation<
+  APITypes.UpdateAssignmentMutationVariables,
+  APITypes.UpdateAssignmentMutation
 >;
 export const updateCourse = /* GraphQL */ `mutation UpdateCourse($id: ID!, $input: UpdateCourseInput!) {
   updateCourse(id: $id, input: $input) {

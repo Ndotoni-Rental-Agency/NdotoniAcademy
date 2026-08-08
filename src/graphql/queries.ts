@@ -8,6 +8,21 @@ type GeneratedQuery<InputType, OutputType> = string & {
   __generatedQueryOutput: OutputType;
 };
 
+export const assignmentsForCourse = /* GraphQL */ `query AssignmentsForCourse($courseId: ID!) {
+  assignmentsForCourse(courseId: $courseId) {
+    courseId
+    createdAt
+    description
+    id
+    title
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedQuery<
+  APITypes.AssignmentsForCourseQueryVariables,
+  APITypes.AssignmentsForCourseQuery
+>;
 export const certificateByPublicId = /* GraphQL */ `query CertificateByPublicId($id: ID!) {
   certificateByPublicId(id: $id) {
     category
@@ -250,6 +265,22 @@ export const coursesForOrganization = /* GraphQL */ `query CoursesForOrganizatio
 ` as GeneratedQuery<
   APITypes.CoursesForOrganizationQueryVariables,
   APITypes.CoursesForOrganizationQuery
+>;
+export const discussionForCourse = /* GraphQL */ `query DiscussionForCourse($courseId: ID!) {
+  discussionForCourse(courseId: $courseId) {
+    authorId
+    authorName
+    body
+    courseId
+    createdAt
+    id
+    parentPostId
+    __typename
+  }
+}
+` as GeneratedQuery<
+  APITypes.DiscussionForCourseQueryVariables,
+  APITypes.DiscussionForCourseQuery
 >;
 export const examToTake = /* GraphQL */ `query ExamToTake($courseId: ID!) {
   examToTake(courseId: $courseId) {
@@ -725,6 +756,30 @@ export const myModules = /* GraphQL */ `query MyModules {
   }
 }
 ` as GeneratedQuery<APITypes.MyModulesQueryVariables, APITypes.MyModulesQuery>;
+export const mySubmissionsForCourse = /* GraphQL */ `query MySubmissionsForCourse($courseId: ID!) {
+  mySubmissionsForCourse(courseId: $courseId) {
+    assignmentId
+    attachment {
+      type
+      url
+      __typename
+    }
+    body
+    courseId
+    feedback
+    gradedAt
+    score
+    status
+    submittedAt
+    submitterName
+    userId
+    __typename
+  }
+}
+` as GeneratedQuery<
+  APITypes.MySubmissionsForCourseQueryVariables,
+  APITypes.MySubmissionsForCourseQuery
+>;
 export const organization = /* GraphQL */ `query Organization($id: ID!) {
   organization(id: $id) {
     createdAt
@@ -967,4 +1022,28 @@ export const publicCourses = /* GraphQL */ `query PublicCourses {
 ` as GeneratedQuery<
   APITypes.PublicCoursesQueryVariables,
   APITypes.PublicCoursesQuery
+>;
+export const submissionsForAssignment = /* GraphQL */ `query SubmissionsForAssignment($assignmentId: ID!, $courseId: ID!) {
+  submissionsForAssignment(assignmentId: $assignmentId, courseId: $courseId) {
+    assignmentId
+    attachment {
+      type
+      url
+      __typename
+    }
+    body
+    courseId
+    feedback
+    gradedAt
+    score
+    status
+    submittedAt
+    submitterName
+    userId
+    __typename
+  }
+}
+` as GeneratedQuery<
+  APITypes.SubmissionsForAssignmentQueryVariables,
+  APITypes.SubmissionsForAssignmentQuery
 >;
